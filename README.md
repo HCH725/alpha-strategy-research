@@ -289,6 +289,8 @@ Never rewrite a source-reported claim as our verified result.
 
 Every source-reported performance figure, parameter, threshold, win rate, Sharpe, t-statistic, CAGR, drawdown, or other quantitative claim must trace to a specific source listed in `## Sources` (for example a stable URL/DOI, commit SHA, or page/table reference). If the exact figure cannot be traced, omit it or state the provenance gap explicitly; never invent precision. Figures from equities, commodities, traditional futures, or other non-crypto samples must identify that asset class and must not be presented as crypto evidence.
 
+For each source-reported empirical claim, verify that the cited author(s), paper title, sample/universe, methodology, and reported result all belong to the same source. Never merge a sample, method, statistic, or finding from a different paper merely because the papers study a similar topic. If multiple papers are used, attribute each claim to its own source explicitly.
+
 Example:
 
 ```text

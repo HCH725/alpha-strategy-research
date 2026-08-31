@@ -289,6 +289,8 @@ Risk / exit: ATR stop
 
 每一個 source-reported 的績效數字、參數、門檻、勝率、Sharpe、t-statistic、CAGR、drawdown 或其他量化主張，都必須能逐項追溯到 `## Sources` 中的明確來源（例如 stable URL/DOI、commit SHA、頁碼或表格）。若無法追溯該精確數字，就應刪除它或明確註記 provenance 缺口，不能自行補出精確值。若數字來自股票、商品、傳統期貨或其他非 crypto 樣本，必須標明該資產類別，不能當成 crypto 實證結果。
 
+對每一個 source-reported empirical claim，都必須確認引用的作者、paper title、sample / universe、methodology 與 reported result 確實屬於同一篇來源。不得僅因多篇研究主題相近，就把另一篇論文的樣本、方法、統計數字或研究發現拼接進來。若同一筆 research record 使用多篇論文，每一項主張都必須明確歸屬到各自的來源。
+
 例如：
 
 ```text
