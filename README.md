@@ -480,3 +480,25 @@ The goal is simple:
 > **Antigravity output should already equal Wiki Brain-ready input.**
 
 This minimizes repeated interpretation, repeated summarization and unnecessary token consumption across Antigravity, ChatGPT and Hermes.
+
+---
+
+## Scheduled Antigravity scout
+
+The recurring Antigravity scout is intentionally **high-frequency but low-output**. Its job is to keep looking, not to manufacture a quota.
+
+For every scheduled run:
+
+1. Sync and inspect the latest `origin/main` before researching. Do not overwrite or casually rewrite another scout's existing artifact.
+2. Read this README on every run and treat it as the current ingestion contract.
+3. Search public, traceable sources for new alpha strategies or falsifiable alpha hypotheses.
+4. Check existing repository records and sources before creating anything. Exact duplicates, trivial paraphrases, and materially identical captures should produce no new artifact.
+5. Produce **at most 3** new strategy records in one run. **Zero is a valid and successful result. Never manufacture candidates to satisfy a quota.**
+6. Preserve hybrid/composite structure when the thesis depends on multiple components. Do not collapse a hybrid into one prominent indicator.
+7. If strategy identity, signal semantics, causal timing, required data, provenance, or public-use rights are materially ambiguous, do not guess. Skip that candidate for this run rather than emitting false precision.
+8. Every emitted artifact must already satisfy `strategy-research-record-v1` and remain `research-only`, `not-implemented`, and `not-approved`.
+9. Commit only artifacts intentionally created or corrected by the current run. If no candidate clears the bar, create no empty commit.
+10. Push explicitly to `origin main`, verify the remote contains the commit, then stop. Do not write to Hermes Wiki Brain, PyBroker, Nautilus, Paper, Testnet, or Live workflows.
+11. Fail closed on dirty unrelated worktree state, merge/rebase conflict, repository-sync failure, source/provenance failure, secret/public-safety concern, or push failure. Report the exact block instead of creating a fallback artifact elsewhere.
+
+The scheduled producer and the ChatGPT review process are deliberately separate. A successful Antigravity push means only that a research artifact entered the public staging pool; it does **not** mean the artifact passed Research Intake Review or entered Wiki Brain.
