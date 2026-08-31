@@ -17,7 +17,7 @@ status: research-only
 confidence: high
 source_as_of: 2023-11
 sources:
-  - https://doi.org/10.1080/14697688.2023.2272820
+  - https://doi.org/10.1080/14697688.2023.2269999
   - https://doi.org/10.1111/jofi.13115
   - https://ideas.repec.org/p/arx/papers/2301.07468.html
 implementation_status: not-implemented
@@ -31,7 +31,7 @@ contradictions: []
 
 ## Provenance
 
-- **Primary Source:** Christian Fieberg, Gerrit Liedtke, Daniel Metko, and Adam Zaremba, “Cryptocurrency factor momentum”, *Quantitative Finance*, Volume 23, Issue 12, Pages 1853–1869 (November 2023). DOI: [10.1080/14697688.2023.2272820](https://doi.org/10.1080/14697688.2023.2272820). Working paper version: arXiv:2301.07468 / RePEc: https://ideas.repec.org/p/arx/papers/2301.07468.html.
+- **Primary Source:** Christian Fieberg, Gerrit Liedtke, Daniel Metko, and Adam Zaremba, “Cryptocurrency factor momentum”, *Quantitative Finance*, Volume 23, Issue 12, Pages 1853–1869 (November 2023). DOI: [10.1080/14697688.2023.2269999](https://doi.org/10.1080/14697688.2023.2269999). Working paper version: arXiv:2301.07468 / RePEc: https://ideas.repec.org/p/arx/papers/2301.07468.html.
 - **Foundational Theoretical Framework:** Sina Ehsani and Juhani T. Linnainmaa, “Factor Momentum and the Momentum Factor”, *The Journal of Finance*, Volume 77, Issue 3, Pages 1877–1919 (June 2022). DOI: [10.1111/jofi.13115](https://doi.org/10.1111/jofi.13115).
 - **Empirical Universe:** Over 3,900 cryptocurrencies from CoinMarketCap and major exchange histories covering January 2014 through June 2022, replicating 34 cross-sectional anomaly factor portfolios across size, liquidity, momentum, and volatility categories.
 
@@ -159,6 +159,6 @@ This record is `research-only`, `not-implemented`, and `not-approved`. Presence 
 
 ## Sources
 
-1. Christian Fieberg, Gerrit Liedtke, Daniel Metko, and Adam Zaremba, “Cryptocurrency factor momentum”, *Quantitative Finance*, Volume 23, Issue 12, Pages 1853–1869 (2023). DOI: [10.1080/14697688.2023.2272820](https://doi.org/10.1080/14697688.2023.2272820).
+1. Christian Fieberg, Gerrit Liedtke, Daniel Metko, and Adam Zaremba, “Cryptocurrency factor momentum”, *Quantitative Finance*, Volume 23, Issue 12, Pages 1853–1869 (2023). DOI: [10.1080/14697688.2023.2269999](https://doi.org/10.1080/14697688.2023.2269999).
 2. Sina Ehsani and Juhani T. Linnainmaa, “Factor Momentum and the Momentum Factor”, *The Journal of Finance*, Volume 77, Issue 3, Pages 1877–1919 (2022). DOI: [10.1111/jofi.13115](https://doi.org/10.1111/jofi.13115).
 3. Working paper / RePEc archive: https://ideas.repec.org/p/arx/papers/2301.07468.html and arXiv:2301.07468.

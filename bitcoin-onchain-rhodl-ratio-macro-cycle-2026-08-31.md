@@ -15,7 +15,7 @@ tags:
   - hodl-waves
   - macro-cycle
 status: research-only
-confidence: high
+confidence: medium
 source_as_of: 2024-06
 sources:
   - https://www.lookintobitcoin.com/charts/rhodl-ratio/
@@ -75,7 +75,8 @@ The economic thesis is **on-chain capital velocity divergence and cohort wealth 
    $$RHODL_t = \left( \frac{RC_{1\text{w}, t}}{RC_{1\text{y}-2\text{y}, t}} \right) \times \text{Market Age (days)}_t$$
    where $\text{Market Age (days)}_t = \text{Date}_t - \text{2009-01-03}$.
 
-4. **Regime Thresholds & Directional Rule:**
+4. **Research-hypothesis thresholds (not source-prescribed trading rules):**
+   The public source defines the RHODL construction and interprets historically low/high zones, but it does not prescribe a production trading contract. The numerical cutoffs below are predeclared research hypotheses derived from the published chart zones and must be independently tested rather than treated as source-authored execution rules.
    - **Macro Long Accumulation / Over-Sold Regime:**
      $$\text{if } RHODL_t \le 350 \implies \text{Regime} = \text{Macro Undervalued / Accumulate Long}$$
    - **Macro Distribution / Over-Bought Exit Regime:**
@@ -93,10 +94,7 @@ The economic thesis is **on-chain capital velocity divergence and cohort wealth 
 
 ## Execution assumptions
 
-- **Strategy Horizon:** Macro cyclical rebalancing / swing timing; average holding periods span several quarters to multi-year phases.
-- **Execution Mechanism:** Spot position accumulation/liquidation or linear futures delta hedging (e.g., shorting BTC quarterly futures or perpetuals to hedge spot inventory during overbought regimes).
-- **Transaction Costs:** Due to the low-frequency nature of macro cycle rebalancing (single-digit trade counts per multi-year epoch), execution costs and exchange taker fees represent a negligible drag on total returns.
-- **Custody / On-Chain Friction:** Strategy assumes access to liquid spot/futures markets; on-chain transfer fees apply when rebalancing between cold storage and exchange venues.
+The source is an on-chain market-cycle indicator, not an execution specification. Exact order type, venue, leverage, hedging instrument, rebalance timing, holding period, transaction-cost model, and custody workflow are **underspecified** and must not be inferred from the indicator itself. Any later PyBroker/Nautilus hypothesis must predeclare these choices independently and test them as implementation assumptions rather than source-reported rules.
 
 ## Evidence
 
