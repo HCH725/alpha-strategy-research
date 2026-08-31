@@ -287,6 +287,8 @@ Risk / exit: ATR stop
 
 不要把來源聲稱的績效改寫成我們已驗證的結果。
 
+每一個 source-reported 的績效數字、參數、門檻、勝率、Sharpe、t-statistic、CAGR、drawdown 或其他量化主張，都必須能逐項追溯到 `## Sources` 中的明確來源（例如 stable URL/DOI、commit SHA、頁碼或表格）。若無法追溯該精確數字，就應刪除它或明確註記 provenance 缺口，不能自行補出精確值。若數字來自股票、商品、傳統期貨或其他非 crypto 樣本，必須標明該資產類別，不能當成 crypto 實證結果。
+
 例如：
 
 ```text
@@ -338,6 +340,8 @@ adapted
 unproven
 not applicable
 ```
+
+若策略機制源自傳統資產研究，除非引用來源本身已在 crypto 市場直接驗證該機制，否則不得標示為 `direct`。應使用 `adapted` 或 `unproven`，並在 Research interpretation 明確說明這是移植假說，不是 crypto empirical evidence。
 
 並說明任何 crypto-specific portability risks，尤其是：
 

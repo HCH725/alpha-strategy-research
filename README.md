@@ -287,6 +287,8 @@ Third-party backtest, Sharpe, win rate, CAGR, drawdown or profitability claims b
 
 Never rewrite a source-reported claim as our verified result.
 
+Every source-reported performance figure, parameter, threshold, win rate, Sharpe, t-statistic, CAGR, drawdown, or other quantitative claim must trace to a specific source listed in `## Sources` (for example a stable URL/DOI, commit SHA, or page/table reference). If the exact figure cannot be traced, omit it or state the provenance gap explicitly; never invent precision. Figures from equities, commodities, traditional futures, or other non-crypto samples must identify that asset class and must not be presented as crypto evidence.
+
 Example:
 
 ```text
@@ -338,6 +340,8 @@ adapted
 unproven
 not applicable
 ```
+
+A strategy whose mechanism originates from traditional-asset research must not be labeled `direct` unless the cited source itself demonstrates that mechanism in crypto markets. Otherwise use `adapted` or `unproven`, and state under Research interpretation that this is a ported hypothesis rather than crypto empirical evidence.
 
 Explain any crypto-specific portability risks, especially:
 
@@ -493,7 +497,7 @@ For every scheduled run:
 2. Read this README on every run and treat it as the current ingestion contract.
 3. Search public, traceable sources for new alpha strategies or falsifiable alpha hypotheses.
 4. Check existing repository records and sources before creating anything. Exact duplicates, trivial paraphrases, and materially identical captures should produce no new artifact.
-5. Produce **at most 3** new strategy records in one run. **Zero is a valid and successful result. Never manufacture candidates to satisfy a quota.**
+5. Produce **at most 3** new strategy records in one run. **Zero is a valid and successful result. Never manufacture candidates to satisfy a quota.** Three is a hard ceiling, not a target; prefer zero or one strong record over filling available slots with marginal material.
 6. Preserve hybrid/composite structure when the thesis depends on multiple components. Do not collapse a hybrid into one prominent indicator.
 7. If strategy identity, signal semantics, causal timing, required data, provenance, or public-use rights are materially ambiguous, do not guess. Skip that candidate for this run rather than emitting false precision.
 8. Every emitted artifact must already satisfy `strategy-research-record-v1` and remain `research-only`, `not-implemented`, and `not-approved`.
