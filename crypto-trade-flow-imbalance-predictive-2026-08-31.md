@@ -14,7 +14,7 @@ status: research-only
 confidence: medium
 source_as_of: 2019-12-31
 sources:
-  - "Order Flow Analysis of Cryptocurrency Markets (Silantyev, 2019)"
+  - "Order Flow Analysis of Cryptocurrency Markets (Silantyev, 2019) - arXiv:1912.02568"
 implementation_status: not-implemented
 adoption: not-approved
 approval_scope: research-only
@@ -27,7 +27,7 @@ contradictions: []
 ## Provenance
 
 - **Source:** "Order Flow Analysis of Cryptocurrency Markets" by Silantyev (2019)
-- **Venue:** SSRN / ResearchGate
+- **Venue:** Digital Finance / arXiv:1912.02568 / DOI:10.1007/s42521-019-00006-5
 - **Target:** BitMEX XBTUSD perpetual contracts
 
 ## Economic mechanism
@@ -35,20 +35,20 @@ contradictions: []
 The source posits that in cryptocurrency markets, aggressive taker orders (trade flow) have a stronger predictive power for contemporaneous price changes than passive changes to the limit order book (order flow). Trade flow imbalance captures informed trading pressure more accurately than total limit order book additions or cancellations.
 
 ### Research interpretation
-Trade Flow Imbalance (TFI) represents the net difference between market buy orders (lifting the offer) and market sell orders (hitting the bid) over a high-frequency interval. A positive TFI implies strong taker demand, depleting the ask side of the book, which causes immediate upward price drift. The strategy hypothesizes that momentum from taker order flow persists long enough at microstructure timeframes to generate predictive alpha, while passive aggregate order flow imbalance (OFI) is often noisy or influenced by market-making algorithms and spoofing.
+Trade Flow Imbalance (TFI) represents the net difference between market buy orders (lifting the offer) and market sell orders (hitting the bid) over a high-frequency interval. A positive TFI implies strong taker demand, depleting the ask side of the book, which causes immediate upward price drift. The research interprets TFI as having strong explanatory and contemporaneous association with price changes. However, the source tests contemporaneous association rather than genuinely predictive future-return evidence (lead/lag predictive alpha).
 
 ## Signal
 
 - **Signal formation:** High-frequency calculation of Trade Flow Imbalance (TFI) over a rolling short-term window (e.g., tick-level to sub-minute aggregations).
-- **Long entry:** TFI exceeds a positive threshold, indicating aggressive taker buying.
-- **Short entry:** TFI falls below a negative threshold, indicating aggressive taker selling.
-- **Holding period:** Very short term (intraday, potentially seconds to minutes), exiting when TFI reverts or a small take-profit/stop-loss is hit.
-- **Specification:** Underspecified. The exact aggregation window and threshold parameters require empirical tuning.
+- **Long entry:** underspecified (Source establishes explanatory power, not a tradable predictive threshold).
+- **Short entry:** underspecified.
+- **Holding period:** underspecified.
+- **Specification:** underspecified. Source does not provide a specified historical trading rule.
 
 ## Required data
 
 - **Instrument:** High-liquidity crypto perpetuals (e.g., BTC-USD).
-- **Venue:** High-volume centralized exchanges (Binance, Bybit).
+- **Venue:** underspecified (Source targeted BitMEX XBTUSD).
 - **Timeframe:** Tick-level or highly granular (e.g., 1-second).
 - **Fields:** Trade data including aggressor side (taker buy vs taker sell), trade sizes, and execution timestamps.
 - **Order Book Data:** Top-of-book (BBA) to calculate spreads and relative liquidity, although the primary signal relies on executed trades.
@@ -56,7 +56,7 @@ Trade Flow Imbalance (TFI) represents the net difference between market buy orde
 ## Execution assumptions
 
 - **Signal-to-order timing:** Extremely latency-sensitive. Requires immediate execution post-signal.
-- **Order types:** Market orders or aggressive limit orders to ensure fills during momentum bursts.
+- **Order types:** underspecified.
 - **Fees:** Highly sensitive to taker fees. Maker rebates may be utilized for exits if latency allows passive resting.
 - **Slippage & Impact:** High risk of slippage given the strategy competes with other high-frequency participants reacting to the same flow.
 
