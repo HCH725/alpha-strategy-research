@@ -19,7 +19,7 @@ confidence: high
 source_as_of: 2025
 sources:
   - https://ideas.repec.org/a/eee/jbefin/v46y2025ics2214635024001098.html
-  - https://doi.org/10.1016/j.jbef.2024.100980
+  - https://doi.org/10.1016/j.jbef.2025.101043
   - https://alternative.me/crypto/fear-and-greed-index/
 implementation_status: not-implemented
 adoption: not-approved
@@ -32,7 +32,7 @@ contradictions: []
 
 ## Provenance
 
-- **Primary Academic Source:** SeungOh Han, “Investor sentiment and cross-section of cryptocurrency returns,” *Journal of Behavioral and Experimental Finance*, Volume 46, 2025, Article 100980, doi:10.1016/j.jbef.2024.100980; RePEc: `RePEc:eee:jbefin:v:46:y:2025:i:c:s2214635024001098`.
+- **Primary Academic Source:** SeungOh Han, “Investor sentiment and cross-section of cryptocurrency returns,” *Journal of Behavioral and Experimental Finance*, Volume 46, 2025, Article 101043, doi:10.1016/j.jbef.2025.101043; RePEc: `RePEc:eee:jbefin:v:46:y:2025:i:c:s2214635024001098`.
 - **Sample & Benchmark Data:** Cross-section of actively traded cryptocurrencies spanning November 2018 through July 2024, coupled with daily changes in the Alternative.me Crypto Fear and Greed Index (FGI).
 - **Core Signal Concept:** Estimating cross-sectional return sensitivity ($\beta_{\text{Sent}}$) to systemic market sentiment shifts, identifying a negative sentiment risk premium at the extreme upper tail and non-linear outperformance for intermediate sentiment-beta assets.
 
@@ -157,6 +157,6 @@ This record is `research-only`, `not-implemented`, and `not-approved`. Presence 
 
 ## Sources
 
-1. SeungOh Han, “Investor sentiment and cross-section of cryptocurrency returns,” *Journal of Behavioral and Experimental Finance*, Volume 46, 2025, Article 100980, doi:10.1016/j.jbef.2024.100980.
+1. SeungOh Han, “Investor sentiment and cross-section of cryptocurrency returns,” *Journal of Behavioral and Experimental Finance*, Volume 46, 2025, Article 101043, doi:10.1016/j.jbef.2025.101043.
 2. RePEc IDEAS record: https://ideas.repec.org/a/eee/jbefin/v46y2025ics2214635024001098.html.
 3. Alternative.me Crypto Fear and Greed Index Methodology & Historical Archive: https://alternative.me/crypto/fear-and-greed-index/.
