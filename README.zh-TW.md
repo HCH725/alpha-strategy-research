@@ -6,7 +6,7 @@
 
 ## 用途
 
-本 repository 是 **Antigravity 外部研究** 與 **ChatGPT review / Wiki Brain ingestion** 之間的交接層。
+本 repository 是 **三個獨立 Research Scout（ChatGPT / Hermes / Antigravity）** 與 **ChatGPT review / Wiki Brain ingestion** 之間的交接層。
 
 運作流程：
 
@@ -14,7 +14,7 @@
 外部公開來源
 （GitHub / FMZ / papers / blogs / public research）
         ↓
-Antigravity
+ChatGPT / Hermes / Antigravity（獨立平行的 Research Scout）
 尋找 alpha 想法 → 理解 → 標準化 → push 到這裡
         ↓
 ChatGPT
@@ -25,7 +25,7 @@ ChatGPT 將通過 review 的知識直接寫入 Hermes Wiki Brain
 Hermes 使用這些知識進行研究、組合與後續驗證
 ```
 
-Antigravity **不直接寫入** Hermes Wiki Brain。Push 到這裡的 artifact 應該已經是 Wiki Brain-native 格式，讓 ChatGPT 可以 review 後直接 promote，而不需要再做一次翻譯或重新整理。
+**任何 Scout 都不得直接寫入 Hermes Wiki Brain。** 每個 Scout 唯一的輸出管道是本 repository。Push 到這裡的 artifact 應該已經是 Wiki Brain-native 格式，讓 ChatGPT 可以 review 後直接 promote，而不需要再做一次翻譯或重新整理。
 
 ## 本 repository 在整體系統中的位置
 
@@ -36,7 +36,7 @@ Antigravity **不直接寫入** Hermes Wiki Brain。Push 到這裡的 artifact �
 ```text
 外部公開來源
         ↓
-Antigravity 研究
+ChatGPT / Hermes / Antigravity 研究 Scout（獨立平行）
         ↓
 alpha-strategy-research
         ↓
@@ -58,9 +58,11 @@ feedback / lineage / reuse
 
 ---
 
-## Antigravity：每次研究前都必須先閱讀本 README
+## Research Scout：每次研究前都必須先閱讀本 README
 
 你的工作是從公開外部來源搜尋可能有價值的 **alpha 策略或 alpha 假說**，然後把每一個值得保留的項目轉換成下方規定的研究紀錄格式，再 push 到本 repository。
+
+你是三個獨立平行 Research Scout（ChatGPT / Hermes / Antigravity）之一。每個 Scout 自主運作，指向同一個 repository。不要重複或覆蓋其他 Scout 已有的 artifact；產出新紀錄前請先 inspect 近期 commits。
 
 策略可以是：
 
@@ -299,7 +301,7 @@ Source reports Sharpe 2.1 over the stated sample. This result has not been indep
 
 #### Independently reproduced
 
-對新發現的 Antigravity 研究，通常應填：
+對新發現的 Scout 研究，通常應填：
 
 ```text
 Not independently reproduced.
@@ -435,7 +437,7 @@ v2-final-final
 
 ---
 
-## Antigravity 研究規則
+## Research Scout 研究規則
 
 1. **搜尋 alpha，不是搜尋行銷績效。** 高報酬聲稱本身不是 alpha thesis。
 2. **單一策略與混合策略都允許。** 保留真正有意義的元件結構。
@@ -469,7 +471,7 @@ v2-final-final
 
 ## Push workflow
 
-Antigravity 可以使用本機 GitHub CLI / Git tooling 更新本 repository。
+任何 Scout 都可以使用本機 GitHub CLI / Git tooling 更新本 repository。
 
 每一次 research run：
 
@@ -483,6 +485,8 @@ Antigravity 可以使用本機 GitHub CLI / Git tooling 更新本 repository。
 
 目標很簡單：
 
-> **Antigravity output 應該直接等於 Wiki Brain-ready input。**
+> **Scout output 應該直接等於 Wiki Brain-ready input。**
 
-如此可以降低 Antigravity、ChatGPT 與 Hermes 之間重複理解、重複摘要與不必要的 token 消耗。
+如此可以降低 Scout、ChatGPT 與 Hermes 之間重複理解、重複摘要與不必要的 token 消耗。
+
+**任何 Scout 都不得直接 promote 或寫入 Hermes Wiki Brain。** 所有 Wiki Brain ingestion 僅透過 ChatGPT review 進行。

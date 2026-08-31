@@ -6,7 +6,7 @@ Public staging repository for external alpha-strategy research normalized for di
 
 ## Purpose
 
-This repository is the handoff layer between **Antigravity external research** and **ChatGPT review / Wiki Brain ingestion**.
+This repository is the handoff layer between **three independent Research Scouts (ChatGPT / Hermes / Antigravity)** and **ChatGPT review / Wiki Brain ingestion**.
 
 Operating flow:
 
@@ -14,7 +14,7 @@ Operating flow:
 External public sources
 (GitHub / FMZ / papers / blogs / public research)
         ↓
-Antigravity
+ChatGPT / Hermes / Antigravity (independent, parallel scouts)
 find alpha ideas → understand → normalize → push here
         ↓
 ChatGPT
@@ -25,7 +25,7 @@ ChatGPT writes approved knowledge directly into Hermes Wiki Brain
 Hermes uses the knowledge for research, synthesis and later validation
 ```
 
-Antigravity does **not** write to Hermes Wiki Brain. The artifact pushed here should already be in Wiki Brain-native form so ChatGPT can review and promote it without another translation pass.
+**No Scout writes to Hermes Wiki Brain.** Each Scout's only output channel is this repository. The artifact pushed here should already be in Wiki Brain-native form so ChatGPT can review and promote it without another translation pass.
 
 ## Where this repository fits
 
@@ -36,7 +36,7 @@ After ChatGPT review and Wiki Brain ingestion, Hermes can use accepted knowledge
 ```text
 External public sources
         ↓
-Antigravity research
+ChatGPT / Hermes / Antigravity research scouts (independent, parallel)
         ↓
 alpha-strategy-research
         ↓
@@ -58,9 +58,11 @@ A strategy record being present here therefore means only that it is normalized 
 
 ---
 
-## Antigravity: read this README before every research run
+## Research Scouts: read this README before every research run
 
 Your job is to search public external sources for potentially useful **alpha strategies or alpha hypotheses**, then convert each worthwhile item into the exact research-record format below and push it to this repository.
+
+You are one of three independent, parallel Research Scouts (ChatGPT / Hermes / Antigravity). Each Scout operates autonomously and targets the same repository. Do not duplicate or overwrite another Scout's existing artifact; inspect recent commits before producing new records.
 
 Strategies may be:
 
@@ -299,7 +301,7 @@ Source reports Sharpe 2.1 over the stated sample. This result has not been indep
 
 #### Independently reproduced
 
-For new Antigravity discoveries, normally write:
+For newly discovered Scout research, normally write:
 
 ```text
 Not independently reproduced.
@@ -435,7 +437,7 @@ unless the document itself is a versioned specification.
 
 ---
 
-## Research rules for Antigravity
+## Research rules for all Scouts
 
 1. **Search for alpha, not marketing claims.** A high reported return is not itself an alpha thesis.
 2. **Single and hybrid strategies are both allowed.** Preserve meaningful component structure.
@@ -469,7 +471,7 @@ Where redistribution rights are unclear, cite and normalize the idea instead of 
 
 ## Push workflow
 
-Antigravity may use the local GitHub CLI / Git tooling to update this repository.
+Any Scout may use the local GitHub CLI / Git tooling to update this repository.
 
 For each research run:
 
@@ -489,9 +491,9 @@ This minimizes repeated interpretation, repeated summarization and unnecessary t
 
 ---
 
-## Scheduled Antigravity scout
+## Scheduled Research Scouts
 
-The recurring Antigravity scout is intentionally **high-frequency but low-output**. Its job is to keep looking, not to manufacture a quota.
+Each Research Scout runs on its own schedule and is intentionally **high-frequency but low-output**. Its job is to keep looking, not to manufacture a quota.
 
 For every scheduled run:
 
@@ -507,4 +509,6 @@ For every scheduled run:
 10. Push explicitly to `origin main`, verify the remote contains the commit, then stop. Do not write to Hermes Wiki Brain, PyBroker, Nautilus, Paper, Testnet, or Live workflows.
 11. Fail closed on dirty unrelated worktree state, merge/rebase conflict, repository-sync failure, source/provenance failure, secret/public-safety concern, or push failure. Report the exact block instead of creating a fallback artifact elsewhere.
 
-The scheduled producer and the ChatGPT review process are deliberately separate. A successful Antigravity push means only that a research artifact entered the public staging pool; it does **not** mean the artifact passed Research Intake Review or entered Wiki Brain.
+The scheduled scouts and the ChatGPT review process are deliberately separate. A successful Scout push means only that a research artifact entered the public staging pool; it does **not** mean the artifact passed Research Intake Review or entered Wiki Brain.
+
+**No Scout may directly promote or write to Hermes Wiki Brain.** All Wiki Brain ingestion goes through ChatGPT review exclusively.
