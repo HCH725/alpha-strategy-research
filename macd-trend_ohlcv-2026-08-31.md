@@ -1,6 +1,6 @@
 ---
 schema: strategy-research-record-v1
-title: "RSI Based Mean Reversion Family Representative (OHLCV)"
+title: "MACD Trend Family Representative"
 created: 2026-08-31
 updated: 2026-08-31
 type: strategy-research-record
@@ -8,7 +8,7 @@ tags:
   - quant
   - strategy-research
   - source-backed
-  - rsi_ohlcv
+  - macd-trend_ohlcv
 status: research-only
 confidence: medium
 source_as_of: 2026-08-31
@@ -21,7 +21,7 @@ contested: false
 contradictions: []
 ---
 
-# RSI Based Mean Reversion Family Representative (OHLCV)
+# MACD Trend Family Representative
 
 ## Provenance
 - Repository: https://github.com/fmzquant/strategies
@@ -34,7 +34,7 @@ contradictions: []
 > This strategy is a comprehensive trading system that integrates multiple technical indicators, primarily combining the Relative Strength Index (RSI), Moving Average Convergence Divergence (MACD), dual Supertrend indicators, and an Average True Range (ATR)-based risk management mechanism. Through multi-level indicator confirmation, the strategy builds a trading framework that both tracks trends and captures momentum shifts, effectively filtering market noise and reducing the risk of false signals. The core logic is to first confirm the market's dominant trend using dual Supertrends (factors 2 and 7), then verify trend direction through MACD crossovers and momentum changes, and finally identify optimal entry points using RSI overbought/oversold zones, while implementing comprehensive risk control through ATR-based stop-loss, breakeven, and trailing stop mechanisms.
 
 ### Research interpretation
-RSI Based Mean Reversion logic. Based on actual source body semantics, grouped by materially compatible signal logic. Data dependency: OHLCV.
+MACD Trend logic. Standard MACD strategy verified by code. Data dependency: OHLCV
 
 ## Signal
 > The operation mechanism of this strategy is based on four key components: trend identification, momentum confirmation, entry conditions, and risk management.
@@ -62,8 +62,8 @@ Entry and exit semantics are strictly defined by the source logic described abov
 - OHLCV
 
 ## Execution assumptions
-- Source-derived execution logic is underspecified in pure technical descriptions unless detailed in the signal logic block above. Assumes generic next-bar execution unless tick-level data is strictly required.
-- Fees and slippage not strictly accounted for.
+- Signal-to-fill timing: underspecified; implementation must choose and test a causal execution convention.
+- Fees/slippage/latency: underspecified; standard institutional assumptions must be supplied.
 
 ## Evidence
 ### Source-reported
@@ -86,7 +86,7 @@ direct
 ## Limitations
 - underspecified parameter robustness
 - not independently reproduced
-- None explicitly detected in structural scan; manual semantic review required for hidden repainting.
+- leakage/repainting risk: manual semantic review required for hidden repainting in original source code.
 
 ## Implementation status
 not-implemented

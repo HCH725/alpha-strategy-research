@@ -1,6 +1,6 @@
 ---
 schema: strategy-research-record-v1
-title: "Stochastic RSI Reversal/Crossover Family Representative (Renko charts)"
+title: "Stochastic RSI (Renko) Family Representative"
 created: 2026-08-31
 updated: 2026-08-31
 type: strategy-research-record
@@ -8,7 +8,7 @@ tags:
   - quant
   - strategy-research
   - source-backed
-  - stochastic-rsi_renko-charts
+  - stochastic-rsi-renko_renko-charts
 status: research-only
 confidence: medium
 source_as_of: 2026-08-31
@@ -21,7 +21,7 @@ contested: false
 contradictions: []
 ---
 
-# Stochastic RSI Reversal/Crossover Family Representative (Renko charts)
+# Stochastic RSI (Renko) Family Representative
 
 ## Provenance
 - Repository: https://github.com/fmzquant/strategies
@@ -34,7 +34,7 @@ contradictions: []
 > This is a Stochastic RSI trading strategy designed for use on Renko charts. It generates buy and sell signals using the crossover and crossunder of Stochastic RSI K and D lines. The strategy is specialized for Renko charts and can effectively filter market noise and identify trends.
 
 ### Research interpretation
-Stochastic RSI Reversal/Crossover logic. Based on actual source body semantics, grouped by materially compatible signal logic. Data dependency: Renko charts.
+Stochastic RSI (Renko) logic. Explicit Renko Stochastic RSI strategy. Data dependency: Renko charts
 
 ## Signal
 > The trading signals are primarily based on the Stochastic RSI indicator, which combines the advantages of RSI and Stochastic oscillator.
@@ -56,8 +56,8 @@ Entry and exit semantics are strictly defined by the source logic described abov
 - Renko charts
 
 ## Execution assumptions
-- Source-derived execution logic is underspecified in pure technical descriptions unless detailed in the signal logic block above. Assumes generic next-bar execution unless tick-level data is strictly required.
-- Fees and slippage not strictly accounted for.
+- Signal-to-fill timing: underspecified; implementation must choose and test a causal execution convention.
+- Fees/slippage/latency: underspecified; standard institutional assumptions must be supplied.
 
 ## Evidence
 ### Source-reported
@@ -80,7 +80,7 @@ direct
 ## Limitations
 - underspecified parameter robustness
 - not independently reproduced
-- None explicitly detected in structural scan; manual semantic review required for hidden repainting.
+- leakage/repainting risk: manual semantic review required for hidden repainting in original source code.
 
 ## Implementation status
 not-implemented

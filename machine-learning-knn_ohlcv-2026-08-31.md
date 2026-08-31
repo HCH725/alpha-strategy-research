@@ -1,6 +1,6 @@
 ---
 schema: strategy-research-record-v1
-title: "Machine Learning Family Representative (OHLCV)"
+title: "Machine Learning (KNN) Family Representative"
 created: 2026-08-31
 updated: 2026-08-31
 type: strategy-research-record
@@ -8,7 +8,7 @@ tags:
   - quant
   - strategy-research
   - source-backed
-  - machine-learning_ohlcv
+  - machine-learning-knn_ohlcv
 status: research-only
 confidence: medium
 source_as_of: 2026-08-31
@@ -21,7 +21,7 @@ contested: false
 contradictions: []
 ---
 
-# Machine Learning Family Representative (OHLCV)
+# Machine Learning (KNN) Family Representative
 
 ## Provenance
 - Repository: https://github.com/fmzquant/strategies
@@ -34,7 +34,7 @@ contradictions: []
 > This strategy employs the K-Nearest Neighbors (KNN) machine learning algorithm to predict price trends. By selecting different price computation methods (such as HL2, VWAP, SMA, etc.) as input values and various target values (such as price action, VWAP, volatility, etc.) for evaluation, the KNN algorithm identifies the K historical data points closest to the current market state. The strategy then makes long or short predictions based on the trend direction of these K data points. Additionally, the strategy applies a moving average to smooth the prediction results and improve stability. Finally, trading decisions are made according to the predicted results, and the current market trend prediction is visually demonstrated through changes in the background color.
 
 ### Research interpretation
-Machine Learning logic. Based on actual source body semantics, grouped by materially compatible signal logic. Data dependency: OHLCV.
+Machine Learning (KNN) logic. Explicit ML KNN algorithm with code support. Data dependency: OHLCV
 
 ## Signal
 > **Features:** for the KNN algorithm.
@@ -56,8 +56,8 @@ Entry and exit semantics are strictly defined by the source logic described abov
 - OHLCV
 
 ## Execution assumptions
-- Source-derived execution logic is underspecified in pure technical descriptions unless detailed in the signal logic block above. Assumes generic next-bar execution unless tick-level data is strictly required.
-- Fees and slippage not strictly accounted for.
+- Signal-to-fill timing: underspecified; implementation must choose and test a causal execution convention.
+- Fees/slippage/latency: underspecified; standard institutional assumptions must be supplied.
 
 ## Evidence
 ### Source-reported
@@ -80,7 +80,7 @@ direct
 ## Limitations
 - underspecified parameter robustness
 - not independently reproduced
-- None explicitly detected in structural scan; manual semantic review required for hidden repainting.
+- leakage/repainting risk: manual semantic review required for hidden repainting in original source code.
 
 ## Implementation status
 not-implemented
