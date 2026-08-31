@@ -25,6 +25,35 @@ Hermes uses the knowledge for research, synthesis and later validation
 
 Antigravity does **not** write to Hermes Wiki Brain. The artifact pushed here should already be in Wiki Brain-native form so ChatGPT can review and promote it without another translation pass.
 
+## Where this repository fits
+
+This repository is the **upstream research and knowledge-handoff layer** of a broader quantitative workflow. It does not perform formal strategy validation or trading execution itself.
+
+After ChatGPT review and Wiki Brain ingestion, Hermes can use accepted knowledge to synthesize testable hypotheses. Those hypotheses may then move into [`nautilus-quant-system`](https://github.com/HCH725/nautilus-quant-system), where PyBroker is used for isolated strategy research and NautilusTrader provides the formal historical verdict and canonical accounting layer.
+
+```text
+External public sources
+        ↓
+Antigravity research
+        ↓
+alpha-strategy-research
+        ↓
+ChatGPT review
+        ↓
+Hermes Wiki Brain
+        ↓
+Hermes hypothesis / synthesis
+        ↓
+nautilus-quant-system
+PyBroker → NautilusTrader historical verdict
+        ↓
+feedback / lineage / reuse
+        ↓
+later gated Paper → Binance Demo/Testnet → Live progression
+```
+
+A strategy record being present here therefore means only that it is normalized research material. It does **not** mean that the idea has passed PyBroker/Nautilus validation, paper trading, testnet, or live-trading approval.
+
 ---
 
 ## Antigravity: read this README before every research run
