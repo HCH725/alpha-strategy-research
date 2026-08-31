@@ -179,16 +179,20 @@ Duplicate/no-increment cases are handled as `REJECT` with the reason stated; no 
 
 Normal scheduled review is commit-delta based.
 
-1. Read the local review checkpoint.
-2. Fetch the latest `origin/main`.
-3. Snapshot the exact HEAD being reviewed.
-4. If HEAD equals `last_reviewed_commit`, there is no new intake work.
-5. Otherwise review only the strategy artifacts added or modified in `last_reviewed_commit..HEAD`.
-6. Resolve each changed artifact to one of the four decisions.
-7. For material ambiguity or reviewer conflict, request an independent auditor challenge; the auditor finds faults but does not own the final decision.
-8. Only `PASS` and `PASS-WITH-CAVEAT` are eligible for Wiki Brain ingestion.
-9. `REMEDIATE` and `REJECT` remain outside Wiki Brain.
-10. After the entire snapshot has been reviewed, update the checkpoint to the reviewed HEAD. A later remediation commit becomes a new delta and is reviewed normally.
+1. Acquire the single-run review lock. If another active review owns the lock, do not start a second review.
+2. Read the local review checkpoint and confirm the configured repository and branch match the working repository.
+3. Process existing `pending_ingestion` items first. Each pending item should carry at least its reviewed commit and artifact path so retries remain tied to an immutable review snapshot.
+4. Fetch the latest `origin/main` and snapshot the exact HEAD being reviewed.
+5. Verify `last_reviewed_commit` is an ancestor of the snapshot. If it is not, stop normal delta review and reconcile the Git history before proceeding.
+6. If snapshot HEAD equals `last_reviewed_commit`, there is no new intake delta.
+7. Otherwise inspect rename/delete-aware Git status and review only strategy artifacts materially added, modified, renamed, or removed in `last_reviewed_commit..SNAPSHOT_HEAD`. Documentation/skill-only changes do not require strategy review unless they change the review contract.
+8. Resolve each changed strategy artifact to one of the four decisions.
+9. If ChatGPT generated, normalized, materially modified, or previously adjudicated an artifact, an independent `auditor` challenge is mandatory before a final `PASS` or `PASS-WITH-CAVEAT`. For other artifacts, use the auditor when there is material ambiguity or reviewer conflict. The auditor finds faults but never owns promotion or the final decision.
+10. Only `PASS` and `PASS-WITH-CAVEAT` are eligible for Wiki Brain ingestion. `PASS-WITH-CAVEAT` must carry its caveat into the Wiki record.
+11. `REMEDIATE` and `REJECT` remain outside Wiki Brain.
+12. After the entire snapshot has been reviewed, update the checkpoint to the reviewed snapshot HEAD and preserve unresolved remediation/rejection findings plus any pending ingestion. A later remediation commit becomes a new delta and is reviewed normally.
+13. Before writing the checkpoint, confirm it still equals the base checkpoint read at run start. Never move the checkpoint backward or overwrite a newer completed review.
+14. Release the review lock.
 
 Do not advance the checkpoint halfway through a partially reviewed batch.
 
@@ -197,6 +201,8 @@ Do not advance the checkpoint halfway through a partially reviewed batch.
 If `origin/main` changes while a review is in progress, finish the review against the snapshotted commit. Do not silently mix artifacts from two HEADs.
 
 After the snapshot is complete, the next run handles the newer delta.
+
+The review lock protects the local state from overlapping scheduled/manual runs; the Git snapshot rule protects the reviewed content from moving `origin/main`. Both protections are required.
 
 ## Wiki Brain ingestion boundary
 
