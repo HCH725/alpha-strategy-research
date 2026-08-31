@@ -1,5 +1,7 @@
 # alpha-strategy-research
 
+**English** | [繁體中文](README.zh-TW.md)
+
 Public staging repository for external alpha-strategy research normalized for direct Hermes Wiki Brain ingestion.
 
 ## Purpose
