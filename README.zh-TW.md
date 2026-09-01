@@ -12,7 +12,7 @@
 
 ```text
 外部公開來源
-（GitHub / FMZ / papers / blogs / public research）
+（GitHub / FMZ / TradingView / papers / blogs / public research）
         ↓
 ChatGPT / Hermes / Antigravity（獨立平行的 Research Scout）
 尋找 alpha 想法 → 理解 → 標準化 → push 到這裡
@@ -26,6 +26,8 @@ ChatGPT 將通過 intake 的知識直接寫入 Hermes Wiki Brain
 Hermes 使用這些知識進行研究、組合與後續驗證
 ```
 
+三個 Scout 的有效公開來源契約：GitHub / FMZ / TradingView / papers / blogs / public research。TradingView 僅限公開、可追溯的 strategy/idea/script/research URL，須保留 stable URL 與 as-of date；private/paid/invite-only 不可用。
+
 **任何 Scout 都不得直接寫入 Hermes Wiki Brain。** 每個 Scout 唯一的輸出管道是本 repository。Push 到這裡的 artifact 應該已經是 Wiki Brain-native 格式，讓 ChatGPT 可以完成 Research Intake Review 後直接 ingest，而不需要再做一次翻譯或重新整理。
 
 ## 本 repository 在整體系統中的位置
@@ -36,6 +38,7 @@ Hermes 使用這些知識進行研究、組合與後續驗證
 
 ```text
 外部公開來源
+（GitHub / FMZ / TradingView / papers / blogs / public research）
         ↓
 ChatGPT / Hermes / Antigravity 研究 Scout（獨立平行）
         ↓
@@ -64,6 +67,10 @@ feedback / lineage / reuse
 你的工作是從公開外部來源搜尋可能有價值的 **alpha 策略或 alpha 假說**，然後把每一個值得保留的項目轉換成下方規定的研究紀錄格式，再 push 到本 repository。
 
 你是三個獨立平行 Research Scout（ChatGPT / Hermes / Antigravity）之一。每個 Scout 自主運作，指向同一個 repository。不要重複或覆蓋其他 Scout 已有的 artifact；產出新紀錄前請先 inspect 近期 commits。
+
+有效公開來源：GitHub / FMZ / TradingView / papers / blogs / public research。TradingView 僅限公開、可追溯的 strategy/idea/script/research URL，須保留 stable URL 與 as-of date；private/paid/invite-only 不可用。
+
+Scout dedup 契約：同 canonical source identity + 實質相同的 normalized rule => 不得新建 artifact；同 source 但 hypothesis/signal/horizon/mechanism 實質不同則可獨立（僅當核心假說在 mechanism、signal construction、universe/market type、horizon/regime、material data dependency 任一處實質不同時，才視為獨立）。
 
 策略可以是：
 
@@ -194,7 +201,7 @@ approval_scope: research-only
 
 若可以取得固定 commit，不要只使用 `main`、`master`、`latest`、tag 或縮短版 SHA。
 
-對 papers、blogs、FMZ、TradingView 或其他公開來源，保留最穩定的 URL 與 source/data as-of date。
+對 TradingView 來源，僅限公開、可追溯的 strategy/idea/script/research URL，須保留 stable URL 與 as-of date；private/paid/invite-only 不可用。對 papers、blogs、FMZ 或其他公開來源，保留最穩定的 URL 與 source/data as-of date。
 
 ### 2. Economic mechanism
 
@@ -503,8 +510,8 @@ v2-final-final
 
 1. 研究前先同步並檢查最新的 `origin/main`。不得覆蓋或隨意改寫其他 Scout 已有的 artifact。
 2. 每次都完整閱讀本 README 以掌握 workflow contract，並另外解析、讀取目前 canonical 的 versioned Wiki Brain strategy-research specification，作為 record schema 的唯一依據。
-3. 從公開且可追溯的來源搜尋新的 alpha 策略或可被證偽的 alpha 假說。
-4. 建立新檔案前，先檢查 repository 中既有紀錄與來源。Exact duplicate、只有措辭不同的 paraphrase、或實質相同的 capture 都不應產生新 artifact。
+3. 從公開且可追溯的來源（GitHub / FMZ / TradingView / papers / blogs / public research；TradingView 僅限公開、可追溯的 strategy/idea/script/research URL 並須保留 stable URL 與 as-of date，private/paid 不可用）搜尋新的 alpha 策略或可被證偽的 alpha 假說。
+4. 建立新檔案前，先檢查 repository 中既有紀錄與來源。Scout dedup：同 canonical source identity + 實質相同的 normalized rule => 不得新建 artifact；同 source 但 hypothesis/signal/horizon/mechanism 實質不同則可獨立（僅當核心假說在 mechanism、signal construction、universe/market type、horizon/regime、material data dependency 任一處實質不同時）。Exact duplicate、只有措辭不同的 paraphrase、或實質相同的 capture 都不應產生新 artifact。
 5. 每次最多產出 **3 筆**新策略紀錄。**0 筆完全是有效且成功的結果，不得為了配額硬湊候選。** 3 筆只是上限，不是目標；寧可 0 或 1 筆高品質紀錄，也不要塞滿低品質內容。
 6. 若策略 thesis 本身依賴多個元件，必須保留 hybrid/composite 結構，不要只留下最顯眼的一個 indicator。
 7. 若 strategy identity、signal semantics、causal timing、required data、provenance 或 public-use rights 仍有重大不確定性，不要猜。這次直接略過該 candidate。

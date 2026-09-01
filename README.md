@@ -12,7 +12,7 @@ Operating flow:
 
 ```text
 External public sources
-(GitHub / FMZ / papers / blogs / public research)
+(GitHub / FMZ / TradingView / papers / blogs / public research)
         ↓
 ChatGPT / Hermes / Antigravity (independent, parallel scouts)
 find alpha ideas → understand → normalize → push here
@@ -26,6 +26,8 @@ ChatGPT writes accepted knowledge directly into Hermes Wiki Brain
 Hermes uses the knowledge for research, synthesis and later validation
 ```
 
+Valid public source contract for all three Scouts: GitHub / FMZ / TradingView / papers / blogs / public research. For TradingView, only public, traceable strategy/idea/script/research URLs are valid — preserve the stable URL and as-of date; private or paid/invite-only scripts are not valid sources.
+
 **No Scout writes to Hermes Wiki Brain.** Each Scout's only output channel is this repository. The artifact pushed here should already be in Wiki Brain-native form so ChatGPT can review and ingest it without another translation pass.
 
 ## Where this repository fits
@@ -36,6 +38,7 @@ After ChatGPT Research Intake Review and Wiki Brain ingestion, Hermes can use ac
 
 ```text
 External public sources
+(GitHub / FMZ / TradingView / papers / blogs / public research)
         ↓
 ChatGPT / Hermes / Antigravity research scouts (independent, parallel)
         ↓
@@ -64,6 +67,10 @@ A strategy record being present here therefore means only that it is normalized 
 Your job is to search public external sources for potentially useful **alpha strategies or alpha hypotheses**, then convert each worthwhile item into the exact research-record format below and push it to this repository.
 
 You are one of three independent, parallel Research Scouts (ChatGPT / Hermes / Antigravity). Each Scout operates autonomously and targets the same repository. Do not duplicate or overwrite another Scout's existing artifact; inspect recent commits before producing new records.
+
+Valid public sources: GitHub / FMZ / TradingView / papers / blogs / public research. For TradingView, only public, traceable strategy/idea/script/research URLs are valid — preserve the stable URL and as-of date; private or paid/invite-only scripts are not valid sources.
+
+Scout dedup contract: same canonical source identity + materially same normalized rule => do not create a new artifact. Same source but materially distinct hypothesis/signal/horizon/mechanism may be independent (independent only when the core hypothesis differs materially in at least one of mechanism, signal construction, universe/market type, horizon/regime, or material data dependency).
 
 Strategies may be:
 
@@ -194,7 +201,7 @@ For GitHub sources, preserve:
 
 Do not use only `main`, `master`, `latest`, a tag, or a shortened SHA when a fixed commit is available.
 
-For papers, blogs, FMZ, TradingView or other public sources, preserve the most stable URL and the source/data as-of date.
+For TradingView sources, only public, traceable strategy/idea/script/research URLs are valid — preserve the stable URL and as-of date; private or paid/invite-only scripts are not valid sources. For papers, blogs, FMZ or other public sources, preserve the most stable URL and the source/data as-of date.
 
 ### 2. Economic mechanism
 
@@ -503,8 +510,8 @@ For every scheduled run:
 
 1. Sync and inspect the latest `origin/main` before researching. Do not overwrite or casually rewrite another scout's existing artifact.
 2. Read this README on every run for the workflow contract, then resolve and read the current canonical versioned Wiki Brain strategy-research specification for the record schema.
-3. Search public, traceable sources for new alpha strategies or falsifiable alpha hypotheses.
-4. Check existing repository records and sources before creating anything. Exact duplicates, trivial paraphrases, and materially identical captures should produce no new artifact.
+3. Search public, traceable sources (GitHub / FMZ / TradingView / papers / blogs / public research; TradingView limited to public, traceable strategy/idea/script/research URLs with stable URL and as-of date preserved, private/paid not valid) for new alpha strategies or falsifiable alpha hypotheses.
+4. Check existing repository records and sources before creating anything. Scout dedup: same canonical source identity + materially same normalized rule => do not create a new artifact; same source but materially distinct hypothesis/signal/horizon/mechanism may be independent (independent only when the core hypothesis differs materially in at least one of mechanism, signal construction, universe/market type, horizon/regime, or material data dependency). Exact duplicates, trivial paraphrases, and materially identical captures should produce no new artifact.
 5. Produce **at most 3** new strategy records in one run. **Zero is a valid and successful result. Never manufacture candidates to satisfy a quota.** Three is a hard ceiling, not a target; prefer zero or one strong record over filling available slots with marginal material.
 6. Preserve hybrid/composite structure when the thesis depends on multiple components. Do not collapse a hybrid into one prominent indicator.
 7. If strategy identity, signal semantics, causal timing, required data, provenance, or public-use rights are materially ambiguous, do not guess. Skip that candidate for this run rather than emitting false precision.

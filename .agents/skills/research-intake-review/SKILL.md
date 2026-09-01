@@ -24,7 +24,7 @@ It does **not** determine whether a strategy is profitable, robust, production-r
 ## Position in the research pipeline
 
 ```text
-ChatGPT / Antigravity research
+ChatGPT / Hermes / Antigravity research
         ↓
 alpha-strategy-research
         ↓
@@ -113,9 +113,17 @@ Do not convert source claims into our own economic mechanism or validation concl
 
 Wiki Brain is not a catalog of every parameter variation.
 
-Reject a new record when it adds no material knowledge beyond an existing strategy family or canonical record.
+Canonicalize source identity first (DOI / arXiv ID / canonical URL / GitHub repo + immutable commit + path / TradingView stable public strategy/idea/script URL — TradingView limited to public, traceable strategy/idea/script/research URLs; preserve the stable URL and as-of date; private/paid/invite-only sources are not valid).
 
-Material incremental value may include:
+Then apply deduplication:
+
+- Same canonical source identity + materially same normalized rule/hypothesis => REJECT duplicate (no new Wiki record). Do not create a second record for the same source-hypothesis pair.
+- Different source but same core hypothesis => never create a second canonical Wiki strategy record. If the credible new source adds material evidence, use PASS or PASS-WITH-CAVEAT for evidence enrichment and ingest by updating the existing canonical Wiki record with the new provenance/evidence (and caveat or negative evidence when applicable). If it adds no material incremental evidence, use REJECT with a duplicate/no-increment reason. Still use only PASS / PASS-WITH-CAVEAT / REMEDIATE / REJECT; do not add a fifth state.
+- Same canonical source identity but materially distinct hypothesis/signal/horizon/mechanism => may be independent; independent only when the core hypothesis differs materially in at least one of mechanism, signal construction, universe/market type, horizon/regime, or material data dependency.
+
+Scout dedup mirrors this: same canonical source identity + materially same normalized rule => do not create a new artifact; same source but materially distinct hypothesis/signal/horizon/mechanism may be independent under the same material-difference test.
+
+Material incremental value (beyond simple dedup) may include:
 - a genuinely different mechanism;
 - a materially different signal construction;
 - a new data dependency;
