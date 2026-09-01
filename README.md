@@ -6,7 +6,7 @@ Public staging repository for external alpha-strategy research normalized for di
 
 ## Purpose
 
-This repository is the handoff layer between **three independent Research Scouts (ChatGPT / Hermes / Antigravity)** and **ChatGPT review / Wiki Brain ingestion**.
+This repository is the handoff layer between **three independent Research Scouts (ChatGPT / Hermes / Antigravity)** and **ChatGPT Research Intake Review / Wiki Brain ingestion**.
 
 Operating flow:
 
@@ -18,20 +18,21 @@ ChatGPT / Hermes / Antigravity (independent, parallel scouts)
 find alpha ideas → understand → normalize → push here
         ↓
 ChatGPT
-review / audit
+Research Intake Review
+(PASS / PASS-WITH-CAVEAT / REMEDIATE / REJECT)
         ↓
-ChatGPT writes approved knowledge directly into Hermes Wiki Brain
+ChatGPT writes accepted knowledge directly into Hermes Wiki Brain
         ↓
 Hermes uses the knowledge for research, synthesis and later validation
 ```
 
-**No Scout writes to Hermes Wiki Brain.** Each Scout's only output channel is this repository. The artifact pushed here should already be in Wiki Brain-native form so ChatGPT can review and promote it without another translation pass.
+**No Scout writes to Hermes Wiki Brain.** Each Scout's only output channel is this repository. The artifact pushed here should already be in Wiki Brain-native form so ChatGPT can review and ingest it without another translation pass.
 
 ## Where this repository fits
 
 This repository is the **upstream research and knowledge-handoff layer** of a broader quantitative workflow. It does not perform formal strategy validation or trading execution itself.
 
-After ChatGPT review and Wiki Brain ingestion, Hermes can use accepted knowledge to synthesize testable hypotheses. Those hypotheses may then move into [`nautilus-quant-system`](https://github.com/HCH725/nautilus-quant-system), where PyBroker is used for isolated strategy research and NautilusTrader provides the formal historical verdict and canonical accounting layer.
+After ChatGPT Research Intake Review and Wiki Brain ingestion, Hermes can use accepted knowledge to synthesize testable hypotheses. Those hypotheses may then move into [`nautilus-quant-system`](https://github.com/HCH725/nautilus-quant-system), where PyBroker is used for isolated strategy research and NautilusTrader provides the formal historical verdict and canonical accounting layer.
 
 ```text
 External public sources
@@ -40,7 +41,7 @@ ChatGPT / Hermes / Antigravity research scouts (independent, parallel)
         ↓
 alpha-strategy-research
         ↓
-ChatGPT review
+ChatGPT Research Intake Review
         ↓
 Hermes Wiki Brain
         ↓
@@ -89,17 +90,20 @@ Avoid treating arbitrary indicator stacking as stronger evidence. A complicated 
 
 ## Canonical Wiki Brain schema
 
-All strategy records must use the existing Hermes Wiki Brain schema:
+The authoritative strategy-research contract is versioned in Hermes Wiki Brain. At the time of this README update, the current canonical specification is:
 
 ```text
-strategy-research-record-v1
+quant/strategy-research-record-spec-v1.md
+schema: strategy-research-record-v1
 ```
 
-Do not invent another candidate schema.
+The `v1` label above describes the **current** canonical version; it is not a permanent hardcoded contract. Before every scheduled local Scout run, resolve and read the current versioned `quant/strategy-research-record-spec-v*.md` specification in Wiki Brain and use the `schema` and required structure declared by that specification. If a newer canonical specification exists, it overrides the schema examples in this README. If the canonical specification cannot be resolved, fail closed rather than guessing.
+
+Do not invent another candidate schema and do not silently migrate older records. Existing records remain valid under the schema version they were created with unless an explicit versioned migration rule says otherwise.
 
 ### Required frontmatter
 
-Every new external strategy record must begin with:
+The example below reflects the current v1 specification. New records must use the exact frontmatter required by the canonical specification resolved at run time:
 
 ```yaml
 ---
@@ -441,14 +445,14 @@ unless the document itself is a versioned specification.
 
 1. **Search for alpha, not marketing claims.** A high reported return is not itself an alpha thesis.
 2. **Single and hybrid strategies are both allowed.** Preserve meaningful component structure.
-3. **Normalize before pushing.** The file pushed here must already be usable as a Wiki Brain `strategy-research-record-v1` artifact.
+3. **Normalize before pushing.** The file pushed here must already comply with the current canonical Wiki Brain strategy-research schema resolved at run time.
 4. **Keep provenance.** External claims must remain traceable to their source.
 5. **Do not claim independent validation that has not happened.**
 6. **Do not silently repair missing information.** Mark gaps explicitly.
 7. **Do not copy large source-code blocks unnecessarily.** Prefer normalized logic plus source references.
 8. **Do not confuse risk management with alpha.** Stops, sizing, leverage, DCA, grid or martingale rules should be identified separately from the predictive signal.
 9. **Do not confuse complexity with quality.** Multi-indicator combinations need a coherent thesis and remain unvalidated until tested.
-10. **Do not write to Hermes Wiki Brain.** Push the normalized research artifact here. ChatGPT performs the review and, if accepted, writes it into Wiki Brain directly.
+10. **Do not write to Hermes Wiki Brain.** Push the normalized research artifact here. ChatGPT performs Research Intake Review and, if accepted, writes it into Wiki Brain directly.
 
 ---
 
@@ -477,15 +481,15 @@ For each research run:
 
 1. Read this README.
 2. Search public external sources for worthwhile alpha candidates.
-3. Normalize each worthwhile candidate into `strategy-research-record-v1` format.
+3. Resolve the current canonical Wiki Brain strategy-research specification, then normalize each worthwhile candidate to the schema it declares.
 4. Preserve source provenance and label all third-party results as source-reported.
 5. Commit the resulting Markdown record(s).
 6. Push them to this repository.
-7. Stop there. ChatGPT will perform review and direct Wiki Brain ingestion separately.
+7. Stop there. ChatGPT will perform Research Intake Review and direct Wiki Brain ingestion separately.
 
 The goal is simple:
 
-> **Antigravity output should already equal Wiki Brain-ready input.**
+> **Scout output should already equal Wiki Brain-ready input.**
 
 This minimizes repeated interpretation, repeated summarization and unnecessary token consumption across Antigravity, ChatGPT and Hermes.
 
@@ -498,17 +502,17 @@ Each Research Scout runs on its own schedule and is intentionally **high-frequen
 For every scheduled run:
 
 1. Sync and inspect the latest `origin/main` before researching. Do not overwrite or casually rewrite another scout's existing artifact.
-2. Read this README on every run and treat it as the current ingestion contract.
+2. Read this README on every run for the workflow contract, then resolve and read the current canonical versioned Wiki Brain strategy-research specification for the record schema.
 3. Search public, traceable sources for new alpha strategies or falsifiable alpha hypotheses.
 4. Check existing repository records and sources before creating anything. Exact duplicates, trivial paraphrases, and materially identical captures should produce no new artifact.
 5. Produce **at most 3** new strategy records in one run. **Zero is a valid and successful result. Never manufacture candidates to satisfy a quota.** Three is a hard ceiling, not a target; prefer zero or one strong record over filling available slots with marginal material.
 6. Preserve hybrid/composite structure when the thesis depends on multiple components. Do not collapse a hybrid into one prominent indicator.
 7. If strategy identity, signal semantics, causal timing, required data, provenance, or public-use rights are materially ambiguous, do not guess. Skip that candidate for this run rather than emitting false precision.
-8. Every emitted artifact must already satisfy `strategy-research-record-v1` and remain `research-only`, `not-implemented`, and `not-approved`.
+8. Every emitted artifact must already satisfy the current canonical strategy-research schema and remain `research-only`, `not-implemented`, and `not-approved`.
 9. Commit only artifacts intentionally created or corrected by the current run. If no candidate clears the bar, create no empty commit.
 10. Push explicitly to `origin main`, verify the remote contains the commit, then stop. Do not write to Hermes Wiki Brain, PyBroker, Nautilus, Paper, Testnet, or Live workflows.
 11. Fail closed on dirty unrelated worktree state, merge/rebase conflict, repository-sync failure, source/provenance failure, secret/public-safety concern, or push failure. Report the exact block instead of creating a fallback artifact elsewhere.
 
-The scheduled scouts and the ChatGPT review process are deliberately separate. A successful Scout push means only that a research artifact entered the public staging pool; it does **not** mean the artifact passed Research Intake Review or entered Wiki Brain.
+The scheduled scouts and the ChatGPT Research Intake Review process are deliberately separate. A successful Scout push means only that a research artifact entered the public staging pool; it does **not** mean the artifact passed Research Intake Review or entered Wiki Brain.
 
-**No Scout may directly promote or write to Hermes Wiki Brain.** All Wiki Brain ingestion goes through ChatGPT review exclusively.
+**No Scout may directly promote or write to Hermes Wiki Brain.** All Wiki Brain ingestion goes through ChatGPT Research Intake Review exclusively.

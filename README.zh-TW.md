@@ -6,7 +6,7 @@
 
 ## 用途
 
-本 repository 是 **三個獨立 Research Scout（ChatGPT / Hermes / Antigravity）** 與 **ChatGPT review / Wiki Brain ingestion** 之間的交接層。
+本 repository 是 **三個獨立 Research Scout（ChatGPT / Hermes / Antigravity）** 與 **ChatGPT Research Intake Review / Wiki Brain ingestion** 之間的交接層。
 
 運作流程：
 
@@ -18,20 +18,21 @@ ChatGPT / Hermes / Antigravity（獨立平行的 Research Scout）
 尋找 alpha 想法 → 理解 → 標準化 → push 到這裡
         ↓
 ChatGPT
-review / audit
+Research Intake Review
+（PASS / PASS-WITH-CAVEAT / REMEDIATE / REJECT）
         ↓
-ChatGPT 將通過 review 的知識直接寫入 Hermes Wiki Brain
+ChatGPT 將通過 intake 的知識直接寫入 Hermes Wiki Brain
         ↓
 Hermes 使用這些知識進行研究、組合與後續驗證
 ```
 
-**任何 Scout 都不得直接寫入 Hermes Wiki Brain。** 每個 Scout 唯一的輸出管道是本 repository。Push 到這裡的 artifact 應該已經是 Wiki Brain-native 格式，讓 ChatGPT 可以 review 後直接 promote，而不需要再做一次翻譯或重新整理。
+**任何 Scout 都不得直接寫入 Hermes Wiki Brain。** 每個 Scout 唯一的輸出管道是本 repository。Push 到這裡的 artifact 應該已經是 Wiki Brain-native 格式，讓 ChatGPT 可以完成 Research Intake Review 後直接 ingest，而不需要再做一次翻譯或重新整理。
 
 ## 本 repository 在整體系統中的位置
 
 本 repository 是整體量化工作流中的**上游策略研究與知識交接層**。它本身不負責正式策略驗證，也不負責交易執行。
 
-經過 ChatGPT review 與 Wiki Brain ingestion 後，Hermes 可以使用已接受的知識來組合、推演可測試的策略假說。這些假說之後可以進入 [`nautilus-quant-system`](https://github.com/HCH725/nautilus-quant-system)，由 PyBroker 進行隔離式策略研究，再由 NautilusTrader 提供正式歷史 verdict 與 canonical accounting layer。
+經過 ChatGPT Research Intake Review 與 Wiki Brain ingestion 後，Hermes 可以使用已接受的知識來組合、推演可測試的策略假說。這些假說之後可以進入 [`nautilus-quant-system`](https://github.com/HCH725/nautilus-quant-system)，由 PyBroker 進行隔離式策略研究，再由 NautilusTrader 提供正式歷史 verdict 與 canonical accounting layer。
 
 ```text
 外部公開來源
@@ -40,7 +41,7 @@ ChatGPT / Hermes / Antigravity 研究 Scout（獨立平行）
         ↓
 alpha-strategy-research
         ↓
-ChatGPT review
+ChatGPT Research Intake Review
         ↓
 Hermes Wiki Brain
         ↓
@@ -89,17 +90,20 @@ regime filter
 
 ## Canonical Wiki Brain schema
 
-所有策略紀錄都必須使用既有的 Hermes Wiki Brain schema：
+策略研究 contract 以版本化 specification 的方式保存在 Hermes Wiki Brain。以本 README 更新當下而言，目前的 canonical specification 是：
 
 ```text
-strategy-research-record-v1
+quant/strategy-research-record-spec-v1.md
+schema: strategy-research-record-v1
 ```
 
-不要另外發明新的 candidate schema。
+上面的 `v1` 只代表**目前**的 canonical 版本，不是永久寫死的 contract。每次本機排程 Scout 執行前，都必須先解析並讀取 Wiki Brain 中目前有效的 `quant/strategy-research-record-spec-v*.md` versioned specification，並使用該 specification 宣告的 `schema` 與必要結構。若已有較新的 canonical specification，應以新版為準，而不是繼續照本 README 裡的舊版範例。若無法確認 canonical specification，應 fail closed，不要自行猜測。
+
+不要另外發明新的 candidate schema，也不要默默把舊紀錄搬成新版。既有紀錄仍依建立當時的 schema version 保持有效，除非另外存在明確的 versioned migration rule。
 
 ### 必要 frontmatter
 
-每一筆新的外部策略紀錄必須以下列格式開頭：
+下方範例反映目前的 v1 specification。新紀錄必須使用每次執行時實際解析到的 canonical specification 所要求的完整 frontmatter：
 
 ```yaml
 ---
@@ -441,14 +445,14 @@ v2-final-final
 
 1. **搜尋 alpha，不是搜尋行銷績效。** 高報酬聲稱本身不是 alpha thesis。
 2. **單一策略與混合策略都允許。** 保留真正有意義的元件結構。
-3. **Push 前先標準化。** Push 到這裡的檔案必須已可作為 Wiki Brain `strategy-research-record-v1` artifact 使用。
+3. **Push 前先標準化。** Push 到這裡的檔案必須已符合執行時解析到的 current canonical Wiki Brain strategy-research schema。
 4. **保留 provenance。** 所有外部主張都必須可以追溯到來源。
 5. **不要宣稱不存在的獨立驗證。**
 6. **不要偷偷補完缺失資訊。** 缺口必須明確標示。
 7. **不要不必要地複製大量 source code。** 優先使用標準化邏輯加 source references。
 8. **不要把風險管理誤認為 alpha。** Stops、sizing、leverage、DCA、grid、martingale 等規則應與 predictive signal 分開辨識。
 9. **不要把複雜度誤認為品質。** 多指標組合必須有一致的 thesis，而且在正式測試前都仍然是 unvalidated。
-10. **不要直接寫入 Hermes Wiki Brain。** 將標準化 research artifact push 到本 repository，由 ChatGPT review；若接受，再由 ChatGPT 直接寫入 Wiki Brain。
+10. **不要直接寫入 Hermes Wiki Brain。** 將標準化 research artifact push 到本 repository，由 ChatGPT 執行 Research Intake Review；若接受，再由 ChatGPT 直接寫入 Wiki Brain。
 
 ---
 
@@ -477,11 +481,11 @@ v2-final-final
 
 1. 閱讀本 README。
 2. 從公開外部來源搜尋值得研究的 alpha candidates。
-3. 將每一個值得保留的 candidate 標準化為 `strategy-research-record-v1` 格式。
+3. 先解析 current canonical Wiki Brain strategy-research specification，再依其宣告的 schema 將每一個值得保留的 candidate 標準化。
 4. 保留 source provenance，並把所有第三方結果標示為 source-reported。
 5. Commit 產生的 Markdown record(s)。
 6. Push 到本 repository。
-7. 到此停止。ChatGPT 會另外進行 review 與直接 Wiki Brain ingestion。
+7. 到此停止。ChatGPT 會另外進行 Research Intake Review 與直接 Wiki Brain ingestion。
 
 目標很簡單：
 
@@ -489,4 +493,26 @@ v2-final-final
 
 如此可以降低 Scout、ChatGPT 與 Hermes 之間重複理解、重複摘要與不必要的 token 消耗。
 
-**任何 Scout 都不得直接 promote 或寫入 Hermes Wiki Brain。** 所有 Wiki Brain ingestion 僅透過 ChatGPT review 進行。
+---
+
+## Scheduled Research Scouts
+
+每一個 Research Scout 都有自己的排程，整體設計刻意採用**高頻率、低產出**。目標是持續尋找高品質研究，不是為了湊數量。
+
+每一次 scheduled run：
+
+1. 研究前先同步並檢查最新的 `origin/main`。不得覆蓋或隨意改寫其他 Scout 已有的 artifact。
+2. 每次都完整閱讀本 README 以掌握 workflow contract，並另外解析、讀取目前 canonical 的 versioned Wiki Brain strategy-research specification，作為 record schema 的唯一依據。
+3. 從公開且可追溯的來源搜尋新的 alpha 策略或可被證偽的 alpha 假說。
+4. 建立新檔案前，先檢查 repository 中既有紀錄與來源。Exact duplicate、只有措辭不同的 paraphrase、或實質相同的 capture 都不應產生新 artifact。
+5. 每次最多產出 **3 筆**新策略紀錄。**0 筆完全是有效且成功的結果，不得為了配額硬湊候選。** 3 筆只是上限，不是目標；寧可 0 或 1 筆高品質紀錄，也不要塞滿低品質內容。
+6. 若策略 thesis 本身依賴多個元件，必須保留 hybrid/composite 結構，不要只留下最顯眼的一個 indicator。
+7. 若 strategy identity、signal semantics、causal timing、required data、provenance 或 public-use rights 仍有重大不確定性，不要猜。這次直接略過該 candidate。
+8. 每一筆輸出的 artifact 都必須符合 current canonical strategy-research schema，並維持 `research-only`、`not-implemented`、`not-approved` 邊界。
+9. 只 commit 本次刻意建立或修正的 artifact。若沒有 candidate 通過品質門檻，不得建立 empty commit。
+10. 明確 push 到 `origin main`，確認 remote 已包含該 commit 後停止。不得寫入 Hermes Wiki Brain、PyBroker、Nautilus、Paper、Testnet 或 Live workflow。
+11. 遇到 unrelated dirty worktree、merge/rebase conflict、repository sync failure、source/provenance failure、secret/public-safety 問題或 push failure 時，必須 fail closed 並回報真正的 block，不得另外建立 fallback artifact。
+
+Scheduled Scouts 與 ChatGPT Research Intake Review 是刻意分離的兩個流程。Scout 成功 push 只代表 research artifact 進入公開 staging pool，**不代表**已通過 Research Intake Review 或已進入 Wiki Brain。
+
+**任何 Scout 都不得直接 promote 或寫入 Hermes Wiki Brain。** 所有 Wiki Brain ingestion 僅透過 ChatGPT Research Intake Review 進行。
