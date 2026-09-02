@@ -510,9 +510,9 @@ v2-final-final
 
 1. 研究前先同步並檢查最新的 `origin/main`。不得覆蓋或隨意改寫其他 Scout 已有的 artifact。
 2. 每次都完整閱讀本 README 以掌握 workflow contract，並另外解析、讀取目前 canonical 的 versioned Wiki Brain strategy-research specification，作為 record schema 的唯一依據。
-3. 從公開且可追溯的來源（GitHub / FMZ / TradingView / papers / blogs / public research；TradingView 僅限公開、可追溯的 strategy/idea/script/research URL 並須保留 stable URL 與 as-of date，private/paid 不可用）搜尋新的 alpha 策略或可被證偽的 alpha 假說。
+3. 從公開且可追溯的來源（GitHub / FMZ / TradingView / papers / blogs / public research；TradingView 僅限公開、可追溯的 strategy/idea/script/research URL 並須保留 stable URL 與 as-of date，private/paid 不可用）搜尋新的 alpha 策略或可被證偽的 alpha 假說。建立任何 Markdown 紀錄前，必須直接閱讀 primary source 本身（論文／全文、官方研究，或精確的公開 implementation/code path）。搜尋結果摘要、snippet、二手摘要與模型生成摘要只能作為 discovery aid，不得用來補寫策略規則或 empirical claim。
 4. 建立新檔案前，先檢查 repository 中既有紀錄與來源。Scout dedup：同 canonical source identity + 實質相同的 normalized rule => 不得新建 artifact；同 source 但 hypothesis/signal/horizon/mechanism 實質不同則可獨立（僅當核心假說在 mechanism、signal construction、universe/market type、horizon/regime、material data dependency 任一處實質不同時）。Exact duplicate、只有措辭不同的 paraphrase、或實質相同的 capture 都不應產生新 artifact。
-5. 每次最多產出 **3 筆**新策略紀錄。**0 筆完全是有效且成功的結果，不得為了配額硬湊候選。** 3 筆只是上限，不是目標；寧可 0 或 1 筆高品質紀錄，也不要塞滿低品質內容。
+5. 每輪預設**最多 1 筆**新策略紀錄。**0 筆完全是有效且成功的結果，不得為了配額硬湊候選。** 只有當第 2 或第 3 個候選在 dedup 判準下彼此明確獨立，而且每一筆都經過直接 primary-source verification 並各自 source-complete 時，才允許例外產出。3 筆仍是絕對上限，不是目標。
 6. 若策略 thesis 本身依賴多個元件，必須保留 hybrid/composite 結構，不要只留下最顯眼的一個 indicator。
 7. 若 strategy identity、signal semantics、causal timing、required data、provenance 或 public-use rights 仍有重大不確定性，不要猜。這次直接略過該 candidate。
 8. 每一筆輸出的 artifact 都必須符合 current canonical strategy-research schema，並維持 `research-only`、`not-implemented`、`not-approved` 邊界。
