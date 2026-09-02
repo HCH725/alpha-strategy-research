@@ -73,7 +73,7 @@ The falsifiable thesis is that **multi-modal signal fusion via modality-speciali
 - **Point-in-time:** Price data is market data (no revision risk). News articles are published during the prior week. No lookahead protection details provided beyond weekly rebalancing cadence.
 - **Timestamp:** ISO weekly boundaries; daily observations for 30-day lookback.
 - **Missing-data:** Not explicitly addressed.
-- **Funding/fee/spread needs:** Not explicitly modelled in the backtest; the paper does not report transaction cost sensitivity.
+- **Funding/fee/spread needs:** Source-reported transaction cost is 0.1% per trade side (see Execution assumptions); no additional funding/spread/slippage sensitivity beyond that is reported.
 
 ## Execution assumptions
 
@@ -81,7 +81,7 @@ The falsifiable thesis is that **multi-modal signal fusion via modality-speciali
 - **Fill model:** Assumed full fill at close-of-week prices; not explicitly stated.
 - **Latency:** Weekly rebalancing cadence implies low latency requirements.
 - **Signal-to-order timing:** Trading Agent produces rebalancing actions at week start based on prior week's data.
-- **Fees/spread/slippage:** Not modelled in the reported results. This is a significant limitation — weekly rebalancing across 15 crypto assets incurs material transaction costs.
+- **Fees/spread/slippage:** Source-reported: 0.1% transaction cost per trade side applied in the backtest (Methods). Spread/slippage beyond this fixed cost is not separately modelled; this remains a limitation for live-cost robustness.
 - **Leverage/margin:** Not specified; assumed unleveraged.
 - **Position limits:** Portfolio weight vector across 15 assets; no explicit position limits stated.
 
@@ -108,7 +108,7 @@ Not independently reproduced.
 ### Negative evidence
 
 - **Single-seed backtest:** All experiments use temperature 0.0 (deterministic) but only a single seed; the authors note that "a full multi-seed sweep across the grid, three backbones, and 52 weekly ReAct rollouts is cost-prohibitive under commercial API pricing" and leave seed-variance quantification to future work.
-- **No transaction cost modelling:** The reported +133.52% cumulative return does not account for trading fees, spread, or slippage. Weekly rebalancing across 15 crypto assets on standard Binance taker fees (10 bps) would incur material cost drag.
+- **Transaction cost scope (source-reported vs research-proposed):** The backtest is source-reported with 0.1% per trade side transaction cost. No spread/slippage beyond that fixed cost is modelled. Weekly rebalancing across 15 crypto assets means live trading costs could exceed this assumption; sensitivity to higher cost assumptions remains untested (see Falsification plan research-proposed extension).
 - **Survivorship bias in universe:** The top-15-L1 universe is fixed at January 2025 market cap ranking; no reconstitution or survivorship handling is described.
 - **Single-year backtest:** 2025 calendar year only; no out-of-sample or cross-regime validation.
 - **LLM API cost dependency:** The strategy requires ongoing LLM API calls (GPT-4o/GPT-5/Claude) for each weekly rebalancing, introducing cost and availability dependencies.
@@ -116,7 +116,7 @@ Not independently reproduced.
 
 ## Falsification plan
 
-1. **Transaction cost sensitivity:** Reproduce the backtest with 5–10 bps round-trip transaction costs applied to weekly rebalancing. **Failure rule:** If the Sharpe ratio drops below 1.0 after costs, the strategy's alpha is not cost-robust.
+1. **Transaction cost sensitivity (research-proposed extension beyond source-reported 0.1% per side):** Reproduce the backtest varying round-trip costs above the source-reported baseline (e.g. 20–30 bps round-trip, and with spread/slippage) to test robustness. **Failure rule (research-defined):** If the Sharpe ratio drops below 1.0 under moderately higher cost assumptions, the strategy's alpha is not cost-robust beyond the source's fixed-cost model.
 2. **Multi-seed variance:** Run the Hierarchical (Skill) configuration across 10+ random seeds (or temperature > 0) and report the distribution of Sharpe ratios. **Failure rule:** If the 95% confidence interval of the Sharpe ratio includes zero, the result is not statistically robust.
 3. **Out-of-sample extension:** Extend the backtest to 2024 or 2026 (if data available) with the same fixed universe. **Failure rule:** If the strategy underperforms equal-weight buy-and-hold in the out-of-sample period, the 2025 result is likely overfit.
 4. **Universe reconstitution:** Re-run with quarterly universe reconstitution (top 15 by market cap each quarter) to test survivorship sensitivity. **Failure rule:** If performance degrades by more than 50%, the fixed universe is a material driver.
@@ -135,12 +135,12 @@ Not independently reproduced.
 ## Limitations
 
 - **Single-year backtest:** Only 2025 calendar year; no out-of-sample validation.
-- **No transaction cost modelling:** Weekly rebalancing costs are material in crypto (10+ bps taker fees).
+- **Transaction cost: source-reported 0.1% per trade side;** no spread/slippage beyond that fixed cost is modelled, and sensitivity to higher live costs is untested.
 - **Single-seed results:** Deterministic (temperature 0.0) but no variance quantification.
 - **Fixed universe:** Top-15 L1 tokens fixed at January 2025; no survivorship handling.
 - **LLM API cost and availability:** Strategy requires ongoing commercial LLM API access; cost may exceed alpha.
 - **Model-dependent:** Results shown for GPT-4o, GPT-5, Claude Sonnet 4.5; open-model portability untested.
-- **Underspecified execution:** Order type, fill model, slippage, and spread are not modelled.
+- **Underspecified execution:** Order type, fill model, and spread/slippage beyond the source-reported 0.1% per side are not modelled.
 - **Reproducibility:** Code repository is anonymous pre-publication; may change post-acceptance.
 - **Not independently reproduced.**
 
@@ -150,7 +150,7 @@ No implementation in our research stack (PyBroker, Nautilus, or otherwise). The 
 
 ## Adoption boundary
 
-This record is research material only. Its presence in this repository does **not** mean the strategy is profitable, validated, approved for implementation, or approved for paper/testnet/live trading. The reported +133.52% cumulative return and 1.502 Sharpe ratio are source-reported claims over a single year without transaction cost modelling.
+This record is research material only. Its presence in this repository does **not** mean the strategy is profitable, validated, approved for implementation, or approved for paper/testnet/live trading. The reported +133.52% cumulative return and 1.502 Sharpe ratio are source-reported claims over a single year with source-reported 0.1% per trade side transaction cost (no spread/slippage beyond that).
 
 ## Related Wiki records
 
