@@ -35,7 +35,7 @@ contradictions: []
 - **Published:** Accepted at KDD '26 (ACM SIGKDD Conference on Knowledge Discovery and Data Mining), August 9–13, 2026, Jeju, Korea.
 - **Authors:** Molei Qin, Xinyu Cai, Yewen Li, Haochong Xia, Chuqiao Zong, Shuo Sun, Xinrun Wang, Bo An (authors' affiliations not fully extracted from available source; corresponding details in the paper).
 - **URL:** https://arxiv.org/abs/2512.23773
-- **Data:** Crypto perpetual futures on Binance; minute-level bars; 5x leverage; high-fidelity simulated trading environment with funding fees, liquidation, and realistic fill modeling.
+- **Data:** Crypto perpetual futures on Binance; minute-level bars; 5x leverage; high-fidelity simulated trading environment with futures execution friction explicitly modeled — Market Order Loss (LOB depth-aware fill + commission rate κ/σ), transaction costs, slippage, funding fees, liquidation, and realistic fill modeling (arXiv:2512.23773v1 §3.1 Problem Formulation / Experimental Environment / Appendix D).
 - **Evaluation:** Validation and test periods span diverse market regimes (upward and downward trends); validation sets exhibit higher volatility than test sets. Exact date ranges for train/valid/test not fully extracted from available source — data gap.
 
 ## Economic mechanism
@@ -90,23 +90,24 @@ The economic logic is that crypto futures markets exhibit distinct regimes (tren
 - **Venue**: Binance (primary); framework is exchange-agnostic in principle.
 - **Market type**: Perpetual futures.
 - **Timeframe**: Minute-level OHLCV.
-- **Fields**: OHLCV, position, funding rate, funding countdown, ~300 technical indicators (constructed from OHLCV).
-- **Leverage**: 5x (simulated).
-- **Funding**: Explicitly modeled (8-hour funding fee cycles).
-- **Liquidation**: Explicitly modeled in the trading environment.
+- **Fields**: OHLCV, LOB levels (for Market Order Loss $O_t$), mark price, position, funding rate, funding countdown, ~300 technical indicators (constructed from OHLCV).
+- **Leverage**: 5x (simulated; environment supports flexible leverage up to 125x in principle).
+- **Funding**: Explicitly modeled via $F_{ft}=F_{rt}\times H_t$ (8-hour funding cycles; per primary source §3.1/Appendix D).
+- **Liquidation**: Explicitly modeled (margin balance vs maintenance margin; liquidation incurs higher transaction cost).
 - **Timestamp**: Exchange-native timestamps; UTC alignment assumed.
 
 ## Execution assumptions
 
-- **Signal-to-order timing**: Next-bar execution at minute resolution.
-- **Order type**: Market order (simplified; no limit order queue modeling).
-- **Fill model**: Full fill assumed; slippage and spread not explicitly modeled in the main experiments (data gap).
-- **Fees**: Funding fees explicitly included; maker/taker trading fees status not fully confirmed from available source (data gap).
-- **Liquidation**: Modeled; the environment terminates episodes on liquidation.
-- **Leverage**: Fixed at 5x.
+- **Signal-to-order timing**: Next-bar execution at minute resolution (source: minute-level time scale; exact latency not separately parameterized).
+- **Order type**: Market order via target position/leverage (source objective: maximize margin balance via market orders with leverage; no limit-order queue modeling claimed).
+- **Execution friction (source-modeled)**: Primary source explicitly models futures execution friction (arXiv:2512.23773v1 §3.1/§3.2/Appendix D and Abstract/Contributions: "high-fidelity trading environment with adjustable leverage, transaction costs, slippage and funding fees"): Market Order Loss $O_t$ (LOB depth-aware walk $\sum_i(p_t^{c_i}\times\min(q_t^{c_i},\Delta_{i-1}))\times(1+\kappa)-QM_t$ with commission rate $\kappa$/$\sigma$), funding fee $F_{ft}=F_{rt}\times H_t$, margin-balance accounting, and liquidation. Reward is margin-balance change $r_t=H_t(M_{t+1}-M_t)-O_t$ inclusive of order loss.
+- **Fill model**: LOB-walk-based execution implied by $O_t$ definition (levels $p_t^{c_i}, q_t^{c_i}$, remaining $\Delta_{i-1}$, total $Q$, side coefficient $c_t$); not a separate "full fill, no slippage" assumption. Any distinct maker/taker fee split, spread decomposition, or standalone slippage bps parameter — not separately specified in primary source Methods/Experimental Setup; mark as data gap/underspecified, do not infer as unmodeled.
+- **Fees**: Source-modeled as commission-inclusive Market Order Loss + funding fees; discrete maker/taker schedule, spread-cost breakdown, and specific bps values — not separately specified / data gap if not verifiable in Methods/Experimental Environment (do not claim completely unmodeled).
+- **Liquidation**: Explicitly modeled (margin balance vs maintenance margin; liquidation order incurs higher transaction cost; episode terminates on liquidation).
+- **Leverage**: Fixed at 5x in experiments (environment supports flexible leverage up to 125x per source).
 - **Capacity**: Not studied; single-asset per episode design does not address multi-asset capacity.
 - **Latency**: Not modeled; minute-level resolution implies low-latency requirements are abstracted away.
-- **Market impact**: Not modeled.
+- **Market impact**: Partially captured via LOB-walk Market Order Loss; broader market impact / queue dynamics not separately specified.
 
 ## Evidence
 
@@ -121,6 +122,7 @@ The economic logic is that crypto futures markets exhibit distinct regimes (tren
 - Wilcoxon signed-rank tests reported for statistical significance (p-values in Table 12 of appendix).
 - Visualization of selective update mechanism shows different agents specialize in distinct market dynamics.
 - Ablation studies confirm VAE-based routing reduces maximum drawdown effectively.
+- **Execution friction source-reported**: Experiments run in high-fidelity environment with transaction costs, slippage, and funding fees per source; reward and Market Order Loss definitions above constitute the modeled cost. Separate maker/taker, spread decomposition, and slippage bps — not separately specified in the extracted primary source (data gap/underspecified).
 
 **Note**: Specific numerical results (exact Sharpe, CAGR, drawdown percentages) were not fully extractable from the available source (PDF and HTML). The claims above are from the abstract and appendix fragments. Full replication requires reading Tables 5–10 in the main paper.
 
@@ -143,7 +145,7 @@ Not independently reproduced.
 3. **Ablation of ensemble**: Compare FineFT with ensemble vs. best single agent. If ensemble does not outperform the best single agent consistently, the specialization hypothesis is weakened.
 4. **Regime perturbation**: Inject synthetic regime shifts (e.g., flash crashes, volatility spikes) and test whether the system correctly routes to conservative policy.
 5. **Parameter sensitivity**: Vary ensemble size (3, 5, 7, 10 agents), VAE loss threshold, and ETD error computation parameters. Require robust performance across reasonable ranges.
-6. **Cost sensitivity**: Add realistic maker/taker fees, slippage, and spread. Require net-of-cost returns to remain positive.
+6. **Cost sensitivity (research-proposed)**: Source already models Market Order Loss (commission + LOB slippage) and funding fees; falsification should stress alternative fee regimes not separately specified in source (e.g., higher commission κ/σ, distinct maker/taker schedules, wider spread assumptions). Require net-of-cost returns to remain positive under these research-defined perturbations — do not re-test as if source had zero costs.
 7. **Failure metric**: If FineFT with routing does not reduce max drawdown by at least 20% versus routing-free ensemble on a fresh holdout, the risk-control hypothesis is materially weakened.
 8. **Frequency generalization**: Test at 5-minute and 15-minute resolution. If the framework fails at lower frequencies, the regime-detection mechanism may be frequency-dependent.
 
@@ -164,14 +166,14 @@ Crypto-specific considerations:
 ## Limitations
 
 - **Not independently reproduced.**
-- **Simulated environment only**: No live or paper trading results. All evidence is from backtesting with a simulated trading environment.
+- **Simulated environment only**: No live or paper trading results. All evidence is from backtesting with a simulated high-fidelity environment that models Market Order Loss (transaction costs/slippage) and funding fees per primary source; live cost/liquidity may differ.
 - **Specific numerical results not fully extractable**: The available source fragments do not contain the full results tables; exact Sharpe, CAGR, drawdown, and win rate figures require reading the complete paper.
 - **Minute-level only**: The framework is tested at minute resolution; performance at other frequencies is not reported.
 - **Single-asset episodes**: Each episode trains/tests on a single asset; multi-asset portfolio management is not addressed.
 - **VAE threshold tuning**: The OOD detection threshold is a free parameter; sensitivity is acknowledged but not fully explored.
 - **Regime definition depends on chunking**: The slope-based regime chunking is a heuristic; different chunking could yield different regime boundaries.
 - **Computational cost**: Training 7 Q-learners + VAEs is more expensive than single-agent approaches; the paper claims efficiency but does not provide wall-clock comparisons.
-- **Market impact and capacity**: Not modeled; the framework assumes infinite liquidity.
+- **Market impact and capacity**: LOB-walk Market Order Loss partially captures execution cost; broader market impact, queue dynamics, and capacity remain not separately specified / not studied (do not claim completely unmodeled).
 - **Survivorship and selection**: The asset universe is selected from available Binance perpetuals; delisting and availability changes not fully addressed.
 
 ## Implementation status
