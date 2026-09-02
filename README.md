@@ -48,17 +48,17 @@ ChatGPT Research Intake Review
         ↓
 Hermes Wiki Brain
         ↓
-Hermes hypothesis / synthesis
+Hermes hypothesis / synthesis  ── Loop A (low-frequency, theory/evidence-driven; one thesis/family per iteration → bounded meaningful branches → experiment spec)
         ↓
 nautilus-quant-system
-PyBroker → NautilusTrader historical verdict
+PyBroker Experiment & Attrition Loop (Loop B: deterministic campaign expansion → N provisional candidates → batch screens → dedupe/invalid/reject/pass accounting; high-throughput, no LLM per candidate; rejected do not enter Nautilus) → Gate (signal parity, fail-closed) → NautilusTrader high-fidelity historical verdict (survivors only)
         ↓
-feedback / lineage / reuse
+feedback / lineage / reuse  ── outer evidence-based feedback (survivor summary / failure taxonomy / information gain → stop / refine / new batch; not a fixed backtest count)
         ↓
 later gated Paper → Binance Demo/Testnet → Live progression
 ```
 
-A strategy record being present here therefore means only that it is normalized research material. It does **not** mean that the idea has passed PyBroker/Nautilus validation, paper trading, testnet, or live-trading approval.
+*A strategy record being present here therefore means only that it is normalized research material. It does **not** mean that the idea has passed PyBroker/Nautilus validation, paper trading, testnet, or live-trading approval. In the canonical pipeline this repository feeds **Loop A** (Hermes Research Loop).*
 
 ---
 

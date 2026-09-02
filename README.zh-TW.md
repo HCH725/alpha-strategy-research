@@ -48,17 +48,17 @@ ChatGPT Research Intake Review
         ↓
 Hermes Wiki Brain
         ↓
-Hermes hypothesis / synthesis
+Hermes hypothesis / synthesis ── Loop A（low-frequency, theory/evidence-driven；每輪一個研究假說／策略族 → 有限有意義分支 → experiment spec）
         ↓
 nautilus-quant-system
-PyBroker → NautilusTrader historical verdict
+PyBroker Experiment & Attrition Loop（Loop B：deterministic campaign expansion → N provisional candidates → batch screens → dedupe/invalid/reject/pass 記帳；high-throughput，無 LLM per candidate；淘汰不進 Nautilus）→ Gate（signal parity, fail-closed）→ NautilusTrader high-fidelity historical verdict（僅 survivors）
         ↓
-feedback / lineage / reuse
+feedback / lineage / reuse ── outer evidence-based feedback（survivor summary / failure taxonomy / information gain → stop / refine / new batch；非固定回測次數）
         ↓
 後續經 gate 進入 Paper → Binance Demo/Testnet → Live
 ```
 
-因此，一筆策略紀錄出現在本 repository，只代表它是已標準化的**研究素材**。這**不代表**該策略已通過 PyBroker/Nautilus 驗證、Paper Trading、Testnet 或 Live Trading 授權。
+*因此，一筆策略紀錄出現在本 repository，只代表它是已標準化的**研究素材**。這**不代表**該策略已通過 PyBroker/Nautilus 驗證、Paper Trading、Testnet 或 Live Trading 授權。在正典 pipeline 中，本 repository 餵給 **Loop A（Hermes Research Loop）**。*
 
 ---
 
