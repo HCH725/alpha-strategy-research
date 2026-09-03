@@ -95,25 +95,21 @@ The reference strategy is a top-K long-short cross-sectional equity portfolio: f
 
 ### Source-reported
 
-Source reports the following results on CSI 300 and S&P 500 (Table 2, Section 3.2):
+Source reports the following results on CSI 300 and S&P 500, grouped by backbone (primary source fixed to arXiv:2605.05580v2, 2026-07-28, Section 3.2 Table 2; Table 2 is organized by three backbone groups — not a single aggregate AlphaCrafter row — and figures below preserve the original three AlphaCrafter rows in backbone order):
 
-**Backtesting (2024.01.02–2026.02.27):**
+Backtesting window 2024.01.02–2026.02.27 and Live trading window 2026.03.02–2026.06.12, columns ordered as CSI300 Backtest AR/SR/MDD, S&P500 Backtest AR/SR/MDD, CSI300 Live AR/SR/MDD, S&P500 Live AR/SR/MDD.
 
-| Market | AR (%) | Sharpe | MDD (%) |
-|--------|--------|--------|---------|
-| CSI 300 | 21.99 | 1.5809 | -10.94 |
-| S&P 500 | 16.59 | 1.5476 | -10.38 |
+| Backbone | CSI300 Backtest AR (%) | CSI300 Backtest SR | CSI300 Backtest MDD (%) | S&P500 Backtest AR (%) | S&P500 Backtest SR | S&P500 Backtest MDD (%) | CSI300 Live AR (%) | CSI300 Live SR | CSI300 Live MDD (%) | S&P500 Live AR (%) | S&P500 Live SR | S&P500 Live MDD (%) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| GPT 5.3 Codex | 16.76 | 1.5268 | -8.98 | 13.51 | 1.2531 | -8.85 | 9.57 | 1.1275 | -9.07 | 14.02 | 1.4546 | -9.06 |
+| Claude Opus 4.6 | 18.88 | 1.6732 | -8.48 | 15.66 | 1.3425 | -7.98 | 10.70 | 1.1902 | -8.21 | 16.26 | 1.6012 | -9.53 |
+| Gemini 3.1 Pro | 17.22 | 1.4852 | -9.27 | 14.52 | 1.3126 | -8.65 | 9.91 | 1.2001 | -8.17 | 14.25 | 1.4008 | -8.89 |
 
-**Live Trading (2026.03.02–2026.06.12):**
+Provenance: each exact number traces to arXiv:2605.05580v2 Section 3.2 Table 2, row identity = backbone (GPT 5.3 Codex / Claude Opus 4.6 / Gemini 3.1 Pro), column identity = market × phase (Backtest/Live) × metric (AR/SR/MDD).
 
-| Market | AR (%) | Sharpe | MDD (%) |
-|--------|--------|--------|---------|
-| CSI 300 | 11.72 | 0.9743 | -10.58 |
-| S&P 500 | 12.18 | 1.1945 | -9.87 |
+Source reports that AlphaCrafter achieves the highest Sharpe ratio across all baselines in backtesting and maintains favorable live-trading performance within each backbone group. Ablation experiments show that removing the Miner, Screener, or Trader component degrades performance. Cross-model stability study across the three backbones (GPT 5.3 Codex, Claude Opus 4.6, Gemini 3.1 Pro) shows AlphaCrafter exhibits lower cross-model and cross-trial variance than role-playing agent baselines. Live trading uses a paper-trading API from a real brokerage with actual market order execution.
 
-Source reports that AlphaCrafter achieves the highest Sharpe ratio across all baselines in backtesting and maintains favorable live-trading performance. Ablation experiments show that removing the Miner, Screener, or Trader component degrades performance. Cross-model stability study (GPT 5.3 Codex, Claude Opus 4.6, Gemini 3.1 Pro) shows AlphaCrafter exhibits lower cross-model and cross-trial variance than role-playing agent baselines. Live trading uses a paper-trading API from a real brokerage with actual market order execution.
-
-All source-reported figures are from the primary paper (arXiv:2605.05580v2, Table 2). This result has not been independently reproduced.
+All source-reported figures above are from the primary paper (arXiv:2605.05580v2, Section 3.2 Table 2). This result has not been independently reproduced.
 
 ### Independently reproduced
 
@@ -121,7 +117,7 @@ Not independently reproduced.
 
 ### Negative evidence
 
-- Live trading AR is substantially lower than backtesting AR (CSI 300: 11.72% vs 21.99%; S&P 500: 12.18% vs 16.59%), suggesting potential backtest-to-live degradation, although the live period is short (69–73 trading days).
+- Live trading AR is lower than backtesting AR for CSI300 across all three backbones in Table 2 (backtest 16.76–18.88% vs live 9.57–10.70%) and shows a smaller gap/mixed pattern for S&P500, suggesting potential backtest-to-live degradation, although the live period is short (69–73 trading days).
 - The authors acknowledge LLM data leakage concern: backbone LLMs may have encountered market data during pre-training that overlaps with the backtesting period. Live trading is designed to be outside the training cutoff, but backtesting results should be interpreted with caution.
 - Cross-model sensitivity: while AlphaCrafter shows lower variance than baselines, the study is limited to three frontier LLMs; generalizability to smaller or open-source models is unverified.
 - The paper notes that the framework does not address futures, options, or cryptocurrency markets, which have fundamentally different factor definitions, regime dynamics, and execution constraints.
