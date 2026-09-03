@@ -506,6 +506,8 @@ This minimizes repeated interpretation, repeated summarization and unnecessary t
 
 Each Research Scout runs on its own schedule and is intentionally **high-frequency but low-output**. Its job is to keep looking, not to manufacture a quota.
 
+The scheduled Antigravity Scout executes each run in a fresh detached temporary Git worktree created from the latest `origin/main`. The normal checkout is only a coordinator and may contain unrelated local dirt; Antigravity must neither inspect nor modify that dirt, and a failed run must not contaminate later runs.
+
 For every scheduled run:
 
 1. Sync and inspect the latest `origin/main` before researching. Do not overwrite or casually rewrite another scout's existing artifact.
@@ -517,8 +519,8 @@ For every scheduled run:
 7. If strategy identity, signal semantics, causal timing, required data, provenance, or public-use rights are materially ambiguous, do not guess. Skip that candidate for this run rather than emitting false precision.
 8. Every emitted artifact must already satisfy the current canonical strategy-research schema and remain `research-only`, `not-implemented`, and `not-approved`.
 9. Commit only artifacts intentionally created or corrected by the current run. If no candidate clears the bar, create no empty commit.
-10. Push explicitly to `origin main`, verify the remote contains the commit, then stop. Do not write to Hermes Wiki Brain, PyBroker, Nautilus, Paper, Testnet, or Live workflows.
-11. Fail closed on dirty unrelated worktree state, merge/rebase conflict, repository-sync failure, source/provenance failure, secret/public-safety concern, or push failure. Report the exact block instead of creating a fallback artifact elsewhere.
+10. Push explicitly and verify the remote contains the commit, then stop. For the detached Antigravity worktree, the required push form is `git push origin HEAD:main`; never force-push. If another Scout advances `origin/main` first and the push becomes non-fast-forward, fail only that run and let the next scheduled run restart from the new remote head. Do not write to Hermes Wiki Brain, PyBroker, Nautilus, Paper, Testnet, or Live workflows.
+11. Fail closed on dirty/unrelated state **inside the active isolated run worktree**, merge/rebase conflict, repository-sync failure, source/provenance failure, secret/public-safety concern, or push failure. Dirt in the separate coordinator checkout is not by itself a blocker and must not be staged, cleaned, or imported into the run. Report the exact block instead of creating a fallback artifact elsewhere.
 
 The scheduled scouts and the ChatGPT Research Intake Review process are deliberately separate. A successful Scout push means only that a research artifact entered the public staging pool; it does **not** mean the artifact passed Research Intake Review or entered Wiki Brain.
 

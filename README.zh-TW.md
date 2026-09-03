@@ -506,6 +506,8 @@ v2-final-final
 
 每一個 Research Scout 都有自己的排程，整體設計刻意採用**高頻率、低產出**。目標是持續尋找高品質研究，不是為了湊數量。
 
+Scheduled Antigravity Scout 每一輪都必須從最新 `origin/main` 建立全新的 detached temporary Git worktree。一般 checkout 只作 coordinator，即使其中存在其他流程留下的 unrelated local dirt，也不得因此污染或阻塞 Antigravity；Antigravity 不得 inspect、修改、stage 或清理 coordinator 的 dirt，而某一輪失敗也不得傳染後續排程。
+
 每一次 scheduled run：
 
 1. 研究前先同步並檢查最新的 `origin/main`。不得覆蓋或隨意改寫其他 Scout 已有的 artifact。
@@ -517,8 +519,8 @@ v2-final-final
 7. 若 strategy identity、signal semantics、causal timing、required data、provenance 或 public-use rights 仍有重大不確定性，不要猜。這次直接略過該 candidate。
 8. 每一筆輸出的 artifact 都必須符合 current canonical strategy-research schema，並維持 `research-only`、`not-implemented`、`not-approved` 邊界。
 9. 只 commit 本次刻意建立或修正的 artifact。若沒有 candidate 通過品質門檻，不得建立 empty commit。
-10. 明確 push 到 `origin main`，確認 remote 已包含該 commit 後停止。不得寫入 Hermes Wiki Brain、PyBroker、Nautilus、Paper、Testnet 或 Live workflow。
-11. 遇到 unrelated dirty worktree、merge/rebase conflict、repository sync failure、source/provenance failure、secret/public-safety 問題或 push failure 時，必須 fail closed 並回報真正的 block，不得另外建立 fallback artifact。
+10. 明確 push 並確認 remote 已包含該 commit 後停止。Antigravity 的 detached worktree 必須使用 `git push origin HEAD:main`，不得 force-push；若研究期間其他 Scout 已先推進 `origin/main` 而造成 non-fast-forward，僅讓本輪 fail closed，下一輪再從新的 remote head 重新開始。不得寫入 Hermes Wiki Brain、PyBroker、Nautilus、Paper、Testnet 或 Live workflow。
+11. 若 **active isolated run worktree 本身**出現 unrelated dirt、merge/rebase conflict、repository sync failure、source/provenance failure、secret/public-safety 問題或 push failure，必須 fail closed。Separate coordinator checkout 的 dirt 本身不是 blocker，也不得被 stage、清理或帶入本輪。回報真正的 block，不得另外建立 fallback artifact。
 
 Scheduled Scouts 與 ChatGPT Research Intake Review 是刻意分離的兩個流程。Scout 成功 push 只代表 research artifact 進入公開 staging pool，**不代表**已通過 Research Intake Review 或已進入 Wiki Brain。
 
