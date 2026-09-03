@@ -107,7 +107,7 @@ Backtesting window 2024.01.02–2026.02.27 and Live trading window 2026.03.02–
 
 Provenance: each exact number traces to arXiv:2605.05580v2 Section 3.2 Table 2, row identity = backbone (GPT 5.3 Codex / Claude Opus 4.6 / Gemini 3.1 Pro), column identity = market × phase (Backtest/Live) × metric (AR/SR/MDD).
 
-Source reports that AlphaCrafter achieves the highest Sharpe ratio across all baselines in backtesting and maintains favorable live-trading performance within each backbone group. Ablation experiments show that removing the Miner, Screener, or Trader component degrades performance. Cross-model stability study across the three backbones (GPT 5.3 Codex, Claude Opus 4.6, Gemini 3.1 Pro) shows AlphaCrafter exhibits lower cross-model and cross-trial variance than role-playing agent baselines. Live trading uses a paper-trading API from a real brokerage with actual market order execution.
+Source reports that AlphaCrafter shows competitive, favorable risk-adjusted performance across the three backbone groups in backtesting and live trading (arXiv:2605.05580v2 Section 3.2 Table 2), and the paper emphasizes cross-model and cross-trial stability rather than highest Sharpe in every market/backbone cell. Ablation experiments show that removing the Miner, Screener, or Trader component degrades performance. Cross-model stability study across the three backbones (GPT 5.3 Codex, Claude Opus 4.6, Gemini 3.1 Pro) shows AlphaCrafter exhibits lower cross-model and cross-trial variance than role-playing agent baselines. Live trading uses a paper-trading API from a real brokerage with actual market order execution.
 
 All source-reported figures above are from the primary paper (arXiv:2605.05580v2, Section 3.2 Table 2). This result has not been independently reproduced.
 
@@ -117,6 +117,7 @@ Not independently reproduced.
 
 ### Negative evidence
 
+- Source-reported counterexample (arXiv:2605.05580v2 Section 3.2 Table 2): under GPT 5.3 Codex on S&P500 backtest, AlphaAgent SR 1.3123 exceeds AlphaCrafter SR 1.2531; this single-cell result does not by itself imply the overall harness framework is ineffective.
 - Live trading AR is lower than backtesting AR for CSI300 across all three backbones in Table 2 (backtest 16.76–18.88% vs live 9.57–10.70%) and shows a smaller gap/mixed pattern for S&P500, suggesting potential backtest-to-live degradation, although the live period is short (69–73 trading days).
 - The authors acknowledge LLM data leakage concern: backbone LLMs may have encountered market data during pre-training that overlaps with the backtesting period. Live trading is designed to be outside the training cutoff, but backtesting results should be interpreted with caution.
 - Cross-model sensitivity: while AlphaCrafter shows lower variance than baselines, the study is limited to three frontier LLMs; generalizability to smaller or open-source models is unverified.
