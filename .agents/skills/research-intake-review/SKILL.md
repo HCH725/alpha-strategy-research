@@ -230,7 +230,7 @@ Normal scheduled review is commit-delta based and uses **small immutable batches
 3. Read the checkpoint and process any existing `pending_ingestion` first. Pending items remain tied to their reviewed commit/path/blob.
 4. Run `review_state.py preflight --max-artifacts 5`. The helper fetches `origin/main`, verifies the checkpoint is an ancestor, reports untracked strategy files, and chooses a deterministic `batch_head` containing at most five changed strategy artifacts where possible. If the first single commit itself contains more than five strategy artifacts, review that commit as one indivisible batch.
 5. Treat `batch_head`, not local `HEAD`, as `SNAPSHOT_HEAD`. Never use an out-of-date local branch tip as the review snapshot.
-6. Review only strategy artifacts materially added, modified, renamed, or removed in `last_reviewed_commit..SNAPSHOT_HEAD`. Documentation/skill-only changes do not require strategy review unless they change this contract.
+6. Review only strategy artifacts materially added, modified, renamed, or removed in `last_reviewed_commit..SNAPSHOT_HEAD`. Documentation/skill-only changes do not require strategy review unless they change this contract. If the selected committed delta contains **zero** strategy artifacts, verify any contract-affecting documentation/skill change, then apply an empty review payload so the checkpoint can advance across that non-strategy delta; otherwise the same metadata-only delta would repeat forever.
 7. Resolve each changed strategy artifact provisionally to one of the four decisions.
 8. Use the independent Hermes `auditor` selectively:
    - mandatory before final `PASS` or `PASS-WITH-CAVEAT` when ChatGPT generated, normalized, materially modified, or previously adjudicated the artifact;

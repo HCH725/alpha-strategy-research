@@ -97,8 +97,16 @@ def diff_strategy_items(repo: Path, base: str, head: str) -> list[dict]:
             continue
         fields = line.split("\t")
         status = fields[0]
-        candidates = fields[1:]
-        for candidate in candidates:
+        if status.startswith(("R", "C")) and len(fields) >= 3:
+            old_path, new_path = fields[1], fields[2]
+            if is_strategy_path(old_path) or is_strategy_path(new_path):
+                key = new_path if is_strategy_path(new_path) else old_path
+                if key not in seen:
+                    items.append({"status": status, "path": key, "old_path": old_path, "new_path": new_path})
+                    seen.add(key)
+            continue
+        if len(fields) >= 2:
+            candidate = fields[1]
             if is_strategy_path(candidate) and candidate not in seen:
                 items.append({"status": status, "path": candidate})
                 seen.add(candidate)
@@ -288,6 +296,7 @@ def preflight(state_path: Path, repo: Path, max_artifacts: int) -> dict:
         for line in git(repo, "status", "--porcelain", "--untracked-files=all").splitlines()
         if line.startswith("?? ") and is_strategy_path(line[3:])
     ]
+    deferred_items = diff_strategy_items(repo, batch_head, remote_head) if batch_head != remote_head else []
     return {
         "ok": True,
         "base_checkpoint": base,
@@ -297,6 +306,7 @@ def preflight(state_path: Path, repo: Path, max_artifacts: int) -> dict:
         "batch_artifact_count": len(batch_items),
         "total_unreviewed_artifact_count": len(all_items),
         "deferred": batch_head != remote_head,
+        "deferred_items": deferred_items,
         "untracked_strategy_artifacts": untracked,
         "untracked_strategy_artifact_count": len(untracked),
     }
@@ -324,8 +334,14 @@ def apply_update(state_path: Path, payload_path: Path) -> dict:
         if not bucket:
             raise RuntimeError(f"unknown decision: {decision}")
         path = item["path"]
+        old_path = item.get("old_path")
+        paths_to_remove = {path}
+        if old_path:
+            paths_to_remove.add(old_path)
         for existing_bucket in BUCKETS:
-            snapshot[existing_bucket] = [p for p in snapshot.setdefault(existing_bucket, []) if p != path]
+            snapshot[existing_bucket] = [p for p in snapshot.setdefault(existing_bucket, []) if p not in paths_to_remove]
+        for previous_path in paths_to_remove:
+            backlog.pop(previous_path, None)
         snapshot[bucket].append(path)
         counts[bucket] += 1
 
