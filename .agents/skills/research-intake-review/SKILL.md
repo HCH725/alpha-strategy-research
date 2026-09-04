@@ -185,96 +185,63 @@ Duplicate/no-increment cases are handled as `REJECT` with the reason stated; no 
 
 ## Deterministic control-plane mechanics
 
-Research judgment stays in this skill and with ChatGPT. The repo-local helper remains the reference implementation and manual integrity checker:
+Research judgment stays in this skill and with ChatGPT. The repo-local helper owns deterministic mechanics:
 
 ```text
 .agents/skills/research-intake-review/review_state.py
 ```
 
-Scheduled runs are **shell-free**: they must not invoke CatDesk `run_command` or `start_command` for validation, Git preflight, state application, or lease mechanics. The scheduled control plane uses CatDesk dedicated `search`/`edit`/browser operations and GitHub immutable commit history. The helper remains available for interactive/manual diagnostics and must stay semantically aligned with these invariants.
+The control plane is intentionally small. **There is no long-lived review lease.** State mutation uses a short kernel-managed file mutex plus one compare-and-swap on `last_reviewed_commit`. The mutex exists only while a helper process performs a state read/check/write and is released automatically by the OS if that process exits; it cannot become a stale lease. Two runs may read the same immutable batch, but only the run whose base checkpoint still matches may commit review state. A losing run stops before Wiki Brain ingestion.
 
 Required invariants:
-- `run_lease` is either `null` or a valid lease object with `run_id`, owner, offset-aware `started_at`, and positive `stale_after_minutes`;
+- `run_lease` is retained only as a deprecated compatibility field and must be `null`;
 - one artifact path belongs to exactly one decision bucket;
 - `last_review_findings` must agree with the current decision bucket for every item it records;
-- every current `REMEDIATE` item must have exactly one durable `remediation_backlog` entry, and no non-REMEDIATE path may remain in that backlog;
+- every current `REMEDIATE` item has exactly one durable `remediation_backlog` entry, and no non-REMEDIATE path remains in that backlog;
 - a remediation entry stores `path`, immutable `blob` when available, reason, and first/last-seen metadata;
 - a later PASS / PASS-WITH-CAVEAT / REJECT removes that artifact from the remediation backlog;
-- checkpoint updates use compare-and-swap semantics against both the base checkpoint and active `run_id` read at run start.
+- checkpoint movement is atomic under the short state mutex and guarded by `base_checkpoint == last_reviewed_commit`;
+- `apply` must prove `reviewed_snapshot` descends from the base checkpoint and that the review payload exactly covers the strategy diff for that frozen range;
+- every PASS / PASS-WITH-CAVEAT has exactly one matching new `pending_ingestion` entry tied to reviewed commit/path/blob/decision;
+- each pending entry stores the exact deterministic Wiki content plus SHA-256; its decision must match the current PASS/PASS-WITH-CAVEAT bucket;
+- Wiki Brain is written only from durable `pending_ingestion` created by the successful checkpoint CAS.
 
-Before and after every state-changing scheduled run, ChatGPT must perform the equivalent invariant check directly from the canonical state using CatDesk dedicated reads/searches. Any invariant failure is a control-plane block. For manual maintenance, `review_state.py validate` remains the executable cross-check, but the recurring automation must not call it through a shell.
+A transient CatDesk/shell/browser/auditor failure therefore affects only the current run. It must not leave a lock or lease that blocks later runs.
 
-### Run lease
+### Preflight and state mechanics
 
-The recurring automation must not create/delete a shell-level lock file. The single-run lease lives directly in the canonical state as `run_lease` and is acquired/released with CatDesk's dedicated atomic guarded edit operation.
+Scheduled runs use the repo-local deterministic helper for `validate`, `preflight`, `apply`, and `complete-ingestion`. Generic shell work should still be minimized; the helper centralizes the short OS mutex, atomic JSON writes, Git ancestry checks, frozen-diff coverage checks, rename-aware diffing, and batch selection. A transient command failure is retried once, then the run stops without state mutation.
 
-Canonical idle form:
-
-```json
-"run_lease": null
-```
-
-Active form:
-
-```json
-"run_lease": {
-  "run_id": "<unique-run-id>",
-  "owner": "ChatGPT (GPT-5.6 Sol)",
-  "started_at": "<offset-aware ISO-8601 timestamp>",
-  "stale_after_minutes": 180
-}
-```
-
-Lease protocol:
-- Read and validate the canonical state through CatDesk dedicated search/read surfaces; do not invoke a shell validator in a scheduled run.
-- Generate a unique `run_id` without a shell command.
-- Acquire by one CatDesk guarded edit that replaces the exact idle text `"run_lease": null` with the active lease object. This guarded edit is the compare-and-swap: if another run won first, the edit fails and this run must stop without overlap.
-- If a lease already exists, do not overwrite it unless its `started_at` is more than 180 minutes old. A stale reclaim must atomically replace the exact old lease object with the new lease object in one guarded edit; never clear then set in two steps.
-- Every state application must verify both `run_id == run_lease.run_id` and `base_checkpoint == last_reviewed_commit` before any checkpoint movement. This prevents a stale/reclaimed run from advancing state.
-- Release only by a CatDesk guarded edit that replaces the exact current lease object for this `run_id` with `null`.
-- CatDesk connector/safety failures should be refreshed/retried once as usual. A failed guarded edit caused by CAS mismatch is not an infrastructure error; it means another run owns the lease.
-
-This design preserves overlap protection while keeping the recurring workflow off generic shell execution.
-
-### Preflight visibility
-
-Scheduled preflight uses GitHub's immutable compare/commit history through the CatDesk browser, not local `git` shell commands. It must identify the committed strategy artifacts waiting for review and the remote commit sequence from the checkpoint to the current `main` tip.
-
-Root-level untracked local strategy Markdown is a best-effort visibility warning in shell-free scheduled mode because GitHub cannot see uncommitted local files. Known local-only artifacts should still be surfaced when visible through CatDesk dedicated file search. Untracked files are never reviewed, staged, deleted, or treated as reviewed by Intake Review. Lack of a complete untracked listing must not silently turn local-only content into reviewed content.
+Preflight uses committed Git history and selects the oldest immutable batch of at most five root-level strategy Markdown artifacts, preserving an indivisible first commit if it alone exceeds five. Root-level untracked strategy Markdown is visibility-only and is never reviewed, staged, deleted, or treated as reviewed.
 
 ## Incremental review procedure
 
 Normal scheduled review is commit-delta based and uses **small immutable batches**.
 
-1. Read CatDesk operating guidance, the current repo-local skill, and canonical state through dedicated CatDesk file surfaces. Perform the invariant checklist above directly from state; do not call `run_command` or `start_command` for scheduled control-plane work.
-2. Acquire `run_lease` directly in the state using the CatDesk guarded-edit CAS protocol above. Keep the generated `run_id`. If another non-stale review owns the lease, stop this run without changing state.
-3. Process any existing `pending_ingestion` first. Pending items remain tied to their reviewed commit/path/blob.
-4. Use the CatDesk browser to open GitHub's immutable compare view from `last_reviewed_commit` to the current full SHA of `main`. Require the checkpoint to be on the ancestor path; divergence or non-comparable history is `history_reconciliation_required`. Select the small batch from the compare commit sequence in oldest-to-newest order, accumulating root-level strategy Markdown changes up to five artifacts. If adding the next commit would exceed five, stop at the previous commit; if the first indivisible commit itself exceeds five, review that commit as one batch. The selected full SHA is `SNAPSHOT_HEAD` / `batch_head`.
-5. Read each changed strategy artifact from the immutable GitHub `SNAPSHOT_HEAD` (`blob/<SNAPSHOT_HEAD>/<path>` or equivalent raw/contents view) and record its immutable object identity when exposed. Review only that frozen content.
-6. Treat `batch_head`, never local `HEAD` or a moving remote tip, as `SNAPSHOT_HEAD`. Root-level untracked local Markdown remains a best-effort visibility warning only in shell-free scheduled mode and is never reviewed or mutated.
-7. Review only strategy artifacts materially added, modified, renamed, or removed in `last_reviewed_commit..SNAPSHOT_HEAD`. Documentation/skill-only changes do not require strategy review unless they change this contract. If the selected committed delta contains **zero** strategy artifacts, verify any contract-affecting documentation/skill change, then apply an empty review payload so the checkpoint can advance across that non-strategy delta; otherwise the same metadata-only delta would repeat forever.
-8. Resolve each changed strategy artifact provisionally to one of the four decisions.
-9. Use the independent Hermes `auditor` selectively:
+1. Read CatDesk operating guidance, the current repo-local skill, and canonical state. Run the deterministic invariant validator. If validation fails, stop without mutating review state.
+2. Process any existing `pending_ingestion` first. Each pending item is tied to reviewed commit/path/blob/decision and contains the exact Wiki target, exact `wiki_content`, and `wiki_content_sha256`. Never regenerate the Wiki record during ingestion. If the target is absent, create that exact content; if it already has the same hash, treat it as an idempotent success; if it differs, do not overwrite unless an `expected_existing_sha256` stored with the pending item still matches the current target. Read the result back, verify the pending hash, then use `complete-ingestion` to remove only that exact pending item and record the successful Wiki path.
+3. Run deterministic preflight from `last_reviewed_commit` to current `origin/main`. Require the checkpoint to be an ancestor. Select the oldest immutable batch and treat its full SHA as `SNAPSHOT_HEAD` / `batch_head`.
+4. Read each strategy artifact from immutable `SNAPSHOT_HEAD` content and review only that frozen material. Never mix a later remote revision into the batch. For a deleted artifact, read the last immutable content from the base side, record status `D`, resolve it as `REJECT`, and never create pending ingestion for it.
+5. If the selected committed delta has zero strategy artifacts, verify any contract-affecting documentation/skill change and apply an empty review payload so the checkpoint advances across metadata-only history.
+6. Resolve each strategy artifact provisionally to one of the four decisions.
+7. Use the independent Hermes `auditor` selectively:
    - mandatory before final `PASS` or `PASS-WITH-CAVEAT` when ChatGPT generated, normalized, materially modified, or previously adjudicated the artifact;
    - recommended for genuine material ambiguity or reviewer conflict;
    - not required merely to reconfirm an already-clear `REMEDIATE` or `REJECT`.
    The auditor finds faults but never owns promotion or final judgment.
-10. ChatGPT makes the final decision. Only `PASS` and `PASS-WITH-CAVEAT` are eligible for Wiki Brain ingestion, and caveats must travel with the Wiki record.
-11. `REMEDIATE` and `REJECT` remain outside Wiki Brain. Every `REMEDIATE` must retain its durable reason in `remediation_backlog`; a later remediation commit simply becomes a new Git delta and is reviewed normally.
-12. Build one review-update payload containing `run_id`, reviewed snapshot, base checkpoint, item paths/blobs/decisions/reasons, auditor status where applicable, ingestion results, pending ingestion, and deferred remote information.
-13. Apply the complete review result to canonical state with one CatDesk guarded edit/CAS. Before mutation, verify the exact active `run_id` still owns `run_lease` and `last_reviewed_commit` still equals the base checkpoint. Update checkpoint, decision buckets, remediation backlog, last findings, pending ingestion, ingested Wiki records, and deferred information consistently while preserving the active lease. Any CAS mismatch aborts rather than overwrites newer state.
-14. Read/search the state back through CatDesk and repeat the invariant checklist directly. Read back every Wiki Brain record created or enriched by this run before considering ingestion complete.
-15. Release the state lease through one CatDesk guarded edit that replaces this run's exact lease object with `"run_lease": null`. Never use a shell lock cleanup command.
+8. ChatGPT makes the final decision. `REMEDIATE` and `REJECT` remain outside Wiki Brain. Every `REMEDIATE` retains its durable reason in `remediation_backlog`.
+9. Build one review-update payload with the original `base_checkpoint`, `reviewed_snapshot`, each item's exact Git status/path/blob/decision/reason/auditor status, deferred remote information, and **one new pending-ingestion record for every PASS/PASS-WITH-CAVEAT**. Each pending record must carry the exact deterministic Wiki content and SHA-256. Do not write accepted items to Wiki Brain yet.
+10. Run `apply`. Under the short OS mutex it must re-check the checkpoint CAS, prove `reviewed_snapshot` ancestry, and prove the payload exactly covers the frozen strategy diff. CAS or coverage mismatch aborts without Wiki writes. On success, checkpoint, decision buckets, remediation backlog, findings, deferred information, and pending ingestion advance atomically. A newer REMEDIATE/REJECT for the same staging path cancels any older unresolved pending entry for that path.
+11. Re-run state validation. Only after successful state apply may this run process the newly durable pending Wiki entries, using the exact content/hash already stored in state. Read back every exact canonical Wiki file and verify its hash before completion.
+12. Atomically clear only the successfully completed pending entries and append their canonical paths to `ingested_wiki_records`. If ingestion or cleanup fails, leave the pending entry durable for the next run; do not roll back the reviewed checkpoint.
 
-Do not advance the checkpoint halfway through a partially reviewed batch. A failed batch is retried from the same base checkpoint. The recurring workflow must remain shell-free except for an explicitly required independent auditor invocation when no dedicated auditor surface exists.
+Do not advance the checkpoint halfway through a partially reviewed batch. A failed pre-CAS batch is retried from the same base checkpoint. A post-CAS Wiki failure is retried from `pending_ingestion`; it does not cause the research review to repeat.
 
 ## Version-race rule
 
 GitHub `main` may advance while a review is in progress. Finish only the selected immutable `SNAPSHOT_HEAD` batch and never mix newer artifacts into it.
 
-Before state mutation, refresh the GitHub `main` tip. If it advanced beyond `SNAPSHOT_HEAD`, preserve the newer full SHA and strategy delta as `deferred_remote_head` / `deferred_delta`; the next run continues from the newly advanced checkpoint toward the then-current remote tip.
-
-The state lease protects local state from overlapping scheduled/manual runs; the immutable GitHub batch protects reviewed content from remote movement. Both protections remain required.
+Before state mutation, refresh the remote tip. If it advanced beyond `SNAPSHOT_HEAD`, preserve the newer full SHA and delta as `deferred_remote_head` / `deferred_delta`. Remote advancement by itself does not invalidate the batch; only a changed canonical `last_reviewed_commit` causes the checkpoint CAS to fail.
 
 ## Wiki Brain ingestion boundary
 
