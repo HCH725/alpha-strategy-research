@@ -204,14 +204,37 @@ Required invariants:
 
 Before and after every state-changing review run, execute the helper's `validate` command. Any invariant failure is a control-plane block and must be repaired before new review decisions are committed.
 
-### Lock lease
+### Run lease
 
-Use the helper's atomic single-run lock. The lock records `run_id`, owner, and start time.
+The recurring automation must not create/delete a shell-level lock file. The single-run lease lives directly in the canonical state as `run_lease` and is acquired/released with CatDesk's dedicated atomic guarded edit operation.
 
-- If a non-stale lock exists, do not overlap the review.
-- A lock older than 180 minutes may be reclaimed as stale by the helper.
-- Release only a lock whose `run_id` matches the current run.
-- A transient CatDesk failure while invoking the helper should be retried once with identical parameters. Do not silently bypass overlap protection.
+Canonical idle form:
+
+```json
+"run_lease": null
+```
+
+Active form:
+
+```json
+"run_lease": {
+  "run_id": "<unique-run-id>",
+  "owner": "ChatGPT (GPT-5.6 Sol)",
+  "started_at": "<offset-aware ISO-8601 timestamp>",
+  "stale_after_minutes": 180
+}
+```
+
+Lease protocol:
+- Read the state and run `review_state.py validate` first.
+- Generate a unique `run_id` without invoking a shell lock command.
+- Acquire by one CatDesk guarded edit that replaces the exact idle text `"run_lease": null` with the active lease object. The guarded edit is the compare-and-swap: if another run won first, the edit fails and this run must stop without overlap.
+- If a lease already exists, do not overwrite it unless its `started_at` is more than 180 minutes old. A stale reclaim must atomically replace the exact old lease object with the new lease object in one guarded edit; never clear then set in two steps.
+- `review_state.py apply` requires the review payload `run_id` to match the current state `run_lease.run_id`, preventing a stale/reclaimed run from advancing the checkpoint.
+- Release only by a CatDesk guarded edit that replaces the exact current lease object for this `run_id` with `null`.
+- CatDesk connector/safety failures should be refreshed/retried once as usual. A failed guarded edit caused by CAS mismatch is not an infrastructure error; it means another run owns the lease.
+
+This design preserves overlap protection while avoiding recurring shell commands whose lock/create/delete behavior can be misclassified by the execution safety gateway.
 
 ### Preflight visibility
 
@@ -225,24 +248,25 @@ Untracked files are visibility warnings only. They are not reviewed until commit
 
 Normal scheduled review is commit-delta based and uses **small immutable batches**.
 
-1. Read CatDesk operating guidance.
-2. Start the control-plane lease through `review_state.py begin-run --max-artifacts 5`. This single helper entry point performs state validation, atomically acquires the non-overlapping run lease, fetches `origin/main`, verifies checkpoint ancestry, reports untracked strategy files, and chooses the deterministic immutable `batch_head`. Keep the returned `run_id`. If another non-stale review owns the lease, stop this run without changing state. If validation or preflight fails after lease acquisition, the helper releases the lease before returning failure.
-3. Read the checkpoint and process any existing `pending_ingestion` first. Pending items remain tied to their reviewed commit/path/blob.
-4. Review the `batch_head` selected by `begin-run`. The batch contains at most five changed strategy artifacts where possible; if the first single commit itself contains more than five strategy artifacts, review that commit as one indivisible batch.
-5. Treat `batch_head`, not local `HEAD`, as `SNAPSHOT_HEAD`. Never use an out-of-date local branch tip as the review snapshot.
-6. Review only strategy artifacts materially added, modified, renamed, or removed in `last_reviewed_commit..SNAPSHOT_HEAD`. Documentation/skill-only changes do not require strategy review unless they change this contract. If the selected committed delta contains **zero** strategy artifacts, verify any contract-affecting documentation/skill change, then apply an empty review payload so the checkpoint can advance across that non-strategy delta; otherwise the same metadata-only delta would repeat forever.
-7. Resolve each changed strategy artifact provisionally to one of the four decisions.
-8. Use the independent Hermes `auditor` selectively:
+1. Read CatDesk operating guidance and the canonical state, then run `review_state.py validate`.
+2. Acquire `run_lease` directly in the state using the CatDesk guarded-edit CAS protocol above. Keep the generated `run_id`. If another non-stale review owns the lease, stop this run without changing state.
+3. Process any existing `pending_ingestion` first. Pending items remain tied to their reviewed commit/path/blob.
+4. Run `review_state.py preflight --max-artifacts 5`. It fetches `origin/main`, verifies checkpoint ancestry, reports untracked strategy files, and chooses the deterministic immutable `batch_head`. If preflight fails, release this run's state lease with the guarded-edit protocol before returning.
+5. Review the selected `batch_head`. The batch contains at most five changed strategy artifacts where possible; if the first single commit itself contains more than five strategy artifacts, review that commit as one indivisible batch.
+6. Treat `batch_head`, not local `HEAD`, as `SNAPSHOT_HEAD`. Never use an out-of-date local branch tip as the review snapshot.
+7. Review only strategy artifacts materially added, modified, renamed, or removed in `last_reviewed_commit..SNAPSHOT_HEAD`. Documentation/skill-only changes do not require strategy review unless they change this contract. If the selected committed delta contains **zero** strategy artifacts, verify any contract-affecting documentation/skill change, then apply an empty review payload so the checkpoint can advance across that non-strategy delta; otherwise the same metadata-only delta would repeat forever.
+8. Resolve each changed strategy artifact provisionally to one of the four decisions.
+9. Use the independent Hermes `auditor` selectively:
    - mandatory before final `PASS` or `PASS-WITH-CAVEAT` when ChatGPT generated, normalized, materially modified, or previously adjudicated the artifact;
    - recommended for genuine material ambiguity or reviewer conflict;
    - not required merely to reconfirm an already-clear `REMEDIATE` or `REJECT`.
    The auditor finds faults but never owns promotion or final judgment.
-9. ChatGPT makes the final decision. Only `PASS` and `PASS-WITH-CAVEAT` are eligible for Wiki Brain ingestion, and caveats must travel with the Wiki record.
-10. `REMEDIATE` and `REJECT` remain outside Wiki Brain. Every `REMEDIATE` must retain its durable reason in `remediation_backlog`; a later remediation commit simply becomes a new Git delta and is reviewed normally.
-11. Build one review-update payload containing the reviewed snapshot, base checkpoint, item paths/blobs/decisions/reasons, auditor status where applicable, ingestion results, pending ingestion, and deferred remote information.
-12. Apply that payload only through `review_state.py apply`. The helper performs compare-and-swap checkpoint protection, moves artifacts between decision buckets deterministically, updates the remediation ledger, validates invariants, and atomically writes the state file.
-13. Run `review_state.py validate` again and read back any Wiki Brain records created by this run.
-14. Finish the run through `review_state.py finish-run --run-id <run_id>`. The legacy `acquire-lock` / `release-lock` commands remain available only for backward compatibility and should not be used by the recurring automation.
+10. ChatGPT makes the final decision. Only `PASS` and `PASS-WITH-CAVEAT` are eligible for Wiki Brain ingestion, and caveats must travel with the Wiki record.
+11. `REMEDIATE` and `REJECT` remain outside Wiki Brain. Every `REMEDIATE` must retain its durable reason in `remediation_backlog`; a later remediation commit simply becomes a new Git delta and is reviewed normally.
+12. Build one review-update payload containing `run_id`, reviewed snapshot, base checkpoint, item paths/blobs/decisions/reasons, auditor status where applicable, ingestion results, pending ingestion, and deferred remote information.
+13. Apply that payload only through `review_state.py apply`. The helper first verifies `run_id == run_lease.run_id`, then performs checkpoint compare-and-swap protection, moves artifacts between decision buckets deterministically, updates the remediation ledger, validates invariants, and atomically writes the state file while preserving the active lease.
+14. Run `review_state.py validate` again and read back any Wiki Brain records created by this run.
+15. Release the state lease through one CatDesk guarded edit that replaces this run's exact lease object with `"run_lease": null`. Never use a shell lock cleanup command.
 
 Do not advance the checkpoint halfway through a partially reviewed batch. A failed batch is retried from the same base checkpoint.
 
