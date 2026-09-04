@@ -65,15 +65,15 @@ The hypothesis is that **cross-modal agreement on direction** — when price dyn
 - **Point-in-time:** Training/validation/test split is strictly chronological with no overlap. Data as-of periods specified above.
 - **Timestamp:** Daily frequency; timezone handling not specified (likely UTC or exchange local time).
 - **Missing-data:** Not explicitly stated in the reviewed sections.
-- **Funding/fee/spread:** Not modeled — see Execution assumptions.
+- **Funding/fee/spread:** Qlib backtest costs apply (Appendix C.5: open_cost=close_cost=0.0005, i.e. 5 bps/side); long-or-flat only so no funding/borrow; no separate slippage/market-impact model — see Execution assumptions.
 
 ## Execution assumptions
 
-- The paper reports **gross performance** (annualized return and Sharpe ratio) without explicitly modeling transaction costs, slippage, spread, or funding.
+- Reported ARR/SR are portfolio-value paths under the Qlib long-or-flat backtest (Appendix C.5 Backtesting Protocol): Qlib transaction costs open_cost=close_cost=0.0005 (5 bps per side, 10 bps per entry–exit cycle), identical for all methods; risk_degree=0.99; no short selling or borrowing (hence no funding); no separate slippage or market-impact model; close-price execution with no intraday latency/closing-auction slippage modeling. The source does not explicitly label results gross/net — do not assert they are purely gross.
 - Execution is assumed to be next-day (daily close to next daily close).
 - No leverage, shorting, or partial fill modeling.
 - The BTC result is for BTCUSD spot-like return; no perpetual funding is considered.
-- **Data gap:** The paper does not specify whether results are gross or net of fees; the absence of cost modeling is noted but not explicitly stated in the reviewed sections. Based on the experimental setup (daily rebalance, B&H baseline), it is likely gross of transaction costs.
+- **Data gap:** The paper does not explicitly state whether results are gross or net (gross/net status not explicitly stated); an explicit Qlib cost model was identified in Appendix C.5 (open_cost=close_cost=0.0005, no separate slippage/market-impact model), so do not assert costs are definitively absent.
 
 ## Evidence
 
@@ -103,7 +103,7 @@ Not independently reproduced.
 - BTCUSD results are from a single 6-month test window; generalizability across different market regimes is unverified.
 - The paper acknowledges that cumulative-return curves "should not be interpreted as direct evidence that CoLAS trades only when the modalities corroborate" — this is a key caveat.
 - No out-of-sample results on crypto assets beyond BTCUSD.
-- Transaction costs and slippage are not modeled; daily rebalance on crypto (which trades 24/7) may incur meaningful execution costs.
+- Only Qlib-level transaction costs are applied (open_cost=close_cost=0.0005 per Appendix C.5); slippage and market impact are not separately modeled, and daily rebalance on crypto (which trades 24/7) may incur meaningful additional execution costs.
 
 ## Falsification plan
 
@@ -129,12 +129,12 @@ The paper explicitly tests on BTCUSD and reports strong results (ARR 84.64%, SR 
 
 - **Short test period:** 6 months for primary results (April–September 2025); extended test is 12 months. No multi-year or multi-regime validation on crypto.
 - **Single crypto asset:** Only BTCUSD tested; generalizability to altcoins is unknown.
-- **Transaction costs not modeled:** Daily rebalance incurs fees; gross results may overstate net performance.
+- **Limited cost modeling:** Only Qlib-level costs (5 bps/side) are applied; daily rebalance incurs turnover, and reported figures may overstate net performance once slippage/market impact are considered.
 - **Data dependencies:** Requires news embeddings and sentiment scores, which depend on data providers, APIs, and models; not independently reproducible without these inputs.
 - **Architecture complexity:** The full model involves modality-specific encoders, alignment maps, corroboration mining, and robustness objectives; it is not a simple rule-based signal.
 - **Evaluation period may be favorable:** The test period (April–September 2025) captures a bullish regime for BTC; performance in bear markets is unknown.
 - **No frequency analysis:** The paper evaluates at daily frequency only; higher-frequency (intraday) corroboration is untested.
-- **No comparison with cost-aware baselines:** All baselines are evaluated gross of costs; a net-of-cost comparison would change the ranking.
+- **No comparison with slippage-aware baselines:** All baselines share the same Qlib cost configuration without separate slippage modeling; a slippage-aware net-of-cost comparison would change the ranking.
 - **Potential overfitting to test period:** With 5 random seeds and hyperparameter tuning on the validation set, there is some risk of data snooping, especially with the short test window.
 
 ## Implementation status
@@ -151,7 +151,7 @@ This record is research material only. It does not mean:
 - approved for testnet
 - approved for live trading
 
-The strong reported results (SR 2.65 on BTCUSD) are source-reported and not independently reproduced. The 6-month test window and absence of transaction cost modeling are significant caveats.
+The strong reported results (SR 2.65 on BTCUSD) are source-reported and not independently reproduced. The 6-month test window and limited cost modeling (Qlib 5 bps/side only; no separate slippage/market-impact model) are significant caveats.
 
 ## Related Wiki records
 

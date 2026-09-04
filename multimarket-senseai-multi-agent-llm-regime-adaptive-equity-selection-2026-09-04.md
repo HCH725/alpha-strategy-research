@@ -101,9 +101,9 @@ The regime-rotation component adds a second testable layer: agent contribution w
 
 ### Source-reported
 
-All figures trace to Fatouros & Metaxas (arXiv:2604.17327v1):
+All figures trace to Fatouros & Metaxas (arXiv:2604.17327v1); section/table/figure anchors per group below.
 
-**Monte Carlo portfolio test (primary result):**
+**Monte Carlo portfolio test (primary result — Section 5.1, Table 3; Figures 4–5; per-date detail Appendix A Table 8):**
 - S&P 500 (19 months, Sep 2024–Mar 2026):
   - Strong-buy mean monthly return: +2.18%
   - EW universe benchmark (approximating RSP): +1.15%
@@ -122,25 +122,25 @@ All figures trace to Fatouros & Metaxas (arXiv:2604.17327v1):
   - Compound return: +93.2% (strong-buy) vs +62.7% (EW benchmark)
   - Excess compound: +30.5 percentage points
   - Percentile rank in MC null: 83.4th
-  - pp-value: 0.163 (not significant, driven by small ~10-stock average selection)
+  - pp-value: 0.163 (not significant, driven by small ~10-stock average selection; Table 3 reports 0.166 mean-monthly / 0.163 compound, Abstract rounds to p=0.17)
 
-**IC/ICIR analysis (within buy+strong-buy universe):**
+**IC/ICIR analysis (within buy+strong-buy universe — Section 5.4, Table 6 Panels A/B; score result text; Figure 8):**
 - S&P 500 ordinal score: mean IC = +0.051, ICIR = +0.489, t = +2.13, p = 0.024
 - S&P 100 ordinal score: mean IC = +0.018, ICIR = +0.080, p = 0.319 (underpowered)
 - Fundamentals pooled IC on S&P 500: +0.052 (p = 0.049)
 - Macro pooled IC on S&P 100: +0.079 (p = 0.042)
 
-**NNLS attribution:**
+**NNLS attribution (methods Sections 3.2–3.3; results Section 5.2; Figure 2; Table 4):**
 - Thesis reconstruction cosine: mean C^TR = 0.944 (S&P 500), 0.936 (S&P 100)
 - Agent contributions rotate with regime; no single agent dominates across all dates/sectors
 
-**Beta analysis:**
+**Beta analysis (Section 6 "Market beta and downside protection"; Figure 10a–b):**
 - Portfolio beta vs EW proxy: β̂ = 0.865 (below unity)
 - Jensen's α̂ = +1.18%/month (annualised +14.2%, t = 1.45, p = 0.17, R² = 0.60)
 - Down-market months: strong-buy -2.00% vs EW -3.32% (+1.31% excess)
 - Up-market months: strong-buy +5.22% vs EW +4.39% (+0.82% excess)
 
-**Downside behaviour (S&P 500):**
+**Downside behaviour (S&P 500 — Section 5.3, Table 5; Figure 6):**
 - Strong-buy: upside +6.39%, downside -5.95%, hit rate 58.4%, UpDn ratio 1.07
 - Hold: upside +5.27%, downside -6.71%, hit rate 53.4%, UpDn ratio 0.79
 - Bootstrap Δ(UpDn) = +0.17, 95% CI [-0.03, +0.37], one-tailed p = 0.050
