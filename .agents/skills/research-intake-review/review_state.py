@@ -3,9 +3,10 @@
 
 This file owns mechanics only: small immutable batch selection, state invariants,
 remediation bookkeeping, and atomic checkpoint writes. The single-run lease is
-held inside the canonical state and acquired/released by CatDesk guarded edits,
-so recurring automation does not need shell-level lock operations.
-Research judgment remains in SKILL.md and with ChatGPT.
+held inside the canonical state and acquired/released by CatDesk guarded edits.
+This helper is the manual/reference implementation for integrity checks; scheduled
+runs are shell-free and reproduce its invariants through dedicated CatDesk tools
+plus immutable GitHub history. Research judgment remains in SKILL.md and ChatGPT.
 """
 
 from __future__ import annotations
@@ -243,7 +244,7 @@ def migrate_state(state_path: Path, repo: Path) -> dict:
         })
     data["remediation_backlog"] = backlog
     data.setdefault("run_lease", None)
-    data["state_control_version"] = 3
+    data["state_control_version"] = 4
     atomic_write_json(state_path, data)
     return data
 
@@ -364,7 +365,7 @@ def apply_update(state_path: Path, payload_path: Path) -> dict:
     }
     data["deferred_remote_head"] = payload.get("deferred_remote_head", snapshot_head)
     data["deferred_delta"] = payload.get("deferred_delta", [])
-    data["state_control_version"] = 3
+    data["state_control_version"] = 4
 
     errors = validate_state(data)
     if errors:

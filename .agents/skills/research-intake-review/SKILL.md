@@ -185,24 +185,24 @@ Duplicate/no-increment cases are handled as `REJECT` with the reason stated; no 
 
 ## Deterministic control-plane mechanics
 
-Research judgment stays in this skill and with ChatGPT. Mechanical state transitions must use the repo-local helper:
+Research judgment stays in this skill and with ChatGPT. The repo-local helper remains the reference implementation and manual integrity checker:
 
 ```text
 .agents/skills/research-intake-review/review_state.py
 ```
 
-The helper exists only to make the control plane deterministic. It does not decide whether a strategy should pass.
+Scheduled runs are **shell-free**: they must not invoke CatDesk `run_command` or `start_command` for validation, Git preflight, state application, or lease mechanics. The scheduled control plane uses CatDesk dedicated `search`/`edit`/browser operations and GitHub immutable commit history. The helper remains available for interactive/manual diagnostics and must stay semantically aligned with these invariants.
 
 Required invariants:
+- `run_lease` is either `null` or a valid lease object with `run_id`, owner, offset-aware `started_at`, and positive `stale_after_minutes`;
 - one artifact path belongs to exactly one decision bucket;
 - `last_review_findings` must agree with the current decision bucket for every item it records;
-- every current `REMEDIATE` item must have a durable `remediation_backlog` entry;
+- every current `REMEDIATE` item must have exactly one durable `remediation_backlog` entry, and no non-REMEDIATE path may remain in that backlog;
 - a remediation entry stores `path`, immutable `blob` when available, reason, and first/last-seen metadata;
 - a later PASS / PASS-WITH-CAVEAT / REJECT removes that artifact from the remediation backlog;
-- checkpoint updates use compare-and-swap semantics against the base checkpoint read at run start;
-- checkpoint JSON is written atomically (`tmp + fsync + replace`), never by partial in-place mutation.
+- checkpoint updates use compare-and-swap semantics against both the base checkpoint and active `run_id` read at run start.
 
-Before and after every state-changing review run, execute the helper's `validate` command. Any invariant failure is a control-plane block and must be repaired before new review decisions are committed.
+Before and after every state-changing scheduled run, ChatGPT must perform the equivalent invariant check directly from the canonical state using CatDesk dedicated reads/searches. Any invariant failure is a control-plane block. For manual maintenance, `review_state.py validate` remains the executable cross-check, but the recurring automation must not call it through a shell.
 
 ### Run lease
 
@@ -226,34 +226,32 @@ Active form:
 ```
 
 Lease protocol:
-- Read the state and run `review_state.py validate` first.
-- Generate a unique `run_id` without invoking a shell lock command.
-- Acquire by one CatDesk guarded edit that replaces the exact idle text `"run_lease": null` with the active lease object. The guarded edit is the compare-and-swap: if another run won first, the edit fails and this run must stop without overlap.
+- Read and validate the canonical state through CatDesk dedicated search/read surfaces; do not invoke a shell validator in a scheduled run.
+- Generate a unique `run_id` without a shell command.
+- Acquire by one CatDesk guarded edit that replaces the exact idle text `"run_lease": null` with the active lease object. This guarded edit is the compare-and-swap: if another run won first, the edit fails and this run must stop without overlap.
 - If a lease already exists, do not overwrite it unless its `started_at` is more than 180 minutes old. A stale reclaim must atomically replace the exact old lease object with the new lease object in one guarded edit; never clear then set in two steps.
-- `review_state.py apply` requires the review payload `run_id` to match the current state `run_lease.run_id`, preventing a stale/reclaimed run from advancing the checkpoint.
+- Every state application must verify both `run_id == run_lease.run_id` and `base_checkpoint == last_reviewed_commit` before any checkpoint movement. This prevents a stale/reclaimed run from advancing state.
 - Release only by a CatDesk guarded edit that replaces the exact current lease object for this `run_id` with `null`.
 - CatDesk connector/safety failures should be refreshed/retried once as usual. A failed guarded edit caused by CAS mismatch is not an infrastructure error; it means another run owns the lease.
 
-This design preserves overlap protection while avoiding recurring shell commands whose lock/create/delete behavior can be misclassified by the execution safety gateway.
+This design preserves overlap protection while keeping the recurring workflow off generic shell execution.
 
 ### Preflight visibility
 
-Preflight must report both:
-- committed strategy artifacts waiting for review; and
-- root-level untracked strategy Markdown files.
+Scheduled preflight uses GitHub's immutable compare/commit history through the CatDesk browser, not local `git` shell commands. It must identify the committed strategy artifacts waiting for review and the remote commit sequence from the checkpoint to the current `main` tip.
 
-Untracked files are visibility warnings only. They are not reviewed until committed, and they must never be staged, deleted, or treated as reviewed by Intake Review.
+Root-level untracked local strategy Markdown is a best-effort visibility warning in shell-free scheduled mode because GitHub cannot see uncommitted local files. Known local-only artifacts should still be surfaced when visible through CatDesk dedicated file search. Untracked files are never reviewed, staged, deleted, or treated as reviewed by Intake Review. Lack of a complete untracked listing must not silently turn local-only content into reviewed content.
 
 ## Incremental review procedure
 
 Normal scheduled review is commit-delta based and uses **small immutable batches**.
 
-1. Read CatDesk operating guidance and the canonical state, then run `review_state.py validate`.
+1. Read CatDesk operating guidance, the current repo-local skill, and canonical state through dedicated CatDesk file surfaces. Perform the invariant checklist above directly from state; do not call `run_command` or `start_command` for scheduled control-plane work.
 2. Acquire `run_lease` directly in the state using the CatDesk guarded-edit CAS protocol above. Keep the generated `run_id`. If another non-stale review owns the lease, stop this run without changing state.
 3. Process any existing `pending_ingestion` first. Pending items remain tied to their reviewed commit/path/blob.
-4. Run `review_state.py preflight --max-artifacts 5`. It fetches `origin/main`, verifies checkpoint ancestry, reports untracked strategy files, and chooses the deterministic immutable `batch_head`. If preflight fails, release this run's state lease with the guarded-edit protocol before returning.
-5. Review the selected `batch_head`. The batch contains at most five changed strategy artifacts where possible; if the first single commit itself contains more than five strategy artifacts, review that commit as one indivisible batch.
-6. Treat `batch_head`, not local `HEAD`, as `SNAPSHOT_HEAD`. Never use an out-of-date local branch tip as the review snapshot.
+4. Use the CatDesk browser to open GitHub's immutable compare view from `last_reviewed_commit` to the current full SHA of `main`. Require the checkpoint to be on the ancestor path; divergence or non-comparable history is `history_reconciliation_required`. Select the small batch from the compare commit sequence in oldest-to-newest order, accumulating root-level strategy Markdown changes up to five artifacts. If adding the next commit would exceed five, stop at the previous commit; if the first indivisible commit itself exceeds five, review that commit as one batch. The selected full SHA is `SNAPSHOT_HEAD` / `batch_head`.
+5. Read each changed strategy artifact from the immutable GitHub `SNAPSHOT_HEAD` (`blob/<SNAPSHOT_HEAD>/<path>` or equivalent raw/contents view) and record its immutable object identity when exposed. Review only that frozen content.
+6. Treat `batch_head`, never local `HEAD` or a moving remote tip, as `SNAPSHOT_HEAD`. Root-level untracked local Markdown remains a best-effort visibility warning only in shell-free scheduled mode and is never reviewed or mutated.
 7. Review only strategy artifacts materially added, modified, renamed, or removed in `last_reviewed_commit..SNAPSHOT_HEAD`. Documentation/skill-only changes do not require strategy review unless they change this contract. If the selected committed delta contains **zero** strategy artifacts, verify any contract-affecting documentation/skill change, then apply an empty review payload so the checkpoint can advance across that non-strategy delta; otherwise the same metadata-only delta would repeat forever.
 8. Resolve each changed strategy artifact provisionally to one of the four decisions.
 9. Use the independent Hermes `auditor` selectively:
@@ -264,19 +262,19 @@ Normal scheduled review is commit-delta based and uses **small immutable batches
 10. ChatGPT makes the final decision. Only `PASS` and `PASS-WITH-CAVEAT` are eligible for Wiki Brain ingestion, and caveats must travel with the Wiki record.
 11. `REMEDIATE` and `REJECT` remain outside Wiki Brain. Every `REMEDIATE` must retain its durable reason in `remediation_backlog`; a later remediation commit simply becomes a new Git delta and is reviewed normally.
 12. Build one review-update payload containing `run_id`, reviewed snapshot, base checkpoint, item paths/blobs/decisions/reasons, auditor status where applicable, ingestion results, pending ingestion, and deferred remote information.
-13. Apply that payload only through `review_state.py apply`. The helper first verifies `run_id == run_lease.run_id`, then performs checkpoint compare-and-swap protection, moves artifacts between decision buckets deterministically, updates the remediation ledger, validates invariants, and atomically writes the state file while preserving the active lease.
-14. Run `review_state.py validate` again and read back any Wiki Brain records created by this run.
+13. Apply the complete review result to canonical state with one CatDesk guarded edit/CAS. Before mutation, verify the exact active `run_id` still owns `run_lease` and `last_reviewed_commit` still equals the base checkpoint. Update checkpoint, decision buckets, remediation backlog, last findings, pending ingestion, ingested Wiki records, and deferred information consistently while preserving the active lease. Any CAS mismatch aborts rather than overwrites newer state.
+14. Read/search the state back through CatDesk and repeat the invariant checklist directly. Read back every Wiki Brain record created or enriched by this run before considering ingestion complete.
 15. Release the state lease through one CatDesk guarded edit that replaces this run's exact lease object with `"run_lease": null`. Never use a shell lock cleanup command.
 
-Do not advance the checkpoint halfway through a partially reviewed batch. A failed batch is retried from the same base checkpoint.
+Do not advance the checkpoint halfway through a partially reviewed batch. A failed batch is retried from the same base checkpoint. The recurring workflow must remain shell-free except for an explicitly required independent auditor invocation when no dedicated auditor surface exists.
 
 ## Version-race rule
 
-`origin/main` may advance while a review is in progress. Finish only the selected `SNAPSHOT_HEAD` batch and never mix newer artifacts into it.
+GitHub `main` may advance while a review is in progress. Finish only the selected immutable `SNAPSHOT_HEAD` batch and never mix newer artifacts into it.
 
-If the helper selected a small batch before the current remote tip, preserve the newer remote tip as deferred work. The next run continues from the newly advanced checkpoint toward the then-current `origin/main`.
+Before state mutation, refresh the GitHub `main` tip. If it advanced beyond `SNAPSHOT_HEAD`, preserve the newer full SHA and strategy delta as `deferred_remote_head` / `deferred_delta`; the next run continues from the newly advanced checkpoint toward the then-current remote tip.
 
-The lock lease protects local state from overlapping scheduled/manual runs; the immutable Git batch protects reviewed content from remote movement. Both protections remain required.
+The state lease protects local state from overlapping scheduled/manual runs; the immutable GitHub batch protects reviewed content from remote movement. Both protections remain required.
 
 ## Wiki Brain ingestion boundary
 
