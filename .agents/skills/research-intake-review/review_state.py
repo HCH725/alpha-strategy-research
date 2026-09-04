@@ -254,9 +254,37 @@ def acquire_lock(state_path: Path, owner: str, stale_minutes: int) -> dict:
             current = {"unreadable": True}
         if not stale:
             return {"acquired": False, "lock_path": str(lock_path), "current": current}
-        lock_path.unlink()
-        create()
-        return {"acquired": True, **payload, "lock_path": str(lock_path), "reclaimed_stale": True, "previous": current}
+
+        # Claim the stale lease by atomically moving the exact file out of the
+        # lock path. Only one contender can move it; any other contender then
+        # observes either no file or the newly created live lease. This avoids
+        # the unlink()+create() TOCTOU window where two reclaimers could race.
+        reclaimed_path = lock_path.with_name(f".{lock_path.name}.stale-{run_id}")
+        try:
+            os.replace(lock_path, reclaimed_path)
+        except FileNotFoundError:
+            return acquire_lock(state_path, owner, stale_minutes)
+        try:
+            try:
+                create()
+            except FileExistsError:
+                winner = load_json(lock_path)
+                return {
+                    "acquired": False,
+                    "lock_path": str(lock_path),
+                    "current": winner,
+                    "stale_reclaim_race": True,
+                    "previous": current,
+                }
+            return {
+                "acquired": True,
+                **payload,
+                "lock_path": str(lock_path),
+                "reclaimed_stale": True,
+                "previous": current,
+            }
+        finally:
+            reclaimed_path.unlink(missing_ok=True)
 
 
 def release_lock(state_path: Path, run_id: str) -> dict:
@@ -402,9 +430,17 @@ def main() -> int:
     sub.add_parser("validate")
     sub.add_parser("migrate")
 
+    begin = sub.add_parser("begin-run")
+    begin.add_argument("--owner", default="ChatGPT (GPT-5.6 Sol)")
+    begin.add_argument("--stale-minutes", type=int, default=DEFAULT_STALE_LOCK_MINUTES)
+    begin.add_argument("--max-artifacts", type=int, default=DEFAULT_MAX_ARTIFACTS)
+
     acquire = sub.add_parser("acquire-lock")
     acquire.add_argument("--owner", default="ChatGPT (GPT-5.6 Sol)")
     acquire.add_argument("--stale-minutes", type=int, default=DEFAULT_STALE_LOCK_MINUTES)
+
+    finish = sub.add_parser("finish-run")
+    finish.add_argument("--run-id", required=True)
 
     release = sub.add_parser("release-lock")
     release.add_argument("--run-id", required=True)
@@ -428,12 +464,40 @@ def main() -> int:
             result = {"ok": not errors, "errors": errors, "remediation_backlog_count": len(data.get("remediation_backlog", []))}
             print(json.dumps(result, ensure_ascii=False, indent=2))
             return 0 if not errors else 2
+        if args.command == "begin-run":
+            errors = validate_state(load_json(args.state))
+            if errors:
+                result = {"ok": False, "stage": "validate", "errors": errors}
+                print(json.dumps(result, ensure_ascii=False, indent=2))
+                return 2
+            lease = acquire_lock(args.state, args.owner, args.stale_minutes)
+            if not lease.get("acquired"):
+                result = {"ok": False, "stage": "lease", "lease": lease}
+                print(json.dumps(result, ensure_ascii=False, indent=2))
+                return 3
+            try:
+                pf_result = preflight(args.state, args.repo, args.max_artifacts)
+            except Exception:
+                release_lock(args.state, lease["run_id"])
+                raise
+            if not pf_result.get("ok"):
+                release_lock(args.state, lease["run_id"])
+                result = {"ok": False, "stage": "preflight", "lease_released": True, "preflight": pf_result}
+                print(json.dumps(result, ensure_ascii=False, indent=2))
+                return 5
+            result = {"ok": True, "run_id": lease["run_id"], "lease": lease, "preflight": pf_result}
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+            return 0
         if args.command == "acquire-lock":
             result = acquire_lock(args.state, args.owner, args.stale_minutes)
             print(json.dumps(result, ensure_ascii=False, indent=2))
             return 0 if result.get("acquired") else 3
-        if args.command == "release-lock":
+        if args.command in {"finish-run", "release-lock"}:
             result = release_lock(args.state, args.run_id)
+            if args.command == "finish-run" and result.get("reason") == "lock-missing":
+                result = {**result, "finished": True, "idempotent": True}
+                print(json.dumps(result, ensure_ascii=False, indent=2))
+                return 0
             print(json.dumps(result, ensure_ascii=False, indent=2))
             return 0 if result.get("released") else 4
         if args.command == "preflight":

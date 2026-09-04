@@ -225,10 +225,10 @@ Untracked files are visibility warnings only. They are not reviewed until commit
 
 Normal scheduled review is commit-delta based and uses **small immutable batches**.
 
-1. Read CatDesk operating guidance, then run `review_state.py validate`.
-2. Acquire the single-run lock through `review_state.py acquire-lock`. If another non-stale review owns it, stop this run without changing state.
+1. Read CatDesk operating guidance.
+2. Start the control-plane lease through `review_state.py begin-run --max-artifacts 5`. This single helper entry point performs state validation, atomically acquires the non-overlapping run lease, fetches `origin/main`, verifies checkpoint ancestry, reports untracked strategy files, and chooses the deterministic immutable `batch_head`. Keep the returned `run_id`. If another non-stale review owns the lease, stop this run without changing state. If validation or preflight fails after lease acquisition, the helper releases the lease before returning failure.
 3. Read the checkpoint and process any existing `pending_ingestion` first. Pending items remain tied to their reviewed commit/path/blob.
-4. Run `review_state.py preflight --max-artifacts 5`. The helper fetches `origin/main`, verifies the checkpoint is an ancestor, reports untracked strategy files, and chooses a deterministic `batch_head` containing at most five changed strategy artifacts where possible. If the first single commit itself contains more than five strategy artifacts, review that commit as one indivisible batch.
+4. Review the `batch_head` selected by `begin-run`. The batch contains at most five changed strategy artifacts where possible; if the first single commit itself contains more than five strategy artifacts, review that commit as one indivisible batch.
 5. Treat `batch_head`, not local `HEAD`, as `SNAPSHOT_HEAD`. Never use an out-of-date local branch tip as the review snapshot.
 6. Review only strategy artifacts materially added, modified, renamed, or removed in `last_reviewed_commit..SNAPSHOT_HEAD`. Documentation/skill-only changes do not require strategy review unless they change this contract. If the selected committed delta contains **zero** strategy artifacts, verify any contract-affecting documentation/skill change, then apply an empty review payload so the checkpoint can advance across that non-strategy delta; otherwise the same metadata-only delta would repeat forever.
 7. Resolve each changed strategy artifact provisionally to one of the four decisions.
@@ -242,7 +242,7 @@ Normal scheduled review is commit-delta based and uses **small immutable batches
 11. Build one review-update payload containing the reviewed snapshot, base checkpoint, item paths/blobs/decisions/reasons, auditor status where applicable, ingestion results, pending ingestion, and deferred remote information.
 12. Apply that payload only through `review_state.py apply`. The helper performs compare-and-swap checkpoint protection, moves artifacts between decision buckets deterministically, updates the remediation ledger, validates invariants, and atomically writes the state file.
 13. Run `review_state.py validate` again and read back any Wiki Brain records created by this run.
-14. Release the lock through `review_state.py release-lock --run-id <run_id>`.
+14. Finish the run through `review_state.py finish-run --run-id <run_id>`. The legacy `acquire-lock` / `release-lock` commands remain available only for backward compatibility and should not be used by the recurring automation.
 
 Do not advance the checkpoint halfway through a partially reviewed batch. A failed batch is retried from the same base checkpoint.
 
