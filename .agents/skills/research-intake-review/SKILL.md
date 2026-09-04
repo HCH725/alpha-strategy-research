@@ -183,34 +183,76 @@ Do not create a new Wiki record when the artifact is untraceable, materially fal
 
 Duplicate/no-increment cases are handled as `REJECT` with the reason stated; no fifth decision state is required.
 
+## Deterministic control-plane mechanics
+
+Research judgment stays in this skill and with ChatGPT. Mechanical state transitions must use the repo-local helper:
+
+```text
+.agents/skills/research-intake-review/review_state.py
+```
+
+The helper exists only to make the control plane deterministic. It does not decide whether a strategy should pass.
+
+Required invariants:
+- one artifact path belongs to exactly one decision bucket;
+- `last_review_findings` must agree with the current decision bucket for every item it records;
+- every current `REMEDIATE` item must have a durable `remediation_backlog` entry;
+- a remediation entry stores `path`, immutable `blob` when available, reason, and first/last-seen metadata;
+- a later PASS / PASS-WITH-CAVEAT / REJECT removes that artifact from the remediation backlog;
+- checkpoint updates use compare-and-swap semantics against the base checkpoint read at run start;
+- checkpoint JSON is written atomically (`tmp + fsync + replace`), never by partial in-place mutation.
+
+Before and after every state-changing review run, execute the helper's `validate` command. Any invariant failure is a control-plane block and must be repaired before new review decisions are committed.
+
+### Lock lease
+
+Use the helper's atomic single-run lock. The lock records `run_id`, owner, and start time.
+
+- If a non-stale lock exists, do not overlap the review.
+- A lock older than 180 minutes may be reclaimed as stale by the helper.
+- Release only a lock whose `run_id` matches the current run.
+- A transient CatDesk failure while invoking the helper should be retried once with identical parameters. Do not silently bypass overlap protection.
+
+### Preflight visibility
+
+Preflight must report both:
+- committed strategy artifacts waiting for review; and
+- root-level untracked strategy Markdown files.
+
+Untracked files are visibility warnings only. They are not reviewed until committed, and they must never be staged, deleted, or treated as reviewed by Intake Review.
+
 ## Incremental review procedure
 
-Normal scheduled review is commit-delta based.
+Normal scheduled review is commit-delta based and uses **small immutable batches**.
 
-1. Acquire the single-run review lock. If another active review owns the lock, do not start a second review.
-2. Read the local review checkpoint and confirm the configured repository and branch match the working repository.
-3. Process existing `pending_ingestion` items first. Each pending item should carry at least its reviewed commit and artifact path so retries remain tied to an immutable review snapshot.
-4. Fetch the latest `origin/main` and snapshot the exact HEAD being reviewed.
-5. Verify `last_reviewed_commit` is an ancestor of the snapshot. If it is not, stop normal delta review and reconcile the Git history before proceeding.
-6. If snapshot HEAD equals `last_reviewed_commit`, there is no new intake delta.
-7. Otherwise inspect rename/delete-aware Git status and review only strategy artifacts materially added, modified, renamed, or removed in `last_reviewed_commit..SNAPSHOT_HEAD`. Documentation/skill-only changes do not require strategy review unless they change the review contract.
-8. Resolve each changed strategy artifact to one of the four decisions.
-9. If ChatGPT generated, normalized, materially modified, or previously adjudicated an artifact, an independent `auditor` challenge is mandatory before a final `PASS` or `PASS-WITH-CAVEAT`. For other artifacts, use the auditor when there is material ambiguity or reviewer conflict. The auditor finds faults but never owns promotion or the final decision.
-10. Only `PASS` and `PASS-WITH-CAVEAT` are eligible for Wiki Brain ingestion. `PASS-WITH-CAVEAT` must carry its caveat into the Wiki record.
-11. `REMEDIATE` and `REJECT` remain outside Wiki Brain.
-12. After the entire snapshot has been reviewed, update the checkpoint to the reviewed snapshot HEAD and preserve unresolved remediation/rejection findings plus any pending ingestion. A later remediation commit becomes a new delta and is reviewed normally.
-13. Before writing the checkpoint, confirm it still equals the base checkpoint read at run start. Never move the checkpoint backward or overwrite a newer completed review.
-14. Release the review lock.
+1. Read CatDesk operating guidance, then run `review_state.py validate`.
+2. Acquire the single-run lock through `review_state.py acquire-lock`. If another non-stale review owns it, stop this run without changing state.
+3. Read the checkpoint and process any existing `pending_ingestion` first. Pending items remain tied to their reviewed commit/path/blob.
+4. Run `review_state.py preflight --max-artifacts 5`. The helper fetches `origin/main`, verifies the checkpoint is an ancestor, reports untracked strategy files, and chooses a deterministic `batch_head` containing at most five changed strategy artifacts where possible. If the first single commit itself contains more than five strategy artifacts, review that commit as one indivisible batch.
+5. Treat `batch_head`, not local `HEAD`, as `SNAPSHOT_HEAD`. Never use an out-of-date local branch tip as the review snapshot.
+6. Review only strategy artifacts materially added, modified, renamed, or removed in `last_reviewed_commit..SNAPSHOT_HEAD`. Documentation/skill-only changes do not require strategy review unless they change this contract.
+7. Resolve each changed strategy artifact provisionally to one of the four decisions.
+8. Use the independent Hermes `auditor` selectively:
+   - mandatory before final `PASS` or `PASS-WITH-CAVEAT` when ChatGPT generated, normalized, materially modified, or previously adjudicated the artifact;
+   - recommended for genuine material ambiguity or reviewer conflict;
+   - not required merely to reconfirm an already-clear `REMEDIATE` or `REJECT`.
+   The auditor finds faults but never owns promotion or final judgment.
+9. ChatGPT makes the final decision. Only `PASS` and `PASS-WITH-CAVEAT` are eligible for Wiki Brain ingestion, and caveats must travel with the Wiki record.
+10. `REMEDIATE` and `REJECT` remain outside Wiki Brain. Every `REMEDIATE` must retain its durable reason in `remediation_backlog`; a later remediation commit simply becomes a new Git delta and is reviewed normally.
+11. Build one review-update payload containing the reviewed snapshot, base checkpoint, item paths/blobs/decisions/reasons, auditor status where applicable, ingestion results, pending ingestion, and deferred remote information.
+12. Apply that payload only through `review_state.py apply`. The helper performs compare-and-swap checkpoint protection, moves artifacts between decision buckets deterministically, updates the remediation ledger, validates invariants, and atomically writes the state file.
+13. Run `review_state.py validate` again and read back any Wiki Brain records created by this run.
+14. Release the lock through `review_state.py release-lock --run-id <run_id>`.
 
-Do not advance the checkpoint halfway through a partially reviewed batch.
+Do not advance the checkpoint halfway through a partially reviewed batch. A failed batch is retried from the same base checkpoint.
 
 ## Version-race rule
 
-If `origin/main` changes while a review is in progress, finish the review against the snapshotted commit. Do not silently mix artifacts from two HEADs.
+`origin/main` may advance while a review is in progress. Finish only the selected `SNAPSHOT_HEAD` batch and never mix newer artifacts into it.
 
-After the snapshot is complete, the next run handles the newer delta.
+If the helper selected a small batch before the current remote tip, preserve the newer remote tip as deferred work. The next run continues from the newly advanced checkpoint toward the then-current `origin/main`.
 
-The review lock protects the local state from overlapping scheduled/manual runs; the Git snapshot rule protects the reviewed content from moving `origin/main`. Both protections are required.
+The lock lease protects local state from overlapping scheduled/manual runs; the immutable Git batch protects reviewed content from remote movement. Both protections remain required.
 
 ## Wiki Brain ingestion boundary
 
