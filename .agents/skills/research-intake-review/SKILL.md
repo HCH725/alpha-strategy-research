@@ -15,11 +15,11 @@ It does **not** determine whether a strategy is profitable, robust, production-r
 
 ## Ownership boundary
 
-- Scheduled Research Intake Review is owned by **ChatGPT**.
-- Hermes `default` should understand this skill as backup professional knowledge and may use it only when explicitly asked to assist or take over.
-- Learning this skill does **not** assign Hermes the recurring review job.
-- The `auditor` profile may independently challenge a review when requested, but it is not the final decision-maker.
-- Final intake judgment and Wiki Brain promotion remain with ChatGPT unless the user explicitly changes ownership.
+- Scheduled Research Intake Review is owned by **Hermes `default`**.
+- Hermes `default` is the recurring reviewer and Wiki ingestion worker for this skill.
+- The `auditor` profile independently challenges reviews when this skill requires it, but it is not the final decision-maker.
+- Final intake judgment and Wiki Brain promotion remain with Hermes `default` after considering any required independent auditor challenge.
+- ChatGPT remains the architecture/methodology advisor and may perform spot audits or remediation guidance when the user asks.
 
 ## Position in the research pipeline
 
@@ -185,7 +185,7 @@ Duplicate/no-increment cases are handled as `REJECT` with the reason stated; no 
 
 ## Deterministic control-plane mechanics — CONTROL PLANE V6
 
-Research judgment stays in this skill and with ChatGPT. The repo-local helper owns deterministic mechanics:
+Research judgment stays in this skill and with Hermes `default`. The repo-local helper owns deterministic mechanics:
 
 ```text
 .agents/skills/research-intake-review/review_state.py
@@ -197,7 +197,7 @@ The v6 entrypoint owns bootstrap/verification mechanics without duplicating stat
 .agents/skills/research-intake-review/intake_control.py
 ```
 
-Scheduled ChatGPT reads the current skill through v6 bootstrap output, not a CatDesk dedicated read. After CatDesk guidance, launch the entrypoint through CatDesk `run_command`; it reads `SKILL.md` + canonical state using normal local file IO, computes policy SHA-256, runs helper `validate`/`preflight`, and returns structured JSON including policy text/hash, state summary, pending summary, frozen batch manifest, untracked visibility-only list, version contract, and failure class (`ok`/`transient`/`deterministic`). A CatDesk dedicated-read `INVALID_ARGUMENT` never prevents bootstrap because bootstrap never calls that surface; CatDesk `run_command` itself is still required for local invocation.
+Scheduled Hermes `default` runs locally from the repository workdir and reads the current skill through the v6 entrypoint. The entrypoint reads `SKILL.md` + canonical state using normal local file IO, computes policy SHA-256, runs helper `validate`/`preflight`, and returns structured JSON including policy text/hash, state summary, pending summary, frozen batch manifest, untracked visibility-only list, version contract, and failure class (`ok`/`transient`/`deterministic`). CatDesk is not part of the recurring execution path.
 
 Version contract (frozen for this release): the v6 entrypoint operates over frozen state schema/control v5. `SUPPORTED_STATE_VERSIONS=(5,)` is enforced in `intake_control.py` (`bootstrap`/`status`/`ingest-pending`/`apply`); any other `state_control_version` is rejected deterministically with `unsupported state_control_version`; no canonical migration is performed here. Bootstrap output carries `version_contract` (`entrypoint v6`, `supported_state_versions [5]`).
 
@@ -216,7 +216,7 @@ Required invariants:
 - each pending entry stores the exact deterministic Wiki content plus SHA-256; its decision must match the current PASS/PASS-WITH-CAVEAT bucket;
 - Wiki Brain is written only from durable `pending_ingestion` created by the successful checkpoint CAS.
 
-A transient CatDesk/shell/browser/auditor failure therefore affects only the current run. It must not leave a lock or lease that blocks later runs.
+A transient local shell/browser/auditor/network failure therefore affects only the current run. It must not leave a lock or lease that blocks later runs.
 
 ### Preflight and state mechanics
 
@@ -230,18 +230,18 @@ Pending ingestion is executed only by `intake_control.py execute_ingestion`: it 
 
 Normal scheduled review is commit-delta based and uses **small immutable batches**.
 
-1. Read CatDesk operating guidance, then launch the v6 entrypoint through CatDesk `run_command` and read the current skill through its bootstrap output (not a dedicated read). Run the deterministic invariant validator via bootstrap. If validation fails (`deterministic`), stop without mutating review state. `INVALID_ARGUMENT` from a dedicated read never blocks bootstrap because bootstrap uses local file IO.
+1. From the repository workdir, launch the v6 entrypoint locally and read the current skill through its bootstrap output. Run the deterministic invariant validator via bootstrap. If validation fails (`deterministic`), stop without mutating review state.
 2. Process any existing `pending_ingestion` first via `intake_control.py ingest-pending` (dry-run with `--dry-run` for preview). Each pending item is tied to reviewed commit/path/blob/decision and contains the exact Wiki target, exact `wiki_content`, and `wiki_content_sha256`. Never regenerate the Wiki record during ingestion. If the target is absent, create that exact content; if it already has the same hash, treat it as an idempotent success; if it differs, do not overwrite unless an `expected_existing_sha256` stored with the pending item still matches the current target. Read the result back, verify the pending hash, then use `complete-ingestion` to remove only that exact pending item and record the successful Wiki path.
 3. Run deterministic preflight from `last_reviewed_commit` to current `origin/main`. Require the checkpoint to be an ancestor. Select the oldest immutable batch and treat its full SHA as `SNAPSHOT_HEAD` / `batch_head`.
 4. Read each strategy artifact from immutable `SNAPSHOT_HEAD` content and review only that frozen material. Never mix a later remote revision into the batch. For a deleted artifact, read the last immutable content from the base side, record status `D`, resolve it as `REJECT`, and never create pending ingestion for it.
 5. If the selected committed delta has zero strategy artifacts, verify any contract-affecting documentation/skill change and apply an empty review payload so the checkpoint advances across metadata-only history.
 6. Resolve each strategy artifact provisionally to one of the four decisions.
 7. Use the independent Hermes `auditor` selectively:
-   - mandatory before final `PASS` or `PASS-WITH-CAVEAT` when ChatGPT generated, normalized, materially modified, or previously adjudicated the artifact;
+   - mandatory before final `PASS` or `PASS-WITH-CAVEAT` when Hermes `default` generated, normalized, materially modified, or previously adjudicated the artifact;
    - recommended for genuine material ambiguity or reviewer conflict;
    - not required merely to reconfirm an already-clear `REMEDIATE` or `REJECT`.
    The auditor finds faults but never owns promotion or final judgment.
-8. ChatGPT makes the final decision. `REMEDIATE` and `REJECT` remain outside Wiki Brain. Every `REMEDIATE` retains its durable reason in `remediation_backlog`.
+8. Hermes `default` makes the final decision after considering any required independent auditor challenge. `REMEDIATE` and `REJECT` remain outside Wiki Brain. Every `REMEDIATE` retains its durable reason in `remediation_backlog`.
 9. Build one review-update payload with the original `base_checkpoint`, `reviewed_snapshot`, each item's exact Git status/path/blob/decision/reason/auditor status, deferred remote information, and **one new pending-ingestion record for every PASS/PASS-WITH-CAVEAT**. Each pending record must carry the exact deterministic Wiki content and SHA-256. Do not write accepted items to Wiki Brain yet.
 10. Run `apply` via `intake_control.py apply` (fresh-fetch guarded; fetch failure aborts as `transient` with no offline advancement). Under the short OS mutex it must re-check the checkpoint CAS, prove `reviewed_snapshot` ancestry, and prove the payload exactly covers the frozen strategy diff. CAS or coverage mismatch aborts without Wiki writes. On success, checkpoint, decision buckets, remediation backlog, findings, deferred information, and pending ingestion advance atomically. A newer REMEDIATE/REJECT for the same staging path cancels any older unresolved pending entry for that path.
 11. Re-run state validation. Only after successful state apply may this run process the newly durable pending Wiki entries, using the exact content/hash already stored in state. Read back every exact canonical Wiki file and verify its hash before completion.
@@ -275,13 +275,13 @@ It does not mean:
 - Nautilus-validated;
 - approved for Paper, Testnet, or Live trading.
 
-## Handover rule for Hermes
+## Operating rule for Hermes
 
-If the user explicitly asks Hermes to take over Research Intake Review in the future, Hermes should:
+As the current recurring owner, Hermes `default` should:
 
 1. read this skill first;
 2. inspect the current checkpoint and latest repo HEAD;
 3. review only the unreviewed commit delta;
 4. preserve the four-decision model and downstream boundaries;
 5. use an independent auditor when appropriate;
-6. never infer that prior familiarity with the skill grants permanent ownership of the scheduled review.
+6. keep ownership explicit in this skill and canonical state; any future ownership change must be user-directed.

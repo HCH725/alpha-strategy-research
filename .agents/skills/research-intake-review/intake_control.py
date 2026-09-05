@@ -5,17 +5,16 @@ Version contract (frozen for this release): v6 entrypoint operates over frozen
 state schema/control v5. SUPPORTED_STATE_VERSIONS=(5,); unknown versions are
 rejected deterministically; no canonical migration is performed here.
 
-Launched through CatDesk run_command after CatDesk guidance. Reads SKILL.md
-and canonical state using normal local file IO (no CatDesk dedicated read),
-computes policy SHA-256, runs review_state validate/preflight, and returns
-structured JSON. Uses review_state functions for validate/preflight/apply/
-complete-ingestion semantics; never duplicates CAS/coverage logic.
+Launched locally by Hermes `default` from the repository workdir. Reads
+SKILL.md and canonical state using normal local file IO, computes policy
+SHA-256, runs review_state validate/preflight, and returns structured JSON.
+Uses review_state functions for validate/preflight/apply/complete-ingestion
+semantics; never duplicates CAS/coverage logic.
 
 Failure classes: transient = fetch/network transport only (retryable, whitelist
 below); deterministic = invariant/CAS/coverage/contract/bad-revision/object/
-not-a-repo/invalid-checkpoint (not retryable). CatDesk dedicated read
-INVALID_ARGUMENT does not prevent bootstrap because bootstrap never calls it.
-CatDesk run_command is still required to launch this file locally.
+not-a-repo/invalid-checkpoint (not retryable). The recurring Hermes execution
+path is local and does not depend on CatDesk.
 
 Wiki safety is two layers: (1) canonical invariant owned by
 review_state.validate_state (quant/ prefix, .md suffix, no .., no absolute)
@@ -212,11 +211,13 @@ def list_untracked_local(repo: Path) -> list[str]:
 
 
 def _catdesk_note() -> dict:
+    # Backward-compatible diagnostics field retained for callers/tests. The
+    # recurring Hermes path is fully local and has no CatDesk dependency.
     return {
         "dedicated_read_required": False,
-        "invocation": "run_command",
+        "invocation": "local-hermes",
         "read_invalid_argument_tolerated": True,
-        "note": "bootstrap uses local file IO; CatDesk dedicated read INVALID_ARGUMENT never blocks bootstrap; run_command still required to launch locally",
+        "note": "bootstrap uses local file IO; recurring Hermes execution has no CatDesk dependency",
     }
 
 
