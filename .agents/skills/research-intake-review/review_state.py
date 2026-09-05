@@ -32,6 +32,9 @@ DECISION_TO_BUCKET = {
 DEFAULT_STATE = Path("/Users/hong/workspace/alpha-strategy-review-state.json")
 DEFAULT_REPO = Path("/Users/hong/workspace/alpha-strategy-research")
 DEFAULT_MAX_ARTIFACTS = 5
+# ponytail: bounded fetch for preflight (backward-compatible default; other
+# local git calls stay unbounded). intake_control passes this explicitly.
+FETCH_TIMEOUT_S = 60
 
 
 def now_iso() -> str:
@@ -89,13 +92,14 @@ def atomic_write_json(path: Path, data: dict) -> None:
             tmp.unlink()
 
 
-def git(repo: Path, *args: str, check: bool = True) -> str:
+def git(repo: Path, *args: str, check: bool = True, timeout: int | None = None) -> str:
     proc = subprocess.run(
         ["git", *args],
         cwd=repo,
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        timeout=timeout,
     )
     if check and proc.returncode != 0:
         raise RuntimeError(f"git {' '.join(args)} failed: {proc.stderr.strip()}")
@@ -325,13 +329,16 @@ def _migrate_state_locked(state_path: Path, repo: Path) -> dict:
     return data
 
 
-def preflight(state_path: Path, repo: Path, max_artifacts: int) -> dict:
+def preflight(state_path: Path, repo: Path, max_artifacts: int,
+              fetch_timeout: int | None = FETCH_TIMEOUT_S) -> dict:
     data = load_json(state_path)
     errors = validate_state(data)
     if errors:
         return {"ok": False, "state_errors": errors}
 
-    git(repo, "fetch", "origin", "main", "--quiet")
+    # Bounded fetch: TimeoutExpired propagates to the caller (intake_control
+    # maps it to transient). All CAS/diff/batch semantics below are unchanged.
+    git(repo, "fetch", "origin", "main", "--quiet", timeout=fetch_timeout)
     base = data["last_reviewed_commit"]
     remote_head = git(repo, "rev-parse", "origin/main")
     ancestor = subprocess.run(
