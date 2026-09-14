@@ -6,7 +6,7 @@
 
 ## 用途
 
-本 repository 是 **三個獨立 Research Scout（ChatGPT / Hermes / Antigravity）** 與 **ChatGPT Research Intake Review / Wiki Brain ingestion** 之間的交接層。
+本 repository 是 **四個獨立 Research Scout（ChatGPT / Hermes / Antigravity / MiMo）** 與 **ChatGPT Research Intake Review / Wiki Brain ingestion** 之間的交接層。
 
 運作流程：
 
@@ -14,7 +14,7 @@
 外部公開來源
 （GitHub / FMZ / TradingView / papers / blogs / public research）
         ↓
-ChatGPT / Hermes / Antigravity（獨立平行的 Research Scout）
+ChatGPT / Hermes / Antigravity / MiMo（獨立平行的 Research Scout）
 尋找 alpha 想法 → 理解 → 標準化 → push 到這裡
         ↓
 ChatGPT
@@ -26,7 +26,7 @@ ChatGPT 將通過 intake 的知識直接寫入 Hermes Wiki Brain
 Hermes 使用這些知識進行研究、組合與後續驗證
 ```
 
-三個 Scout 的有效公開來源契約：GitHub / FMZ / TradingView / papers / blogs / public research。TradingView 僅限公開、可追溯的 strategy/idea/script/research URL，須保留 stable URL 與 as-of date；private/paid/invite-only 不可用。
+四個 Scout 的有效公開來源契約：GitHub / FMZ / TradingView / papers / blogs / public research。TradingView 僅限公開、可追溯的 strategy/idea/script/research URL，須保留 stable URL 與 as-of date；private/paid/invite-only 不可用。
 
 **任何 Scout 都不得直接寫入 Hermes Wiki Brain。** 每個 Scout 唯一的輸出管道是本 repository。Push 到這裡的 artifact 應該已經是 Wiki Brain-native 格式，讓 ChatGPT 可以完成 Research Intake Review 後直接 ingest，而不需要再做一次翻譯或重新整理。
 
@@ -40,7 +40,7 @@ Hermes 使用這些知識進行研究、組合與後續驗證
 外部公開來源
 （GitHub / FMZ / TradingView / papers / blogs / public research）
         ↓
-ChatGPT / Hermes / Antigravity 研究 Scout（獨立平行）
+ChatGPT / Hermes / Antigravity / MiMo 研究 Scout（獨立平行）
         ↓
 alpha-strategy-research
         ↓
@@ -66,7 +66,7 @@ feedback / lineage / reuse ── outer evidence-based feedback（survivor summa
 
 你的工作是從公開外部來源搜尋可能有價值的 **alpha 策略或 alpha 假說**，然後把每一個值得保留的項目轉換成下方規定的研究紀錄格式，再 push 到本 repository。
 
-你是三個獨立平行 Research Scout（ChatGPT / Hermes / Antigravity）之一。每個 Scout 自主運作，指向同一個 repository。不要重複或覆蓋其他 Scout 已有的 artifact；產出新紀錄前請先 inspect 近期 commits。
+你是四個獨立平行 Research Scout（ChatGPT / Hermes / Antigravity / MiMo）之一。每個 Scout 自主運作，指向同一個 repository。不要重複或覆蓋其他 Scout 已有的 artifact；產出新紀錄前請先 inspect 近期 commits。
 
 有效公開來源：GitHub / FMZ / TradingView / papers / blogs / public research。TradingView 僅限公開、可追溯的 strategy/idea/script/research URL，須保留 stable URL 與 as-of date；private/paid/invite-only 不可用。
 
@@ -498,7 +498,7 @@ v2-final-final
 
 > **Scout output 應該直接等於 Wiki Brain-ready input。**
 
-如此可以降低 Scout、ChatGPT 與 Hermes 之間重複理解、重複摘要與不必要的 token 消耗。
+如此可以降低 Antigravity、ChatGPT、Hermes 與 MiMo 之間重複理解、重複摘要與不必要的 token 消耗。
 
 ---
 
@@ -507,6 +507,8 @@ v2-final-final
 每一個 Research Scout 都有自己的排程，整體設計刻意採用**高頻率、低產出**。目標是持續尋找高品質研究，不是為了湊數量。
 
 Scheduled Antigravity Scout 每一輪都必須從最新 `origin/main` 建立全新的 detached temporary Git worktree。一般 checkout 只作 coordinator，即使其中存在其他流程留下的 unrelated local dirt，也不得因此污染或阻塞 Antigravity；Antigravity 不得 inspect、修改、stage 或清理 coordinator 的 dirt，而某一輪失敗也不得傳染後續排程。
+
+Scheduled MiMo Desktop Scout 是第四條獨立研究 lane，優先研究公開 academic papers、arXiv/SSRN/journals、公開 GitHub research/code repositories、FMZ、公開 quantitative research/blogs 與其他可追溯 primary sources。MiMo lane 刻意排除 TradingView，因為 ChatGPT 已維持獨立的 TradingView Scout。MiMo 與其他 Scout 一樣，必須遵循相同的 canonical schema、dedup、provenance、research-only 邊界與 Git concurrency 規則。
 
 每一次 scheduled run：
 

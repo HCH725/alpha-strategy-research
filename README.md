@@ -6,7 +6,7 @@ Public staging repository for external alpha-strategy research normalized for di
 
 ## Purpose
 
-This repository is the handoff layer between **three independent Research Scouts (ChatGPT / Hermes / Antigravity)** and **ChatGPT Research Intake Review / Wiki Brain ingestion**.
+This repository is the handoff layer between **four independent Research Scouts (ChatGPT / Hermes / Antigravity / MiMo)** and **ChatGPT Research Intake Review / Wiki Brain ingestion**.
 
 Operating flow:
 
@@ -14,7 +14,7 @@ Operating flow:
 External public sources
 (GitHub / FMZ / TradingView / papers / blogs / public research)
         ↓
-ChatGPT / Hermes / Antigravity (independent, parallel scouts)
+ChatGPT / Hermes / Antigravity / MiMo (independent, parallel scouts)
 find alpha ideas → understand → normalize → push here
         ↓
 ChatGPT
@@ -26,7 +26,7 @@ ChatGPT writes accepted knowledge directly into Hermes Wiki Brain
 Hermes uses the knowledge for research, synthesis and later validation
 ```
 
-Valid public source contract for all three Scouts: GitHub / FMZ / TradingView / papers / blogs / public research. For TradingView, only public, traceable strategy/idea/script/research URLs are valid — preserve the stable URL and as-of date; private or paid/invite-only scripts are not valid sources.
+Valid public source contract for all four Scouts: GitHub / FMZ / TradingView / papers / blogs / public research. For TradingView, only public, traceable strategy/idea/script/research URLs are valid — preserve the stable URL and as-of date; private or paid/invite-only scripts are not valid sources.
 
 **No Scout writes to Hermes Wiki Brain.** Each Scout's only output channel is this repository. The artifact pushed here should already be in Wiki Brain-native form so ChatGPT can review and ingest it without another translation pass.
 
@@ -40,7 +40,7 @@ After ChatGPT Research Intake Review and Wiki Brain ingestion, Hermes can use ac
 External public sources
 (GitHub / FMZ / TradingView / papers / blogs / public research)
         ↓
-ChatGPT / Hermes / Antigravity research scouts (independent, parallel)
+ChatGPT / Hermes / Antigravity / MiMo research scouts (independent, parallel)
         ↓
 alpha-strategy-research
         ↓
@@ -66,7 +66,7 @@ later gated Paper → Binance Demo/Testnet → Live progression
 
 Your job is to search public external sources for potentially useful **alpha strategies or alpha hypotheses**, then convert each worthwhile item into the exact research-record format below and push it to this repository.
 
-You are one of three independent, parallel Research Scouts (ChatGPT / Hermes / Antigravity). Each Scout operates autonomously and targets the same repository. Do not duplicate or overwrite another Scout's existing artifact; inspect recent commits before producing new records.
+You are one of four independent, parallel Research Scouts (ChatGPT / Hermes / Antigravity / MiMo). Each Scout operates autonomously and targets the same repository. Do not duplicate or overwrite another Scout's existing artifact; inspect recent commits before producing new records.
 
 Valid public sources: GitHub / FMZ / TradingView / papers / blogs / public research. For TradingView, only public, traceable strategy/idea/script/research URLs are valid — preserve the stable URL and as-of date; private or paid/invite-only scripts are not valid sources.
 
@@ -498,7 +498,7 @@ The goal is simple:
 
 > **Scout output should already equal Wiki Brain-ready input.**
 
-This minimizes repeated interpretation, repeated summarization and unnecessary token consumption across Antigravity, ChatGPT and Hermes.
+This minimizes repeated interpretation, repeated summarization and unnecessary token consumption across Antigravity, ChatGPT, Hermes and MiMo.
 
 ---
 
@@ -507,6 +507,8 @@ This minimizes repeated interpretation, repeated summarization and unnecessary t
 Each Research Scout runs on its own schedule and is intentionally **high-frequency but low-output**. Its job is to keep looking, not to manufacture a quota.
 
 The scheduled Antigravity Scout executes each run in a fresh detached temporary Git worktree created from the latest `origin/main`. The normal checkout is only a coordinator and may contain unrelated local dirt; Antigravity must neither inspect nor modify that dirt, and a failed run must not contaminate later runs.
+
+The scheduled MiMo Desktop Scout is a fourth independent lane. It prioritizes public academic papers, arXiv/SSRN/journals, public GitHub research/code repositories, FMZ, public quantitative research/blogs, and other traceable primary sources. TradingView is intentionally excluded from the MiMo lane because ChatGPT maintains a dedicated TradingView Scout. MiMo follows the same canonical schema, dedup, provenance, research-only and Git concurrency rules as every other Scout.
 
 For every scheduled run:
 
