@@ -29,15 +29,18 @@ ChatGPT / Hermes / Antigravity research
 alpha-strategy-research
         ↓
 Research Intake Review
-        ↓
-Hermes Wiki Brain (research-only knowledge)
-        ↓
-Hermes hypothesis / synthesis
-        ↓
-PyBroker research screening
-        ↓
-Nautilus authoritative historical validation
+        ├──→ ① Hermes Wiki Brain (research-only knowledge)                    [sibling output A]
+        └──→ ② production candidate pool (/Volumes/ExpansionDrive/qlib-results/_handoff/candidates.json)
+                                                                              [sibling output B]
+                ↓
+        Hermes hypothesis / synthesis
+                ↓
+        PyBroker research screening
+                ↓
+        Nautilus authoritative historical validation
 ```
+
+The two outputs are **siblings produced by the same review decision**: one `PASS` / `PASS-WITH-CAVEAT` decision creates (①) the Wiki Brain record **and** (②) exactly one production candidate. Wiki Brain is knowledge preservation; it is **not** a second eligibility gate for candidateization, and there is no crypto/runnable suitability screening after intake.
 
 Never collapse these stages.
 
@@ -150,6 +153,8 @@ Intake Review does not require:
 
 Those belong downstream to Hermes hypothesis formation, PyBroker research, Nautilus validation, and later trading authorization.
 
+Also do not turn the decision into a two-step gate: once `PASS` / `PASS-WITH-CAVEAT` is finalized, the candidate-pool append (sibling output, see below) must not be re-adjudicated for crypto/runnable suitability, and Wiki Brain presence must not be treated as a precondition for it.
+
 ## Decisions
 
 Use only four outcomes.
@@ -246,6 +251,7 @@ Normal scheduled review is commit-delta based and uses **small immutable batches
 10. Run `apply` via `intake_control.py apply` (fresh-fetch guarded; fetch failure aborts as `transient` with no offline advancement). Under the short OS mutex it must re-check the checkpoint CAS, prove `reviewed_snapshot` ancestry, and prove the payload exactly covers the frozen strategy diff. CAS or coverage mismatch aborts without Wiki writes. On success, checkpoint, decision buckets, remediation backlog, findings, deferred information, and pending ingestion advance atomically. A newer REMEDIATE/REJECT for the same staging path cancels any older unresolved pending entry for that path.
 11. Re-run state validation. Only after successful state apply may this run process the newly durable pending Wiki entries, using the exact content/hash already stored in state. Read back every exact canonical Wiki file and verify its hash before completion.
 12. Atomically clear only the successfully completed pending entries and append their canonical paths to `ingested_wiki_records`. If ingestion or cleanup fails, leave the pending entry durable for the next run; do not roll back the reviewed checkpoint.
+13. Append the sibling candidate-pool output: for every item this run finalized as `PASS` / `PASS-WITH-CAVEAT`, append exactly one entry to `/Volumes/ExpansionDrive/qlib-results/_handoff/candidates.json` (idempotent: no-op when the same `reviewed_source` / `family_id` / fingerprint already exists). Write all new card bodies first, then replace the pool file atomically. This is canonicalization of the same review decision, not a second review, and it happens regardless of whether the Wiki entry was already ingested.
 
 Do not advance the checkpoint halfway through a partially reviewed batch. A failed pre-CAS batch is retried from the same base checkpoint. A post-CAS Wiki failure is retried from `pending_ingestion`; it does not cause the research review to repeat.
 
@@ -275,6 +281,25 @@ It does not mean:
 - Nautilus-validated;
 - approved for Paper, Testnet, or Live trading.
 
+## Candidate pool sibling output (contract 14.4)
+
+The production candidate pool is a **file contract, not a service**:
+
+```text
+/Volumes/ExpansionDrive/qlib-results/_handoff/candidates.json
+```
+
+Rules:
+
+- **Same decision, two outputs.** Every item finalized as `PASS` or `PASS-WITH-CAVEAT` in this review gets exactly one candidate appended to that pool before the run ends, in addition to its Wiki Brain record. `REMEDIATE` and `REJECT` never enter the pool.
+- **No new states, no new stage.** The four decisions are unchanged, and the pool append is not a fifth state, not a second review, and not a new pipeline stage.
+- **Candidate eligibility is decided here.** `PASS` / `PASS-WITH-CAVEAT` must be sufficient to candidateize. There is no later crypto/runnable suitability screening, and Wiki Brain presence is not a precondition (Wiki ingestion and the pool append are sibling outputs of the same decision).
+- **Appends are idempotent.** If the same `reviewed_source` / `family_id` / fingerprint already exists in the pool or in `/results/*/family.json`, the append is a no-op. Never rewrite, renumber, or re-author an existing entry; write every new card body file first, then replace `candidates.json` atomically.
+- **Body generation is format/canonicalization, not review.** The card body is produced from the frozen GitHub artifact plus this review's normalized content, crypto portability, caveats, and the contract-14.4 v1.3.0 candidate requirements (mechanism, eligible universe, parameter domain, historical/OOS split, `DCA PARAMETER DOMAIN`, `COHORT SURVIVOR SEMANTICS`, robustness/falsification, Qlib-only runtime rules). Execution details the source does not specify may be labeled `research-defined` without changing the core hypothesis.
+- **Universe fidelity.** Never force a non-crypto source onto BTC/ETH/BNB/SOL; when a research-defined universe is needed, keep it inside the same market/mechanism range and label it `research-defined`. Where the record itself carries a crypto portability statement, canonicalize from that statement.
+- **A missing prerequisite is not a gate.** If the required data/market is not available locally, the candidate still enters the pool with the requirement registered faithfully; the later execution card then ends under the existing technical-failure semantics. Never re-adjudicate suitability to keep the pool clean.
+- **No new machinery.** Appending is plain file work by the recurring owner. Do not add a helper service/manager/registry/daemon/queue/cron or a new file-type framework for it.
+
 ## Operating rule for Hermes
 
 As the current recurring owner, Hermes `default` should:
@@ -284,4 +309,5 @@ As the current recurring owner, Hermes `default` should:
 3. review only the unreviewed commit delta;
 4. preserve the four-decision model and downstream boundaries;
 5. use an independent auditor when appropriate;
-6. keep ownership explicit in this skill and canonical state; any future ownership change must be user-directed.
+6. append the sibling production candidate for every `PASS` / `PASS-WITH-CAVEAT` (idempotently, same run);
+7. keep ownership explicit in this skill and canonical state; any future ownership change must be user-directed.
