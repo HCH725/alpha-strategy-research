@@ -104,13 +104,17 @@ quant/strategy-research-record-spec-v1.md
 schema: strategy-research-record-v1
 ```
 
-The `v1` label above describes the **current** canonical version; it is not a permanent hardcoded contract. Before every scheduled local Scout run, resolve and read the current versioned `quant/strategy-research-record-spec-v*.md` specification in Wiki Brain and use the `schema` and required structure declared by that specification. If a newer canonical specification exists, it overrides the schema examples in this README. If the canonical specification cannot be resolved, fail closed rather than guessing.
+The `v1` label above describes the **current** canonical version; it is not a permanent hardcoded contract.
+
+**GitHub-only Scout rule:** when a Scout is explicitly constrained to GitHub-only operation, this repository README is its complete operational contract for the current strategy-record schema, required frontmatter, document structure, provenance, naming, deduplication, and research-only boundaries. A GitHub-only Scout MUST NOT access Hermes Wiki Brain, CatDesk, local files, shell/Git CLI, or any other local dependency to resolve the schema. It should fail closed only if the current README itself does not expose enough information to construct a compliant record unambiguously.
+
+**Local Scout rule:** a Scout that is explicitly allowed local/Wiki access may resolve and read the current versioned `quant/strategy-research-record-spec-v*.md` specification in Hermes Wiki Brain. If that local canonical specification is newer than the README, the local Scout should follow the newer specification and the repository documentation should subsequently be synchronized.
 
 Do not invent another candidate schema and do not silently migrate older records. Existing records remain valid under the schema version they were created with unless an explicit versioned migration rule says otherwise.
 
 ### Required frontmatter
 
-The example below reflects the current v1 specification. New records must use the exact frontmatter required by the canonical specification resolved at run time:
+The block below is the required frontmatter for the current `strategy-research-record-v1` contract. GitHub-only Scouts use this README directly; local Scouts may use a newer canonical Wiki Brain specification when explicitly allowed by their own operating contract:
 
 ```yaml
 ---
@@ -488,7 +492,7 @@ For each research run:
 
 1. Read this README.
 2. Search public external sources for worthwhile alpha candidates.
-3. Resolve the current canonical Wiki Brain strategy-research specification, then normalize each worthwhile candidate to the schema it declares.
+3. Resolve the strategy-record schema according to the Scout's operating mode: GitHub-only Scouts use this README directly; local Scouts may resolve the current canonical Wiki Brain specification when explicitly permitted. Normalize each worthwhile candidate to that resolved schema.
 4. Preserve source provenance and label all third-party results as source-reported.
 5. Commit the resulting Markdown record(s).
 6. Push them to this repository.
@@ -513,7 +517,7 @@ The scheduled MiMo Desktop Scout is a fourth independent lane. It prioritizes pu
 For every scheduled run:
 
 1. Sync and inspect the latest `origin/main` before researching. Do not overwrite or casually rewrite another scout's existing artifact.
-2. Read this README on every run for the workflow contract, then resolve and read the current canonical versioned Wiki Brain strategy-research specification for the record schema.
+2. Read this README on every run for the workflow contract. GitHub-only Scouts use the schema and required structure declared here and MUST NOT access Hermes Wiki Brain or any local dependency. Local Scouts may additionally resolve the current canonical versioned Wiki Brain strategy-research specification when their own operating contract explicitly permits it.
 3. Search public, traceable sources (GitHub / FMZ / TradingView / papers / blogs / public research; TradingView limited to public, traceable strategy/idea/script/research URLs with stable URL and as-of date preserved, private/paid not valid) for new alpha strategies or falsifiable alpha hypotheses. Before creating any Markdown record, directly read the primary source itself (paper/full text, official research, or the exact public implementation/code path). Search-result summaries, snippets, secondary summaries, and model-generated summaries are discovery aids only and must not be used to fill strategy rules or empirical claims.
 4. Check existing repository records and sources before creating anything. Scout dedup: same canonical source identity + materially same normalized rule => do not create a new artifact; same source but materially distinct hypothesis/signal/horizon/mechanism may be independent (independent only when the core hypothesis differs materially in at least one of mechanism, signal construction, universe/market type, horizon/regime, or material data dependency). Exact duplicates, trivial paraphrases, and materially identical captures should produce no new artifact.
 5. Default to **at most 1** new strategy record per run. **Zero is a valid and successful result. Never manufacture candidates to satisfy a quota.** A second or third record is allowed only when each candidate is clearly independent under the dedup criteria and each is individually source-complete after direct primary-source verification. Three remains the absolute hard ceiling, never a target.
