@@ -2,7 +2,7 @@
 schema: strategy-research-record-v1
 title: "Structural Limits of OHLCV-Based Intraday Signals in MNQ Futures: Gross Edge Ceiling and Friction-Aware Falsification"
 created: 2026-09-05
-updated: 2026-09-05
+updated: 2026-09-17
 type: strategy-research-record
 tags:
   - quant
@@ -14,16 +14,19 @@ tags:
   - intraday-momentum
   - transaction-costs
   - negative-evidence
+  - revision-correction
 status: research-only
 confidence: high
-source_as_of: 2026-05-15
+source_as_of: 2026-09-17
 sources:
-  - "arXiv:2605.04004v1 [q-fin.TR]"
+  - "arXiv:2605.04004 replacement listing as of 2026-09-17 (corrected T-statistics to net-return basis; London Signal B walk-forward OOS N=247, T=4.30; MGC friction corrected; year-stability tables OOS-only; replication disclosures added). https://arxiv.org/abs/2605.04004"
+  - "arXiv:2605.04004v1 [q-fin.TR] (original capture basis 2026-05-15)"
 implementation_status: not-implemented
 adoption: not-approved
 approval_scope: research-only
 contested: false
-contradictions: []
+contradictions:
+  - "Author replacement (listed 2026-09-17) corrected T-statistics to net-return basis and revised positive-control figures (e.g. London Signal B OOS T=4.30, N=247). Core Gross Edge Ceiling / none-pass-all-five-criteria conclusion is unchanged; v1 T-stats in body sections should not be quoted without checking the replacement."
 ---
 
 # Structural Limits of OHLCV-Based Intraday Signals in MNQ Futures: Gross Edge Ceiling and Friction-Aware Falsification
@@ -33,6 +36,7 @@ contradictions: []
 - **Primary Research Paper:** Mathias Mesfin, *"Structural Limits of OHLCV-Based Intraday Signals in MNQ Futures: A Systematic Falsification Study"*, arXiv preprint `arXiv:2605.04004v1 [q-fin.TR]`, manuscript date May 2026 (research period 2024–2026). Canonical URL: [https://arxiv.org/abs/2605.04004](https://arxiv.org/abs/2605.04004). Direct PDF: [https://arxiv.org/pdf/2605.04004](https://arxiv.org/pdf/2605.04004).
 - **Author & Affiliation:** Mathias Mesfin, Independent Researcher (`mathiasmesfin.research@gmail.com`).
 - **Verification Basis:** The complete 15-page manuscript PDF was directly downloaded and inspected. Every reported numerical statistic, parameter threshold, empirical table (Tables 1 through 11), figure analysis (Figures 1 through 4), and project decision ledger entry (Appendix Table A1, decisions D001 through D213) was verified directly from the primary manuscript.
+- **Update 2026-09-17 (replacement listing):** arXiv replacement of 2605.04004 corrects T-statistics to **net-return** basis; updates London Signal B to walk-forward OOS **N=247, T=4.30** (p≈0.000025); corrects MGC friction; year-stability tables limited to OOS years; adds replication disclosures. **None of 14 families still passes all five criteria.** Two positive controls remain (RTH Confluence and London Session Signal B) with revised numbers. Body T-stats below that were taken from v1 should be treated as superseded where they conflict with the replacement.
 
 ## Economic mechanism
 
