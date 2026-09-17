@@ -456,7 +456,7 @@ unless the document itself is a versioned specification.
 
 1. **Search for alpha, not marketing claims.** A high reported return is not itself an alpha thesis.
 2. **Single and hybrid strategies are both allowed.** Preserve meaningful component structure.
-3. **Normalize before pushing.** The file pushed here must already comply with the current canonical Wiki Brain strategy-research schema resolved at run time.
+3. **Normalize before pushing.** Resolve the current strategy-research schema according to the Scout's operating mode: GitHub-only Scouts use this README directly; local Scouts may use the canonical Wiki Brain specification when explicitly permitted.
 4. **Keep provenance.** External claims must remain traceable to their source.
 5. **Do not claim independent validation that has not happened.**
 6. **Do not silently repair missing information.** Mark gaps explicitly.
@@ -516,7 +516,7 @@ The scheduled MiMo Desktop Scout is a fourth independent lane. It prioritizes pu
 
 For every scheduled run:
 
-1. Sync and inspect the latest `origin/main` before researching. Do not overwrite or casually rewrite another scout's existing artifact.
+1. Inspect the latest repository `main` before researching. GitHub-only Scouts do this through the GitHub connector/app; local Scouts may sync `origin/main`. Do not overwrite or casually rewrite another scout's existing artifact.
 2. Read this README on every run for the workflow contract. GitHub-only Scouts use the schema and required structure declared here and MUST NOT access Hermes Wiki Brain or any local dependency. Local Scouts may additionally resolve the current canonical versioned Wiki Brain strategy-research specification when their own operating contract explicitly permits it.
 3. Search public, traceable sources (GitHub / FMZ / TradingView / papers / blogs / public research; TradingView limited to public, traceable strategy/idea/script/research URLs with stable URL and as-of date preserved, private/paid not valid) for new alpha strategies or falsifiable alpha hypotheses. Before creating any Markdown record, directly read the primary source itself (paper/full text, official research, or the exact public implementation/code path). Search-result summaries, snippets, secondary summaries, and model-generated summaries are discovery aids only and must not be used to fill strategy rules or empirical claims.
 4. Check existing repository records and sources before creating anything. Scout dedup: same canonical source identity + materially same normalized rule => do not create a new artifact; same source but materially distinct hypothesis/signal/horizon/mechanism may be independent (independent only when the core hypothesis differs materially in at least one of mechanism, signal construction, universe/market type, horizon/regime, or material data dependency). Exact duplicates, trivial paraphrases, and materially identical captures should produce no new artifact.
