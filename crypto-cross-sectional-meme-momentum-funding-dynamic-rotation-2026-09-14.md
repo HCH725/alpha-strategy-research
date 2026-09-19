@@ -2,7 +2,7 @@
 schema: strategy-research-record-v1
 title: Cross-Sectional Meme-Coin Momentum + Funding Dynamic Rotation
 created: 2026-09-14
-updated: 2026-09-14
+updated: 2026-09-19
 type: strategy-research-record
 tags:
   - quant
@@ -16,12 +16,14 @@ tags:
   - meme-coins
   - fama-macbeth
   - rotation
+  - negative-evidence
 status: research-only
 confidence: medium
-source_as_of: 2026-09-04
+source_as_of: 2026-09-19
 sources:
   - "FMZ Quant blog, 'The Bull Is Now Got Listed on Binance Futures. I Was Afraid to Chase Highs or Buy Lows, So I Built a Strategy That Doesn't Bet on Direction,' September 4, 2026, https://blog.mathquant.com/2026/09/04/the-bull-is-now-got-listed-on-binance-futures-i-was-afraid-to-chase-highs-or-buy-lows-so-i-built-a-strategy-that-doesnt-bet-on-direction.html"
-  - "FMZ strategy platform, https://www.fmz.com (strategy implementation by 发明者量化-小小梦)"
+  - "FMZ strategy page: 'Meme-Coin Momentum Rotation v4.0', created 2026-08-31, page author ianzeng123; source-code header references 发明者量化 FMZ. https://www.fmz.com/strategy/548617 (public description, parameters, and author comments reviewed 2026-09-19; full source login-gated)"
+  - "FMZ strategy platform, https://www.fmz.com (strategy implementation by 发明者量化-小小梦 / FMZ ecosystem)"
 implementation_status: not-implemented
 adoption: not-approved
 approval_scope: research-only
@@ -33,13 +35,14 @@ contradictions: []
 
 ## Provenance
 
-- **Primary source:** FMZ Quant blog post by 发明者量化-小小梦, "The Bull Is Now Got Listed on Binance Futures. I Was Afraid to Chase Highs or Buy Lows, So I Built a Strategy That Doesn't Bet on Direction," published September 4, 2026.
+- **Primary source (original capture):** FMZ Quant blog post by 发明者量化-小小梦, "The Bull Is Now Got Listed on Binance Futures. I Was Afraid to Chase Highs or Buy Lows, So I Built a Strategy That Doesn't Bet on Direction," published September 4, 2026.
 - **Source URL:** https://blog.mathquant.com/2026/09/04/the-bull-is-now-got-listed-on-binance-futures-i-was-afraid-to-chase-highs-or-buy-lows-so-i-built-a-strategy-that-doesnt-bet-on-direction.html
 - **Platform:** FMZ Quant (blog.mathquant.com / fmz.com)
-- **Author:** 发明者量化-小小梦 (FMZ Quant platform author)
+- **Blog author:** 发明者量化-小小梦 (FMZ Quant platform author)
+- **Update 2026-09-19 — FMZ strategy page (same source identity family):** https://www.fmz.com/strategy/548617 — "Meme-Coin Momentum Rotation v4.0", created 2026-08-31 16:28:24; page author shown as **ianzeng123**; strategy source-code header states 发明者量化 FMZ / JavaScript / Binance USDT-margined contracts. Page title version is v4.0 while the source-code comment banner reads v4.4 — **version label underspecified**. Full JS source is login-gated; this update uses only the public description, parameters, and public author comments.
 - **Universe:** Binance USDT-margined perpetual contracts, cross-sectional universe of meme and speculative coins (initial sample mentions 44 contracts with various funding settlement intervals; universe is dynamically selected by composite score).
 - **Sample period:** Source-reported backtest covering multiple rotation intervals from 5 minutes to 24 hours on the same data batch (exact date range not stated in source; the article was published September 4, 2026 and references a 139-day grid sample and 20-day rolling windows).
-- **Deduplication audit:** Repository-wide search finds `crypto-hyperliquid-momentum-funding-carry-combo-2026-09-12.md` (Keel Research, fixed 70/30 momentum+funding blend on Hyperliquid top-30 perps) and `funding-rate-cross-sectional-factor-survivorship-free-regime-flip-2026-09-13.md` (OctopusTakopi, funding rate as standalone cross-sectional factor with regime flip analysis). This source is materially distinct: (a) different author/platform (FMZ vs. Keel vs. OctopusTakopi), (b) different weighting mechanism (Fama-MacBeth dynamic regression with t-stat shrinkage vs. fixed blend vs. standalone factor), (c) different universe (meme/speculative coins on Binance vs. top-30 Hyperliquid perps vs. survivorship-free 421 Binance contracts), and (d) different composite construction (two-factor dynamic rotation vs. static blend vs. single-factor regime analysis).
+- **Deduplication / update rule application (2026-09-19):** FMZ strategy id `548617` shares the same economic mechanism and materially the same signal construction as this record (composite momentum + funding score, Fama-MacBeth weights with t-stat shrinkage, 8h funding normalization, risk-parity sizing, market-neutral top/bottom legs on Binance meme perps). Per the canonical deduplication rule, this cycle **updates this record** rather than creating a parallel artifact. Adjacent distinct sources remain: `crypto-hyperliquid-momentum-funding-carry-combo-2026-09-12.md` (Keel Research, fixed 70/30) and `funding-rate-cross-sectional-factor-survivorship-free-regime-flip-2026-09-13.md` (OctopusTakopi, standalone funding factor).
 
 ## Economic mechanism
 
@@ -72,7 +75,7 @@ Decision times are aligned with 4-hour funding settlement intervals (the default
 ### Lookback
 
 - **Momentum factor:** Rolling cross-sectional regression over the past 120 periods (one period every four hours ≈ 20 days).
-- **Funding factor:** Current funding rate normalized to an 8-hour basis (critical: raw funding rates from 4-hour and 8-hour settlement contracts are not directly comparable; the implementation normalizes: `fund8 = raw_funding × (8 / settlement_interval_hours)`).
+- **Funding factor:** Current funding rate normalized to an 8-hour basis (critical: raw funding rates from 4-hour and 8-hour settlement contracts are not directly comparable; the blog implementation normalizes: `fund8 = raw_funding × (8 / settlement_interval_hours)`). FMZ strategy page 548617 (public description, reviewed 2026-09-19) further specifies that both live scoring and historical regression use the **premium index** `(mark/index − 1)` rather than the last settled funding rate, with source-reported formula `fund8 = premium index × 10000 × (8 / funding interval hours)`, so fitted β can apply to live scoring on one definition. Exact premium-index field name and exchange API path are not fully restated on the public page (`underspecified` beyond the formula).
 - **Factor weights:** Time-series mean of Fama-MacBeth regression coefficients over 120 four-hour periods, then shrunk by t-statistic.
 
 ### Long entry
@@ -115,6 +118,10 @@ Decision times are aligned with 4-hour funding settlement intervals (the default
 | Net exposure guard | 8% | Source-reported |
 | Risk parity floor σ | 5 bps | Source-reported (code: `Math.max(5, σ)`) |
 | Leverage cap | ≤ 3× | Source-reported |
+
+### Universe screening (source-reported on FMZ 548617 public page; 2026-09-19 update)
+
+From the full USDT-perp universe the strategy page reports filters on: 24h turnover band (`VOL_MIN_M`–`VOL_MAX_M`; too small cannot absorb exposure, too large e.g. BTC/ETH is not treated as meme universe), hourly volatility floor (`σ ≥ SIGMA_MIN`), bid-ask spread cap (`spread ≤ SPREAD_MAX`), and minimum candle history (`bars ≥ MIN_HISTORY`). **Exact numeric default thresholds for these filters are not published on the public page** (`underspecified`).
 
 ## Required data
 
@@ -175,6 +182,7 @@ Not independently reproduced.
 - Turnover is extremely high at all intervals (16-19 of 20 legs replaced per rotation), which creates fee sensitivity.
 - No cost-adjusted net returns are reported; the daily return figures appear to be gross of trading costs.
 - The article explicitly states: "This article is for strategy research and software development purposes only and does not constitute investment advice."
+- **Author public comment on FMZ strategy page 548617 (source-reported negative evidence; reviewed 2026-09-19):** page author `ianzeng123` replied to a user asking whether the strategy could go live, writing (translated from Chinese): it is essentially a momentum-factor strategy; after testing, it is hard to achieve stable profitability and it depends on market regime ("其实就是一个动量因子策略，测试了一下，很难做到稳定盈利，靠行情吃饭"; comment timestamp shown as ~7 days before 2026-09-19). Community comments also note bull-regime dependence. This **strengthens the research-only boundary** and is consistent with the blog's already-reported factor-sign instability and thin raw signal. It is not an independent backtest and must not be rewritten as a verified PnL series.
 
 ## Falsification plan
 
@@ -226,4 +234,5 @@ This record represents research material only. The source-reported performance h
 ## Sources
 
 1. FMZ Quant blog, "The Bull Is Now Got Listed on Binance Futures. I Was Afraid to Chase Highs or Buy Lows, So I Built a Strategy That Doesn't Bet on Direction," September 4, 2026. https://blog.mathquant.com/2026/09/04/the-bull-is-now-got-listed-on-binance-futures-i-was-afraid-to-chase-highs-or-buy-lows-so-i-built-a-strategy-that-doesnt-bet-on-direction.html
-2. FMZ strategy platform, https://www.fmz.com (strategy implementation by 发明者量化-小小梦).
+2. FMZ strategy page, "Meme-Coin Momentum Rotation v4.0", id 548617, created 2026-08-31; page author ianzeng123; public description + author comments reviewed 2026-09-19. https://www.fmz.com/strategy/548617
+3. FMZ strategy platform, https://www.fmz.com (blog implementation attributed to 发明者量化-小小梦; strategy-page/code header references FMZ ecosystem authors).
