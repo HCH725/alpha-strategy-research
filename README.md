@@ -22,20 +22,24 @@ Research Intake Review
 (PASS / PASS-WITH-CAVEAT / REMEDIATE / REJECT)
         ↓
 PASS / PASS-WITH-CAVEAT decision produces two sibling outputs:
-├── Hermes Wiki Brain (research-only knowledge)
+├── Hermes Wiki Brain (research-only / knowledge preservation / non-gating)
+│   └── knowledge preservation only
 └── /results/_handoff/candidates.json (production candidate pool)
-        ↓
+    ↓
 Hermes production card
-        ↓
+    ↓
 Qlib full backtest
-        ↓
-REJECT / TECHNICAL_INCOMPLETE / PASS
-        ↓
-frozen survivor
-        ↓
-survivor index / leaderboard
-        ↓
-§28 survivor evidence preservation
+    ├── PASS + >=1 cohort survivor
+    │   (terminal DONE / coverage complete / assertions valid)
+    │   ↓
+    │   frozen survivor bundle(s)
+    │   ↓
+    │   survivor index / leaderboard
+    │   ↓
+    │   §28 survivor evidence preservation
+    └── REJECT / TECHNICAL_INCOMPLETE
+        (terminal; no new survivor promotion, index entry, or
+         §28 evidence package)
 ```
 
 `/results/_handoff/candidates.json` is the runtime candidate-pool contract; its current host mount is `/Volumes/ExpansionDrive/qlib-results/_handoff/candidates.json`.
@@ -48,7 +52,7 @@ Valid public source contract for all four Scouts: GitHub / FMZ / TradingView / p
 
 This repository is the **upstream public staging and research-only handoff layer** of a broader quantitative workflow. It does not perform Intake decisions, Qlib full backtests, survivor promotion, or trading execution itself.
 
-After ChatGPT Research Intake Review, the same PASS / PASS-WITH-CAVEAT decision produces the Hermes Wiki Brain research-only record and one production candidate-pool entry as sibling outputs. The candidate then moves directly to a Hermes production card and Qlib full backtest; Wiki Brain preserves knowledge but is not a second candidate-eligibility gate.
+After ChatGPT Research Intake Review, the same PASS / PASS-WITH-CAVEAT decision produces the Hermes Wiki Brain research-only record and one production candidate-pool entry as sibling outputs. The candidate then moves directly to a Hermes production card and Qlib full backtest; Wiki Brain is research-only knowledge preservation and a non-gating sibling output, not a second candidate-eligibility gate.
 
 ```text
 External public sources
@@ -60,16 +64,24 @@ alpha-strategy-research
         ↓
 ChatGPT Research Intake Review
         ↓
-┌── Hermes Wiki Brain (research-only knowledge)
+├── Hermes Wiki Brain (research-only / knowledge preservation / non-gating)
+│   └── knowledge preservation only
 └── /results/_handoff/candidates.json (production candidate pool)
-        ↓
+    ↓
 Hermes production card
-        ↓
+    ↓
 Qlib full backtest
-        ↓
-REJECT / TECHNICAL_INCOMPLETE / PASS
-        ↓
-frozen survivor → survivor index / leaderboard → §28 evidence preservation
+    ├── PASS + >=1 cohort survivor
+    │   (terminal DONE / coverage complete / assertions valid)
+    │   ↓
+    │   frozen survivor bundle(s)
+    │   ↓
+    │   survivor index / leaderboard
+    │   ↓
+    │   §28 survivor evidence preservation
+    └── REJECT / TECHNICAL_INCOMPLETE
+        (terminal; no new survivor promotion, index entry, or
+         §28 evidence package)
 ```
 
 *A strategy record being present here means only normalized research material in the public staging pool. A Scout push does **not** mean the artifact passed Research Intake Review, entered Hermes Wiki Brain or the production candidate pool, completed Qlib validation, became a frozen survivor, reached the survivor leaderboard/evidence-preservation stage, or received Paper, Testnet, or Live approval. Paper/Testnet/Live remain future gated stages and must not be implied as already connected.*

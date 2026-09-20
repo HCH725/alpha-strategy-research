@@ -22,20 +22,24 @@ Research Intake Review
 （PASS / PASS-WITH-CAVEAT / REMEDIATE / REJECT）
         ↓
 PASS / PASS-WITH-CAVEAT decision 產生兩個 sibling outputs：
-├── Hermes Wiki Brain（research-only knowledge）
+├── Hermes Wiki Brain（research-only / knowledge preservation / non-gating）
+│   └── 僅作知識保存
 └── /results/_handoff/candidates.json（production candidate pool）
-        ↓
+    ↓
 Hermes production card
-        ↓
+    ↓
 Qlib full backtest
-        ↓
-REJECT / TECHNICAL_INCOMPLETE / PASS
-        ↓
-frozen survivor
-        ↓
-survivor index / leaderboard
-        ↓
-§28 survivor evidence preservation
+    ├── PASS + >=1 cohort survivor
+    │   （terminal DONE / coverage complete / assertions valid）
+    │   ↓
+    │   frozen survivor bundle(s)
+    │   ↓
+    │   survivor index / leaderboard
+    │   ↓
+    │   §28 survivor evidence preservation
+    └── REJECT / TECHNICAL_INCOMPLETE
+        （terminal；不產生新的 survivor promotion、index entry 或
+         §28 evidence package）
 ```
 
 `/results/_handoff/candidates.json` 是 runtime candidate-pool contract；目前 host mount 為 `/Volumes/ExpansionDrive/qlib-results/_handoff/candidates.json`。
@@ -48,7 +52,7 @@ survivor index / leaderboard
 
 本 repository 是整體量化工作流中的**上游公開 staging 與 research-only handoff layer**。它本身不負責 Intake decision、Qlib full backtest、survivor promotion 或交易執行。
 
-經過 ChatGPT Research Intake Review 後，同一個 PASS / PASS-WITH-CAVEAT decision 會同時產生 Hermes Wiki Brain 的 research-only record 與一筆 production candidate-pool entry，兩者是 sibling outputs。Candidate 之後直接進入 Hermes production card 與 Qlib full backtest；Wiki Brain 是知識保存，不是第二道 candidate eligibility gate。
+經過 ChatGPT Research Intake Review 後，同一個 PASS / PASS-WITH-CAVEAT decision 會同時產生 Hermes Wiki Brain 的 research-only record 與一筆 production candidate-pool entry，兩者是 sibling outputs。Candidate 之後直接進入 Hermes production card 與 Qlib full backtest；Wiki Brain 是 research-only 的知識保存、non-gating sibling output，不是第二道 candidate eligibility gate。
 
 ```text
 外部公開來源
@@ -60,16 +64,24 @@ alpha-strategy-research
         ↓
 ChatGPT Research Intake Review
         ↓
-┌── Hermes Wiki Brain（research-only knowledge）
+├── Hermes Wiki Brain（research-only / knowledge preservation / non-gating）
+│   └── 僅作知識保存
 └── /results/_handoff/candidates.json（production candidate pool）
-        ↓
+    ↓
 Hermes production card
-        ↓
+    ↓
 Qlib full backtest
-        ↓
-REJECT / TECHNICAL_INCOMPLETE / PASS
-        ↓
-frozen survivor → survivor index / leaderboard → §28 evidence preservation
+    ├── PASS + >=1 cohort survivor
+    │   （terminal DONE / coverage complete / assertions valid）
+    │   ↓
+    │   frozen survivor bundle(s)
+    │   ↓
+    │   survivor index / leaderboard
+    │   ↓
+    │   §28 survivor evidence preservation
+    └── REJECT / TECHNICAL_INCOMPLETE
+        （terminal；不產生新的 survivor promotion、index entry 或
+         §28 evidence package）
 ```
 
 *因此，一筆策略紀錄出現在本 repository，只代表它是公開 staging pool 中的標準化**研究素材**。Scout push **不代表**已通過 Research Intake Review、已進入 Hermes Wiki Brain 或 production candidate pool、已完成 Qlib validation、已成為 frozen survivor、已進入 survivor leaderboard/evidence preservation，或已取得 Paper、Testnet、Live 授權。Paper/Testnet/Live 仍是未來的 gated stages，不得暗示它們已經接通。*
