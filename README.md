@@ -37,6 +37,10 @@ Qlib full backtest
     │   survivor index / leaderboard
     │   ↓
     │   §28 survivor evidence preservation
+    │   ↓
+    │   guarded compact private survivor mirror
+    │   (all formal leaderboard entries; not a Top-10 gate)
+    │   → HCH725/validated-survivor-research
     └── REJECT / TECHNICAL_INCOMPLETE
         (terminal; no new survivor promotion, index entry, or
          §28 evidence package)
@@ -53,6 +57,9 @@ Valid public source contract for all four Scouts: GitHub / FMZ / TradingView / p
 This repository is the **upstream public staging and research-only handoff layer** of a broader quantitative workflow. It does not perform Intake decisions, Qlib full backtests, survivor promotion, or trading execution itself.
 
 After ChatGPT Research Intake Review, the same PASS / PASS-WITH-CAVEAT decision produces the Hermes Wiki Brain research-only record and one production candidate-pool entry as sibling outputs. The candidate then moves directly to a Hermes production card and Qlib full backtest; Wiki Brain is research-only knowledge preservation and a non-gating sibling output, not a second candidate-eligibility gate.
+
+After a successful Qlib run, the frozen survivor bundle, survivor index/leaderboard, and §28 evidence feed a guarded compact private survivor mirror at `HCH725/validated-survivor-research`. The mirror accepts all formal leaderboard entries; it is not a Top-10 gate. It remains a downstream research mirror: Qlib remains the canonical performance truth, and the mirror does not self-pass, self-rank, or self-promote.
+References to retired engines preserved in legacy research records are historical provenance only, not the current workflow; existing strategy records are not rewritten.
 
 ```text
 External public sources
@@ -79,6 +86,10 @@ Qlib full backtest
     │   survivor index / leaderboard
     │   ↓
     │   §28 survivor evidence preservation
+    │   ↓
+    │   guarded compact private survivor mirror
+    │   (all formal leaderboard entries; not a Top-10 gate)
+    │   → HCH725/validated-survivor-research
     └── REJECT / TECHNICAL_INCOMPLETE
         (terminal; no new survivor promotion, index entry, or
          §28 evidence package)

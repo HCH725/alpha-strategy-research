@@ -33,16 +33,22 @@ Research Intake Review
         └──→ ② production candidate pool (/Volumes/ExpansionDrive/qlib-results/_handoff/candidates.json)
                                                                               [sibling output B]
                 ↓
-        Hermes hypothesis / synthesis
+        Hermes production card
                 ↓
-        PyBroker research screening
+        Qlib-only full backtest
+        ├──→ REJECT / TECHNICAL_INCOMPLETE
+        └──→ PASS + >=1 cohort survivor
                 ↓
-        Nautilus authoritative historical validation
+        frozen survivor bundle → survivor index / leaderboard
+                ↓
+        §28 evidence → guarded compact private survivor mirror
+        (HCH725/validated-survivor-research; all formal leaderboard entries;
+         not a Top-10 gate; Qlib remains canonical performance truth)
 ```
 
 The two outputs are **siblings produced by the same review decision**: one `PASS` / `PASS-WITH-CAVEAT` decision creates (①) the Wiki Brain record **and** (②) exactly one production candidate. Wiki Brain is knowledge preservation; it is **not** a second eligibility gate for candidateization, and there is no crypto/runnable suitability screening after intake.
 
-Never collapse these stages.
+Never collapse these stages. Qlib-only full backtest is the current runtime/backtest path. The downstream mirror is research-only and does not replace Qlib truth or self-promote entries.
 
 ## What Intake Review must answer
 
@@ -151,7 +157,7 @@ Intake Review does not require:
 - profitability judgment;
 - Paper/Testnet/Live approval.
 
-Those belong downstream to Hermes hypothesis formation, PyBroker research, Nautilus validation, and later trading authorization.
+Those belong downstream to the Hermes production card, Qlib-only full backtest, frozen-survivor/evidence processing, and later trading authorization.
 
 Also do not turn the decision into a two-step gate: once `PASS` / `PASS-WITH-CAVEAT` is finalized, the candidate-pool append (sibling output, see below) must not be re-adjudicated for crypto/runnable suitability, and Wiki Brain presence must not be treated as a precondition for it.
 
@@ -277,8 +283,7 @@ Presence in Wiki Brain means only that the research knowledge is worth preservin
 It does not mean:
 - independently reproduced;
 - profitable;
-- PyBroker-validated;
-- Nautilus-validated;
+- passed the Qlib-only full-backtest or survivor/evidence process;
 - approved for Paper, Testnet, or Live trading.
 
 ## Candidate pool sibling output (contract 14.4)
@@ -297,7 +302,7 @@ Rules:
 - **Appends are idempotent.** If the same `reviewed_source` / `family_id` / fingerprint already exists in the pool or in `/results/*/family.json`, the append is a no-op. Never rewrite, renumber, or re-author an existing entry; write every new card body file first, then replace `candidates.json` atomically.
 - **Body generation is format/canonicalization, not review.** The card body is produced from the frozen GitHub artifact plus this review's normalized content, crypto portability, caveats, and the contract-14.4 v1.3.0 candidate requirements (mechanism, eligible universe, parameter domain, historical/OOS split, `DCA PARAMETER DOMAIN`, `COHORT SURVIVOR SEMANTICS`, robustness/falsification, Qlib-only runtime rules). Execution details the source does not specify may be labeled `research-defined` without changing the core hypothesis.
 - **Universe fidelity.** Never force a non-crypto source onto BTC/ETH/BNB/SOL; when a research-defined universe is needed, keep it inside the same market/mechanism range and label it `research-defined`. Where the record itself carries a crypto portability statement, canonicalize from that statement.
-- **A missing prerequisite is not a gate.** If the required data/market is not available locally, the candidate still enters the pool with the requirement registered faithfully; the later execution card then ends under the existing technical-failure semantics. Never re-adjudicate suitability to keep the pool clean.
+- **A missing prerequisite is not a gate.** `PASS` / `PASS-WITH-CAVEAT` still enters the pool directly. Production execution uses the complete local eligible universe in canonical local raw where the core signal/mechanism can be legally computed, across all preregistered symbols, timeframes, strategy-parameter domain, DCA-parameter domain, and historical/OOS/robustness coverage. A source venue or named-symbol mismatch alone is not `TECHNICAL_INCOMPLETE`; only when the core signal requires a data type/field completely absent locally, making every legal local universe impossible to compute, may the execution result be prerequisite-missing `TECHNICAL_INCOMPLETE`. Never re-adjudicate suitability to keep the pool clean.
 - **No new machinery.** Appending is plain file work by the recurring owner. Do not add a helper service/manager/registry/daemon/queue/cron or a new file-type framework for it.
 
 ## Operating rule for Hermes

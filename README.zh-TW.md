@@ -37,6 +37,10 @@ Qlib full backtest
     │   survivor index / leaderboard
     │   ↓
     │   §28 survivor evidence preservation
+    │   ↓
+    │   guarded compact private survivor mirror
+    │   （所有 formal leaderboard entries；不是 Top-10 gate）
+    │   → HCH725/validated-survivor-research
     └── REJECT / TECHNICAL_INCOMPLETE
         （terminal；不產生新的 survivor promotion、index entry 或
          §28 evidence package）
@@ -53,6 +57,9 @@ Qlib full backtest
 本 repository 是整體量化工作流中的**上游公開 staging 與 research-only handoff layer**。它本身不負責 Intake decision、Qlib full backtest、survivor promotion 或交易執行。
 
 經過 ChatGPT Research Intake Review 後，同一個 PASS / PASS-WITH-CAVEAT decision 會同時產生 Hermes Wiki Brain 的 research-only record 與一筆 production candidate-pool entry，兩者是 sibling outputs。Candidate 之後直接進入 Hermes production card 與 Qlib full backtest；Wiki Brain 是 research-only 的知識保存、non-gating sibling output，不是第二道 candidate eligibility gate。
+
+Qlib run 成功後，frozen survivor bundle、survivor index/leaderboard 與 §28 evidence 會進入受保護的 compact private survivor mirror：`HCH725/validated-survivor-research`。Mirror 收錄所有 formal leaderboard entries，不是 Top-10 gate；它只是 downstream research mirror，Qlib 仍是 canonical performance truth，mirror 不得 self-pass、self-rank 或 self-promote。
+既有 legacy research records 中保留的退役引擎 references 只屬 historical provenance，不代表 current workflow；既有 strategy records 不重寫。
 
 ```text
 外部公開來源
@@ -79,6 +86,10 @@ Qlib full backtest
     │   survivor index / leaderboard
     │   ↓
     │   §28 survivor evidence preservation
+    │   ↓
+    │   guarded compact private survivor mirror
+    │   （所有 formal leaderboard entries；不是 Top-10 gate）
+    │   → HCH725/validated-survivor-research
     └── REJECT / TECHNICAL_INCOMPLETE
         （terminal；不產生新的 survivor promotion、index entry 或
          §28 evidence package）
