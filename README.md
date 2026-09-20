@@ -2,11 +2,11 @@
 
 **English** | [繁體中文](README.zh-TW.md)
 
-Public staging repository for external alpha-strategy research normalized for direct Hermes Wiki Brain ingestion.
+Public staging repository for external alpha-strategy research normalized for Research Intake Review and its downstream sibling outputs.
 
 ## Purpose
 
-This repository is the handoff layer between **four independent Research Scouts (ChatGPT / Hermes / Antigravity / MiMo)** and **ChatGPT Research Intake Review / Wiki Brain ingestion**.
+This repository is the public staging and handoff layer between **four independent Research Scouts (ChatGPT / Hermes / Antigravity / MiMo)** and **ChatGPT Research Intake Review**.
 
 Operating flow:
 
@@ -21,20 +21,34 @@ ChatGPT
 Research Intake Review
 (PASS / PASS-WITH-CAVEAT / REMEDIATE / REJECT)
         ↓
-ChatGPT writes accepted knowledge directly into Hermes Wiki Brain
+PASS / PASS-WITH-CAVEAT decision produces two sibling outputs:
+├── Hermes Wiki Brain (research-only knowledge)
+└── /results/_handoff/candidates.json (production candidate pool)
         ↓
-Hermes uses the knowledge for research, synthesis and later validation
+Hermes production card
+        ↓
+Qlib full backtest
+        ↓
+REJECT / TECHNICAL_INCOMPLETE / PASS
+        ↓
+frozen survivor
+        ↓
+survivor index / leaderboard
+        ↓
+§28 survivor evidence preservation
 ```
+
+`/results/_handoff/candidates.json` is the runtime candidate-pool contract; its current host mount is `/Volumes/ExpansionDrive/qlib-results/_handoff/candidates.json`.
 
 Valid public source contract for all four Scouts: GitHub / FMZ / TradingView / papers / blogs / public research. For TradingView, only public, traceable strategy/idea/script/research URLs are valid — preserve the stable URL and as-of date; private or paid/invite-only scripts are not valid sources.
 
-**No Scout writes to Hermes Wiki Brain.** Each Scout's only output channel is this repository. The artifact pushed here should already be in Wiki Brain-native form so ChatGPT can review and ingest it without another translation pass.
+**No Scout writes to Hermes Wiki Brain, the candidate pool, Qlib runtime, or Paper/Testnet/Live workflows.** Each Scout's only output channel is this repository. The artifact pushed here should already be in Wiki Brain-native form so ChatGPT can review it without another translation pass.
 
 ## Where this repository fits
 
-This repository is the **upstream research and knowledge-handoff layer** of a broader quantitative workflow. It does not perform formal strategy validation or trading execution itself.
+This repository is the **upstream public staging and research-only handoff layer** of a broader quantitative workflow. It does not perform Intake decisions, Qlib full backtests, survivor promotion, or trading execution itself.
 
-After ChatGPT Research Intake Review and Wiki Brain ingestion, Hermes can use accepted knowledge to synthesize testable hypotheses. Those hypotheses may then move into [`nautilus-quant-system`](https://github.com/HCH725/nautilus-quant-system), where PyBroker is used for isolated strategy research and NautilusTrader provides the formal historical verdict and canonical accounting layer.
+After ChatGPT Research Intake Review, the same PASS / PASS-WITH-CAVEAT decision produces the Hermes Wiki Brain research-only record and one production candidate-pool entry as sibling outputs. The candidate then moves directly to a Hermes production card and Qlib full backtest; Wiki Brain preserves knowledge but is not a second candidate-eligibility gate.
 
 ```text
 External public sources
@@ -46,19 +60,19 @@ alpha-strategy-research
         ↓
 ChatGPT Research Intake Review
         ↓
-Hermes Wiki Brain
+┌── Hermes Wiki Brain (research-only knowledge)
+└── /results/_handoff/candidates.json (production candidate pool)
         ↓
-Hermes hypothesis / synthesis  ── Loop A (low-frequency, theory/evidence-driven; one thesis/family per iteration → bounded meaningful branches → experiment spec)
+Hermes production card
         ↓
-nautilus-quant-system
-PyBroker Experiment & Attrition Loop (Loop B: deterministic campaign expansion → N provisional candidates → batch screens → dedupe/invalid/reject/pass accounting; high-throughput, no LLM per candidate; rejected do not enter Nautilus) → Gate (signal parity, fail-closed) → NautilusTrader high-fidelity historical verdict (survivors only)
+Qlib full backtest
         ↓
-feedback / lineage / reuse  ── outer evidence-based feedback (survivor summary / failure taxonomy / information gain → stop / refine / new batch; not a fixed backtest count)
+REJECT / TECHNICAL_INCOMPLETE / PASS
         ↓
-later gated Paper → Binance Demo/Testnet → Live progression
+frozen survivor → survivor index / leaderboard → §28 evidence preservation
 ```
 
-*A strategy record being present here therefore means only that it is normalized research material. It does **not** mean that the idea has passed PyBroker/Nautilus validation, paper trading, testnet, or live-trading approval. In the canonical pipeline this repository feeds **Loop A** (Hermes Research Loop).*
+*A strategy record being present here means only normalized research material in the public staging pool. A Scout push does **not** mean the artifact passed Research Intake Review, entered Hermes Wiki Brain or the production candidate pool, completed Qlib validation, became a frozen survivor, reached the survivor leaderboard/evidence-preservation stage, or received Paper, Testnet, or Live approval. Paper/Testnet/Live remain future gated stages and must not be implied as already connected.*
 
 ---
 
@@ -390,7 +404,7 @@ unproven
 
 For newly researched external material, normally state that no implementation in our research stack has been completed.
 
-Do not imply PyBroker, Nautilus, paper, testnet or live verification unless it actually occurred.
+Do not imply Qlib full-backtest validation, Paper, Testnet, or Live verification unless it actually occurred.
 
 ### 11. Adoption boundary
 
@@ -398,6 +412,11 @@ Every newly collected external strategy is research material only.
 
 A record being present in this repository does **not** mean:
 
+- passed Research Intake Review;
+- entered Hermes Wiki Brain;
+- entered the production candidate pool;
+- completed Qlib full-backtest validation;
+- became a frozen survivor or leaderboard entry;
 - profitable;
 - validated alpha;
 - approved for implementation;
@@ -463,7 +482,7 @@ unless the document itself is a versioned specification.
 7. **Do not copy large source-code blocks unnecessarily.** Prefer normalized logic plus source references.
 8. **Do not confuse risk management with alpha.** Stops, sizing, leverage, DCA, grid or martingale rules should be identified separately from the predictive signal.
 9. **Do not confuse complexity with quality.** Multi-indicator combinations need a coherent thesis and remain unvalidated until tested.
-10. **Do not write to Hermes Wiki Brain.** Push the normalized research artifact here. ChatGPT performs Research Intake Review and, if accepted, writes it into Wiki Brain directly.
+10. **Do not write to downstream systems.** Push the normalized research artifact here. ChatGPT performs Research Intake Review and, if accepted, produces the Hermes Wiki Brain record and production candidate-pool entry as sibling outputs; later Qlib, Paper, Testnet, and Live stages are separate and gated.
 
 ---
 
@@ -496,7 +515,7 @@ For each research run:
 4. Preserve source provenance and label all third-party results as source-reported.
 5. Commit the resulting Markdown record(s).
 6. Push them to this repository.
-7. Stop there. ChatGPT will perform Research Intake Review and direct Wiki Brain ingestion separately.
+7. Stop there. ChatGPT will perform Research Intake Review separately; a PASS / PASS-WITH-CAVEAT decision produces the Hermes Wiki Brain record and production candidate-pool entry as sibling outputs. The Scout must not write either output or any later Qlib, Paper, Testnet, or Live stage.
 
 The goal is simple:
 
@@ -525,9 +544,9 @@ For every scheduled run:
 7. If strategy identity, signal semantics, causal timing, required data, provenance, or public-use rights are materially ambiguous, do not guess. Skip that candidate for this run rather than emitting false precision. Any threshold, entry/exit trigger, execution timestamp or fill model, fee/slippage assumption, capacity claim, universe/liquidity filter, crypto-porting rule, position-sizing choice, or other operational rule that is not explicitly specified by the primary source must be labeled `research-proposed`; any Scout-chosen acceptance/failure/falsification cutoff must be labeled `research-defined falsification threshold`. If a material field cannot be confidently classified as source-reported versus research-proposed, skip the candidate.
 8. Every emitted artifact must already satisfy the current canonical strategy-research schema and remain `research-only`, `not-implemented`, and `not-approved`. Before commit, read the artifact back and verify the operational fields above carry the correct source-vs-research labels; do not silently fill an underspecified source gap.
 9. Commit only artifacts intentionally created or corrected by the current run. If no candidate clears the bar, create no empty commit.
-10. Push explicitly and verify the remote contains the commit, then stop. For the detached Antigravity worktree, the required push form is `git push origin HEAD:main`; never force-push. If another Scout advances `origin/main` first and the push becomes non-fast-forward, fail only that run and let the next scheduled run restart from the new remote head. Do not write to Hermes Wiki Brain, PyBroker, Nautilus, Paper, Testnet, or Live workflows.
+10. Push explicitly and verify the remote contains the commit, then stop. For the detached Antigravity worktree, the required push form is `git push origin HEAD:main`; never force-push. If another Scout advances `origin/main` first and the push becomes non-fast-forward, fail only that run and let the next scheduled run restart from the new remote head. Do not write to Hermes Wiki Brain, `/results/_handoff/candidates.json`, Qlib runtime, Paper, Testnet, or Live workflows.
 11. Fail closed on dirty/unrelated state **inside the active isolated run worktree**, merge/rebase conflict, repository-sync failure, source/provenance failure, secret/public-safety concern, or push failure. Dirt in the separate coordinator checkout is not by itself a blocker and must not be staged, cleaned, or imported into the run. Report the exact block instead of creating a fallback artifact elsewhere.
 
-The scheduled scouts and the ChatGPT Research Intake Review process are deliberately separate. A successful Scout push means only that a research artifact entered the public staging pool; it does **not** mean the artifact passed Research Intake Review or entered Wiki Brain.
+The scheduled scouts and the ChatGPT Research Intake Review process are deliberately separate. A successful Scout push means only that a research artifact entered the public staging pool; it does **not** mean the artifact passed Research Intake Review, entered Hermes Wiki Brain or the production candidate pool, completed Qlib validation, or reached Paper, Testnet, or Live.
 
-**No Scout may directly promote or write to Hermes Wiki Brain.** All Wiki Brain ingestion goes through ChatGPT Research Intake Review exclusively.
+**No Scout may directly promote or write to any downstream output.** Hermes Wiki Brain ingestion and production candidate-pool handoff go through ChatGPT Research Intake Review exclusively; Qlib, Paper, Testnet, and Live are not written by Scouts.
