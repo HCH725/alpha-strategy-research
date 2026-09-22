@@ -2,7 +2,7 @@
 schema: strategy-research-record-v1
 title: Crypto Cross-Sectional Nearness to 52-Week High Momentum Factor
 created: 2026-08-31
-updated: 2026-08-31
+updated: 2026-09-22
 type: strategy-research-record
 tags:
   - quant
@@ -17,8 +17,9 @@ tags:
   - reference-point
 status: research-only
 confidence: medium
-source_as_of: 2025-12
+source_as_of: 2026-09-22
 sources:
+  - "Yuecheng Jia, Betty Simkins, Shu Yan, Hongyu Zhang, Jiangyu Zhao, 'Psychological anchoring effect and cross section of cryptocurrency returns', Journal of Banking & Finance, Volume 182 (January 2026), Article 107592. DOI: 10.1016/j.jbankfin.2025.107592"
   - "Thomas J. George and Chuan-Yang Hwang, 'The 52-Week High and Momentum Investing', The Journal of Finance 59(5), 2145-2176 (2004). DOI: 10.1111/j.1540-6261.2004.00695.x"
   - "Jun Li and Jianfeng Yu, 'Investor Attention, Psychological Anchors, and Stock Return Predictability', Journal of Financial Economics 104(2), 401-419 (2012). DOI: 10.1016/j.jfineco.2011.08.004"
   - "Abhishek Bhootra and Jungshik Hur, 'The 52-Week High and Momentum: Anchoring, Reference Points, and Market States', Journal of Banking & Finance 37(7), 2503-2514 (2013). DOI: 10.1016/j.jbankfin.2013.01.036"
@@ -37,6 +38,8 @@ contradictions: []
 - **Macro/Market Psychological Anchor Extension:** Jun Li and Jianfeng Yu, "Investor Attention, Psychological Anchors, and Stock Return Predictability", *Journal of Financial Economics*, Volume 104, Issue 2, Pages 401–419 (2012). DOI: [10.1016/j.jfineco.2011.08.004](https://doi.org/10.1016/j.jfineco.2011.08.004).
 - **Market State & Disposition Interaction:** Abhishek Bhootra and Jungshik Hur, "The 52-Week High and Momentum: Anchoring, Reference Points, and Market States", *Journal of Banking & Finance*, Volume 37, Issue 7, Pages 2503–2514 (2013). DOI: [10.1016/j.jbankfin.2013.01.036](https://doi.org/10.1016/j.jbankfin.2013.01.036).
 - **Empirical Cryptocurrency Application:** Adaptation of the 52-week (or rolling 180d/365d) high proximity ratio to cross-sectional digital asset spot/perpetual universes on major exchanges.
+- **Crypto-native primary evidence (added 2026-09-22 by the scheduled Research Scout run):** Yuecheng Jia, Betty Simkins, Shu Yan, Hongyu Zhang, and Jiangyu Zhao, "Psychological anchoring effect and cross section of cryptocurrency returns," *Journal of Banking & Finance*, Volume 182 (January 2026), Article 107592. DOI: [10.1016/j.jbankfin.2025.107592](https://doi.org/10.1016/j.jbankfin.2025.107592). Publisher page (`https://www.sciencedirect.com/science/article/abs/pii/S0378426625002122`) opened and read by this Scout run on 2026-09-22: author list, journal/volume/article number/date, abstract, and the publicly visible Introduction were verified directly against the publisher page. **Full text (Section 3 "Data and variables" and all tables) is paywalled** — sample period, exact universe/venue, rebalance mechanics beyond "next-week", and any transaction-cost/slippage treatment are therefore recorded below as **data gap / not stated in accessible primary text**, never inferred.
+- **Update note:** This material update was appended under the canonical specification's deduplication/update rule (`quant/strategy-research-record-spec-v1.md`: when economic mechanism and materially the same signal construction are already captured, update the existing record rather than create a second one). All pre-existing content in this record was preserved unchanged; only source-linked crypto evidence, provenance, negative evidence, limitations, and sources were added.
 
 ## Economic mechanism
 
@@ -102,7 +105,22 @@ In cryptocurrency markets, psychological anchoring on historical peak prices is 
 
 - George and Hwang (2004) show that the 52-week high strategy in US equities generates an average monthly return of $0.45\%$ ($t = 3.25$), outperforming standard 6-month/6-month momentum ($0.29\%$, $t = 1.83$). Moreover, when both strategies are evaluated jointly in bivariate regressions, the 52-week high factor dominates and renders conventional momentum statistically insignificant.
 - Li and Yu (2012) and Bhootra and Hur (2013) find that near-52WH momentum does not suffer from long-term return reversals (unlike price momentum which exhibits negative returns in months 13–60) and is resilient across both bull and bear market states.
-- Empirical crypto backtests over 2019–2025 demonstrate that $NH_{365d}$ long-short quintile portfolios generate an annualized Sharpe ratio of $1.35$ vs. $0.82$ for standard 30d cumulative return momentum, specifically avoiding sharp drawdowns during sudden market rotations.
+- Empirical crypto backtests over 2019–2025 demonstrate that $NH_{365d}$ long-short quintile portfolios generate an annualized Sharpe ratio of $1.35$ vs. $0.82$ for standard 30d cumulative return momentum, specifically avoiding sharp drawdowns during sudden market rotations. *(Note added 2026-09-22: this figure was present in the original record without a traceable source; it remains unverified and is treated as an unsourced claim pending provenance — see Limitations.)*
+
+#### Crypto-native primary evidence (Jia et al., 2026) — added 2026-09-22
+
+All figures below are `source-reported` and were read directly from the publisher's public Article preview (Abstract + Introduction) of Jia, Simkins, Yan, Zhang, and Zhao, *Journal of Banking & Finance* 182 (January 2026), Article 107592, DOI 10.1016/j.jbankfin.2025.107592, as accessed 2026-09-22. Section/table provenance is given per figure. Nothing here has been independently reproduced.
+
+- **Signal:** `Nearness52` = proximity of a cryptocurrency's price to its 52-week high; `cANCHOR` is the value-weighted spread portfolio long high-`Nearness52` cryptocurrencies and short low-`Nearness52` cryptocurrencies. *(provenance: publisher Abstract)*
+- **Headline return:** the value-weighted `cANCHOR` spread "generates an average return of around 130 basis points per week". *(provenance: publisher Abstract)*
+- **Decile long–short, next-week returns:** equal-weighted **0.7%** (*t* = 2.39, significant at 5%) and value-weighted **1.4%** (*t* = 2.60, significant at 1%) per week, from portfolios sorted on `Nearness52`. Adjusting returns by the cryptocurrency factors of Liu et al. (2022) does not change the magnitude or significance. *(provenance: publisher Introduction, paragraph 3)*
+- **Window robustness:** results are robust to using *N* = 13 to 100 weeks for constructing `Nearness_N`. *(provenance: publisher Introduction)*
+- **Cross-sectional confirmation:** confirmed by Fama–MacBeth (1973) regressions and sequential portfolio sorts; predictability holds after controlling for size (Liu and Tsyvinski 2021), downside risk (Zhang et al. 2021), illiquidity (Amihud 2002), and bid–ask spreads (Abdi and Ranaldo 2017). *(provenance: publisher Introduction)*
+- **Not subsumed by momentum:** predictability remains significant after controlling for lagged 1–4 week cumulative returns and for medium-term returns up to 12 months — the paper explicitly contrasts this with the equity result of Barroso and Wang (2021), where momentum subsumes the 52-week-high effect. *(provenance: publisher Introduction)*
+- **Risk-channel placebo:** predictability is *weaker* under poor aggregate market conditions and high financial distress, which the authors argue is inconsistent with a risk-based explanation. *(provenance: publisher Introduction)*
+- **Friction-channel placebo:** in many cases predictability is *more* pronounced among cryptocurrencies with *low* market frictions (Amihud illiquidity / bid–ask terciles), which the authors argue is inconsistent with a market-friction explanation. *(provenance: publisher Introduction)*
+- **Asset-pricing contribution:** adding `cANCHOR` to the Liu–Tsyvinski–Wu three-factor benchmark yields a four-factor model that better explains cross-sectional cryptocurrency returns and improves mean–variance efficiency. *(provenance: publisher Abstract + Introduction)*
+- **Not verifiable from the accessible primary text (data gap):** exact sample period, exchange/vendor universe and coin count, listing/delisting and survivorship handling, rebalance timing convention beyond "next-week", shorting feasibility/borrow assumptions, and **whether any transaction costs, spread, or slippage were modelled**. The publisher's Section 3 ("Data and variables") and all tables sit behind the paywall. A third-party recap claims the spread "stays profitable after costs"; that claim is **not verified from the primary source and is not adopted here**.
 
 ### Independently reproduced
 
@@ -112,6 +130,10 @@ Not independently reproduced.
 
 - **Late-Cycle Bull Market Blow-Off Tops:** When an entire sector reaches multi-year highs simultaneously, buying near-peak tokens can expose the portfolio to severe drawdown risk if a macro liquidity contraction suddenly terminates the market cycle.
 - **Survivorship Bias in Newly Listed Tokens:** Rapidly launching tokens without 365 days of history cannot participate in the signal, creating potential opportunity cost during alt-season cycles where new tokens outperform older established assets.
+- **Cost erosion unknown for the crypto-native evidence (added 2026-09-22):** the Jia et al. (2026) figures above are read from the paywalled paper's public Abstract/Introduction only; the accessible primary text does not state whether fees, spread, or slippage were modelled. A weekly long–short decile spread on a cross-section that includes illiquid altcoins is cost-sensitive, so the reported ~130 bps/week (value-weighted) and 0.7%/week (equal-weighted) must be treated as **cost-status: data gap**, not as net-of-cost alpha.
+- **Statistical distance is modest (added 2026-09-22):** *t* = 2.39 (equal-weighted) and *t* = 2.60 (value-weighted) reject zero at conventional levels but leave room for a small number of influential periods; the accessible primary text does not expose subperiod stability or Newey–West/overlapping-window details for the weekly spread (**data gap**).
+- **Cross-asset-class counter-evidence:** in equities, Barroso and Wang (2021) find momentum subsumes the predictive power of nearness-to-52-week-high; the crypto claim of non-subsumption rests on the single Jia et al. (2026) study and has not been independently replicated.
+- **No independent replication identified** of the Jia et al. (2026) crypto result in the reviewed sources; absence of a replication is not evidence that it fails.
 
 ## Falsification plan
 
@@ -128,6 +150,9 @@ Not independently reproduced.
 - **not independently reproduced**: Historical validation in our research pipeline is pending.
 - **data history constraint**: Requires at least 1 year of continuous price data, filtering out newly launched tokens and meme coins.
 - **funding drag on short leg**: Shorting low-$NH$ altcoins during broad bull market expansions can incur persistent negative funding rate drag.
+- **data gap (added 2026-09-22)**: the crypto-native primary source (Jia et al. 2026) is paywalled beyond the Abstract/Introduction — sample period, universe/venue, coin count, survivorship handling, exact rebalance timing, and transaction-cost/slippage treatment are **not stated in the accessible primary text** and must not be inferred.
+- **unsourced claim (flagged 2026-09-22)**: the pre-existing "2019–2025 crypto backtest, annualized Sharpe 1.35 vs 0.82" line has no traceable source in this record and must not be cited as evidence until provenance is supplied.
+- **not independently reproduced**: neither the equity-derived parameterization in this record nor the Jia et al. (2026) crypto result has been reproduced in our research stack.
 
 ## Implementation status
 
@@ -154,3 +179,4 @@ Research material only. Does not constitute trading advice, production validatio
 1. Thomas J. George and Chuan-Yang Hwang, "The 52-Week High and Momentum Investing", *The Journal of Finance*, Volume 59, Issue 5, Pages 2145–2176 (October 2004). DOI: [10.1111/j.1540-6261.2004.00695.x](https://doi.org/10.1111/j.1540-6261.2004.00695.x)
 2. Jun Li and Jianfeng Yu, "Investor Attention, Psychological Anchors, and Stock Return Predictability", *Journal of Financial Economics*, Volume 104, Issue 2, Pages 401–419 (2012). DOI: [10.1016/j.jfineco.2011.08.004](https://doi.org/10.1016/j.jfineco.2011.08.004)
 3. Abhishek Bhootra and Jungshik Hur, "The 52-Week High and Momentum: Anchoring, Reference Points, and Market States", *Journal of Banking & Finance*, Volume 37, Issue 7, Pages 2503–2514 (2013). DOI: [10.1016/j.jbankfin.2013.01.036](https://doi.org/10.1016/j.jbankfin.2013.01.036)
+4. Yuecheng Jia, Betty Simkins, Shu Yan, Hongyu Zhang, and Jiangyu Zhao, "Psychological anchoring effect and cross section of cryptocurrency returns", *Journal of Banking & Finance*, Volume 182 (January 2026), Article 107592. DOI: [10.1016/j.jbankfin.2025.107592](https://doi.org/10.1016/j.jbankfin.2025.107592). Publisher landing page read 2026-09-22: https://www.sciencedirect.com/science/article/abs/pii/S0378426625002122 (Abstract + Introduction accessible; full text and Section 3 "Data and variables" paywalled → data gap).
