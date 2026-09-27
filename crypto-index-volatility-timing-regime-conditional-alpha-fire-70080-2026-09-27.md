@@ -144,7 +144,7 @@ All figures below are third-party claims from the pinned source, read in the bro
 
 ### Independently reproduced
 
-**Not independently reproduced.** No backtest, no simulation, no data download and no code execution was performed for this record. The only actions taken were: reading the primary source in a browser, reading Crossref metadata, running read-only repository dedup searches, and running read-only Wiki Brain searches.
+**`not independently reproduced`.** No backtest, no simulation, no data download and no code execution was performed for this record. The only actions taken were: reading the primary source in a browser, reading Crossref metadata, running read-only repository dedup searches, and running read-only Wiki Brain searches.
 
 ### Negative evidence
 
