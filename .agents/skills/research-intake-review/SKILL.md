@@ -162,7 +162,7 @@ Intake Review does not require:
 - profitability judgment;
 - Paper/Testnet/Live approval.
 
-Those belong downstream to the Hermes production card, Qlib-only full backtest, frozen-survivor/evidence processing, and later trading authorization.
+Those belong downstream to n8n C3 JIT preparation (when needed), deterministic Qlib-only full backtest, frozen-survivor/evidence processing, and later trading authorization.
 
 Also do not turn the decision into a two-step gate: once `PASS` / `PASS-WITH-CAVEAT` is finalized, the candidate-pool append (sibling output, see below) must not be re-adjudicated for crypto/runnable suitability, and Wiki Brain presence must not be treated as a precondition for it.
 
