@@ -11,7 +11,7 @@ This skill defines the review gate between `alpha-strategy-research` and Hermes 
 
 Its job is narrow: determine whether an external strategy artifact has been understood, normalized, classified, and bounded correctly enough to enter Wiki Brain as **research-only knowledge**.
 
-It does **not** determine whether a strategy is profitable, robust, validated for production capital, paper-ready, testnet-ready, or live-ready. After a research decision is accepted, this recurring flow may perform prepare-only implementation so n8n can launch the hypothesis deterministically; that mechanical readiness is not a validation judgment.
+It does **not** determine whether a strategy is profitable, robust, production-ready, paper-ready, testnet-ready, or live-ready.
 
 ## Ownership boundary
 
@@ -29,17 +29,16 @@ ChatGPT / Hermes / Antigravity research
 alpha-strategy-research
         ↓
 Research Intake Review
-        ↓
-durable accepted pending item (PASS / PASS-WITH-CAVEAT)
-        ↓
-prepare-only execution package
-(no Qlib launch; freeze runner + round/run specs + P1–P10)
-        ├──→ ① production candidate pool + execution_file                     [sibling output A]
-        └──→ ② Hermes Wiki Brain (research-only knowledge)                    [sibling output B]
+        ├──→ ① Hermes Wiki Brain (research-only knowledge)                    [sibling output A]
+        └──→ ② production candidate pool (/Volumes/ExpansionDrive/qlib-results/_handoff/candidates.json)
+                                                                              [sibling output B]
                 ↓
-        n8n C3 deterministic handoff
+        n8n C3
                 ↓
-        Qlib-only full backtest
+        JIT prepare-only when execution_file is absent
+        (Hermes may implement/freeze runner + specs; no Qlib compute)
+                ↓
+        deterministic Qlib-only full backtest
         ├──→ REJECT / TECHNICAL_INCOMPLETE
         └──→ PASS + >=1 cohort survivor
                 ↓
@@ -50,11 +49,11 @@ prepare-only execution package
          not a Top-10 gate; Qlib remains canonical performance truth)
 ```
 
-The two outputs remain **siblings produced by the same review decision**, but a reviewed item is not delivered downstream until its **prepare-only execution package** is complete. Preparation is mechanical implementation, not a second eligibility judgment: it freezes a deterministic runner plus round/run specs and proves the staged package passes P1–P10 without launching Qlib. Only then is the candidate appended with its `execution_file`, and only then may the durable pending Wiki entry be completed. Therefore every canonical Wiki record created by the recurring flow already has a matching n8n-ready production candidate.
+The two outputs are **siblings produced by the same review decision**: one `PASS` / `PASS-WITH-CAVEAT` decision creates (①) the Wiki Brain record **and** (②) exactly one schema-complete production candidate. Wiki Brain is knowledge preservation; it is **not** a second eligibility gate for candidateization, and there is no crypto/runnable suitability screening after intake.
 
-A preparation failure does **not** change PASS/PASS-WITH-CAVEAT into REMEDIATE or REJECT. Leave the existing durable `pending_ingestion` entry unresolved and retry preparation on the next scheduled run. Do not create a fifth decision state or a second candidate-eligibility gate.
+A candidate does **not** need an `execution_file` to be complete at Intake Review. Missing `execution_file` means only "not yet mechanically prepared". n8n C3 owns that boundary: when the head candidate lacks `execution_file`, C3 may launch one JIT **prepare-only** Hermes session to implement/test/freeze the runner and specs and then add only the validated `execution_file`. That session must not create canonical `/results/<family>`, run Qlib, write terminal/verdict evidence, or re-adjudicate the research decision.
 
-Never collapse research review with performance validation. Qlib-only full backtest remains downstream under n8n. The Wiki record stays research-only; a prepared package means only "mechanically launchable and frozen", not profitable, reproduced, survivor-qualified, Paper/Testnet/Live approved, or even locally data-complete.
+Never collapse these stages. Intake Review remains research/canonicalization only; Qlib-only full backtest remains downstream under n8n. The downstream mirror is research-only, does not replace Qlib truth, and does not self-pass, self-rank, or self-promote entries.
 
 ## What Intake Review must answer
 
@@ -163,7 +162,7 @@ Intake Review does not require:
 - profitability judgment;
 - Paper/Testnet/Live approval.
 
-Those belong downstream to the prepare-only implementation boundary, n8n-controlled Qlib-only full backtest, frozen-survivor/evidence processing, and later trading authorization. Preparation may make the hypothesis mechanically launchable, but it must not perform the downstream performance judgment.
+Those belong downstream to the Hermes production card, Qlib-only full backtest, frozen-survivor/evidence processing, and later trading authorization.
 
 Also do not turn the decision into a two-step gate: once `PASS` / `PASS-WITH-CAVEAT` is finalized, the candidate-pool append (sibling output, see below) must not be re-adjudicated for crypto/runnable suitability, and Wiki Brain presence must not be treated as a precondition for it.
 
@@ -248,7 +247,7 @@ Pending ingestion is executed only by `intake_control.py execute_ingestion`: it 
 Normal scheduled review is commit-delta based and uses **small immutable batches**.
 
 1. From the repository workdir, launch the v6 entrypoint locally and read the current skill through its bootstrap output. Run the deterministic invariant validator via bootstrap. If validation fails (`deterministic`), stop without mutating review state. Invocation pitfall: `--max-artifacts` is an entrypoint-level flag placed **before** the subcommand (`intake_control.py --max-artifacts 4 bootstrap`); placing it after the subcommand fails with `unrecognized arguments`.
-2. Process existing `pending_ingestion` first, but **do not ingest an accepted Wiki item until its production candidate is prepared**. Each pending item already contains the exact frozen Wiki content/hash; never regenerate that content. For each PASS/PASS-WITH-CAVEAT pending item, either verify its already-prepared candidate package or finish the prepare-only work described below. When preparation succeeds, append/upgrade exactly one candidate with `execution_file` idempotently, verify the staged package again, then run `intake_control.py ingest-pending` so the canonical Wiki file is completed. If preparation fails or is interrupted, leave the pending entry durable and do not append an unprepared candidate; retry on the next scheduled run.
+2. Process any existing `pending_ingestion` first via `intake_control.py ingest-pending` (dry-run with `--dry-run` for preview). Each pending item is tied to reviewed commit/path/blob/decision and contains the exact Wiki target, exact `wiki_content`, and `wiki_content_sha256`. Never regenerate the Wiki record during ingestion. If the target is absent, create that exact content; if it already has the same hash, treat it as an idempotent success; if it differs, do not overwrite unless an `expected_existing_sha256` stored with the pending item still matches the current target. Read the result back, verify the pending hash, then use `complete-ingestion` to remove only that exact pending item and record the successful Wiki path.
 3. Run deterministic preflight from `last_reviewed_commit` to current `origin/main`. Require the checkpoint to be an ancestor. Select the oldest immutable batch and treat its full SHA as `SNAPSHOT_HEAD` / `batch_head`.
 4. Read each strategy artifact from immutable `SNAPSHOT_HEAD` content and review only that frozen material. Never mix a later remote revision into the batch. For a deleted artifact, read the last immutable content from the base side, record status `D`, resolve it as `REJECT`, and never create pending ingestion for it.
 5. If the selected committed delta has zero strategy artifacts, verify any contract-affecting documentation/skill change and apply an empty review payload so the checkpoint advances across metadata-only history.
@@ -261,18 +260,9 @@ Normal scheduled review is commit-delta based and uses **small immutable batches
 8. Hermes `default` makes the final decision after considering any required independent auditor challenge. `REMEDIATE` and `REJECT` remain outside Wiki Brain. Every `REMEDIATE` retains its durable reason in `remediation_backlog`.
 9. Build one review-update payload with the original `base_checkpoint`, `reviewed_snapshot`, each item's exact Git status/path/blob/decision/reason/auditor status, deferred remote information, and **one new pending-ingestion record for every PASS/PASS-WITH-CAVEAT**. Each pending record must carry the exact deterministic Wiki content and SHA-256. Do not write accepted items to Wiki Brain yet.
 10. Run `apply` via `intake_control.py apply` (fresh-fetch guarded; fetch failure aborts as `transient` with no offline advancement). Under the short OS mutex it must re-check the checkpoint CAS, prove `reviewed_snapshot` ancestry, and prove the payload exactly covers the frozen strategy diff. CAS or coverage mismatch aborts without Wiki writes. On success, checkpoint, decision buckets, remediation backlog, findings, deferred information, and pending ingestion advance atomically. A newer REMEDIATE/REJECT for the same staging path cancels any older unresolved pending entry for that path.
-11. Re-run state validation. The successful apply has now made every accepted item durable in existing `pending_ingestion`; this is the retry boundary for execution preparation and Wiki delivery.
-12. For each durable PASS/PASS-WITH-CAVEAT pending item, build or verify its **prepare-only execution package**. Use the same reviewed hypothesis/caveats and contract-14.4 candidate body; do not re-adjudicate suitability. The package must conform to the deployed quant-runtime prepared-execution contract:
-    - staged root: `/Volumes/ExpansionDrive/qlib-results/_handoff/prepared/<family_id>/`;
-    - immutable manifest `execution_file` with exact family/fingerprint/round/run/spec hashes;
-    - staged `rounds/<round_id>/round-spec.json` and `rounds/<round_id>/attempts/<run_id>/run-spec.json`;
-    - a versioned strategy runner whose deployed byte-identical host copy is under `/Users/hong/workspace/qlib-apple-container/scripts/` and whose run-spec `script.path` is the matching `/scripts/<safe>.py` with SHA-256;
-    - direct/card-free ownership fields remain absent or empty as required by P10;
-    - runner accepts `--run-spec` and `--attempt-dir`;
-    - run focused unit/self-checks and `/opt/homebrew/bin/python3 /Users/hong/workspace/quant-runtime-pipeline/runtime/preflight.py --launch --attempt-dir <staged-attempt> --json`; require rc=0, `overall=PASS`, `launch_gate=evaluated`, P9 PASS and P10 PASS.
-    Preparation may inspect canonical raw read-only and encode prerequisite checks, but it must **not** execute `container exec -d qlib-run`, must not create canonical `/results/<family_id>`, must not publish a performance/verdict result, and must not run a backtest. Missing local prerequisite data is not an intake rejection; freeze a runner that handles that condition downstream without changing the hypothesis.
-13. After step 12 succeeds, append exactly one candidate to `/Volumes/ExpansionDrive/qlib-results/_handoff/candidates.json` with the validated absolute `execution_file` path (idempotent by reviewed_source/family_id/fingerprint). If a legacy same-identity pool entry exists without `execution_file`, this preparation flow may **only add that missing execution_file after proving the existing body/fingerprint/review provenance are unchanged**; never re-author or renumber the candidate. Write any new card body first, then replace `candidates.json` atomically.
-14. Re-validate the prepared package after the pool write. Only then run `intake_control.py ingest-pending` for that exact pending item. Read back the exact canonical Wiki file and verify the durable hash; `complete-ingestion` then removes only that pending entry and records its canonical path. If Wiki ingestion fails, the already-prepared candidate remains idempotently valid and the pending Wiki entry is retried next run.
+11. Re-run state validation. Only after successful state apply may this run process the newly durable pending Wiki entries, using the exact content/hash already stored in state. Read back every exact canonical Wiki file and verify its hash before completion.
+12. Atomically clear only the successfully completed pending entries and append their canonical paths to `ingested_wiki_records`. If ingestion or cleanup fails, leave the pending entry durable for the next run; do not roll back the reviewed checkpoint.
+13. Append the sibling candidate-pool output: for every item this run finalized as `PASS` / `PASS-WITH-CAVEAT`, append exactly one entry to `/Volumes/ExpansionDrive/qlib-results/_handoff/candidates.json` (idempotent: no-op when the same `reviewed_source` / `family_id` / fingerprint already exists). Write all new card bodies first, then replace the pool file atomically. This is canonicalization of the same review decision, not a second review, and it happens regardless of whether the Wiki entry was already ingested.
 
 Do not advance the checkpoint halfway through a partially reviewed batch. A failed pre-CAS batch is retried from the same base checkpoint. A post-CAS Wiki failure is retried from `pending_ingestion`; it does not cause the research review to repeat.
 
@@ -311,15 +301,14 @@ The production candidate pool is a **file contract, not a service**:
 
 Rules:
 
-- **Same decision, two prepared outputs.** Every item finalized as `PASS` or `PASS-WITH-CAVEAT` gets exactly one prepared production candidate and one research-only Wiki record. `REMEDIATE` and `REJECT` never enter the pool.
-- **No new decision state or service.** The four review decisions are unchanged. Prepare-only implementation is the delivery requirement between an accepted durable pending item and its two sibling outputs; it reuses existing `pending_ingestion` for retry and adds no daemon/queue/registry/state table.
-- **Candidate eligibility is still decided by intake.** Preparation must not perform a second crypto/runnable suitability screen. It makes the accepted hypothesis mechanically executable/frozen; it does not decide whether the hypothesis deserves testing.
-- **Every new candidate is n8n-ready.** A pool entry created by this recurring flow must carry a validated absolute `execution_file` under `<results>/_handoff/prepared/<family_id>/`. Never append a new unprepared candidate. The deployed n8n C3 path consumes only this prepared contract and never needs a normal Hermes production session.
-- **Appends are idempotent.** Same reviewed_source/family_id/fingerprint is one candidate. A same-identity legacy entry missing only `execution_file` may be backfilled in place after exact provenance/body/fingerprint verification; otherwise never rewrite, renumber, or re-author an existing entry. Write every new card body first, then replace `candidates.json` atomically.
+- **Same decision, two outputs.** Every item finalized as `PASS` or `PASS-WITH-CAVEAT` in this review gets exactly one candidate appended to that pool before the run ends, in addition to its Wiki Brain record. `REMEDIATE` and `REJECT` never enter the pool.
+- **No new states, no new stage.** The four decisions are unchanged, and the pool append is not a fifth state, not a second review, and not a new pipeline stage.
+- **Candidate eligibility is decided here.** `PASS` / `PASS-WITH-CAVEAT` must be sufficient to candidateize. There is no later crypto/runnable suitability screening, and Wiki Brain presence is not a precondition (Wiki ingestion and the pool append are sibling outputs of the same decision).
+- **Appends are idempotent.** If the same `reviewed_source` / `family_id` / fingerprint already exists in the pool or in `/results/*/family.json`, the append is a no-op. Never rewrite, renumber, or re-author an existing entry; write every new card body file first, then replace `candidates.json` atomically. `execution_file` is optional at Intake time and must not be fabricated or treated as a completion gate; only n8n C3 JIT preparation may later add it after validating the frozen execution package.
 - **Body generation is format/canonicalization, not review.** The card body is produced from the frozen GitHub artifact plus this review's normalized content, crypto portability, caveats, and the contract-14.4 v1.3.0 candidate requirements (mechanism, eligible universe, parameter domain, historical/OOS split, `DCA PARAMETER DOMAIN`, `COHORT SURVIVOR SEMANTICS`, robustness/falsification, Qlib-only runtime rules). Execution details the source does not specify may be labeled `research-defined` without changing the core hypothesis.
 - **Universe fidelity.** Never force a non-crypto source onto BTC/ETH/BNB/SOL; when a research-defined universe is needed, keep it inside the same market/mechanism range and label it `research-defined`. Where the record itself carries a crypto portability statement, canonicalize from that statement.
-- **A missing prerequisite is not an intake-eligibility gate.** `PASS` / `PASS-WITH-CAVEAT` still must ultimately receive a prepared candidate; preparation must not withhold it merely because local data is absent. Freeze the missing-data/prerequisite behavior into the runner so downstream Qlib execution can produce the appropriate `TECHNICAL_INCOMPLETE` evidence when every legal local universe is impossible. Production execution uses the complete local eligible universe in canonical local raw where the core signal/mechanism can be validly computed, across all preregistered symbols, timeframes, strategy-parameter domain, DCA-parameter domain, and historical/OOS/robustness coverage. Source venue and named symbols are provenance/external-validity references, not exact-match prerequisites; a mismatch alone is not `TECHNICAL_INCOMPLETE`. Never re-adjudicate suitability to keep the pool clean.
-- **No new machinery.** Preparation and append are owned by the existing twice-daily recurring Intake Review session. Do not add another recurring cron, helper service/manager/registry/daemon/queue, or parallel state store. Historical backlog repair is a separate one-time Kanban task and must be archived when complete.
+- **A missing prerequisite is not a gate.** `PASS` / `PASS-WITH-CAVEAT` still enters the pool directly. Production execution uses the complete local eligible universe in canonical local raw where the core signal/mechanism can be validly computed, across all preregistered symbols, timeframes, strategy-parameter domain, DCA-parameter domain, and historical/OOS/robustness coverage. Source venue and named symbols are provenance/external-validity references, not exact-match prerequisites; a mismatch alone is not `TECHNICAL_INCOMPLETE`. Only when the core signal requires a data type/field completely absent locally, making every legal local universe impossible to compute, may the execution result be prerequisite-missing `TECHNICAL_INCOMPLETE`. Never re-adjudicate suitability to keep the pool clean.
+- **No new machinery.** Appending is plain file work by the recurring owner. Intake Review must not implement strategy runners, build prepared packages, run P1–P10, or launch Qlib. Do not add a helper service/manager/registry/daemon/queue/cron or a new file-type framework for it; JIT mechanical preparation is owned downstream by the existing n8n C3 cadence.
 
 ## Operating rule for Hermes
 
@@ -330,7 +319,6 @@ As the current recurring owner, Hermes `default` should:
 3. review only the unreviewed commit delta;
 4. preserve the four-decision model and downstream boundaries;
 5. use an independent auditor when appropriate;
-6. for every durable accepted pending item, finish/verify the prepare-only execution package before delivery;
-7. append or minimally backfill exactly one candidate with validated `execution_file`, then complete the exact Wiki ingestion;
-8. never launch Qlib or create a normal Hermes production/backtest session from Intake Review;
-9. keep ownership explicit in this skill and canonical state; any future ownership change must be user-directed.
+6. append the sibling schema-complete production candidate for every `PASS` / `PASS-WITH-CAVEAT` (idempotently, same run), without requiring or fabricating `execution_file`;
+7. never implement/run the strategy inside Intake Review; n8n C3 owns JIT preparation and Qlib handoff;
+8. keep ownership explicit in this skill and canonical state; any future ownership change must be user-directed.
