@@ -24,12 +24,13 @@ Research Intake Review
 PASS / PASS-WITH-CAVEAT decision produces two sibling outputs:
 ├── Hermes Wiki Brain (research-only / knowledge preservation / non-gating)
 │   └── knowledge preservation only
-└── /results/_handoff/candidates.json (production candidate pool)
+└── /results/_handoff/preparation_backlog.json (exact reviewed candidate; idempotent)
     ↓
-n8n C3 production handoff
-    ├── execution_file present → staged P1–P10 validation
-    └── execution_file absent → lease-protected Hermes quant-preparation
-                               → validated execution_file
+scheduled no-agent runtime/prepare_candidate.py (outside C3)
+    ↓
+host validates staged package and promotes into candidates.json
+    ↓
+n8n C3 deterministic execution-ready consumer
     ↓
 fixed direct Qlib dispatch
     ↓
@@ -51,7 +52,7 @@ Qlib full backtest
          §28 evidence package)
 ```
 
-`/results/_handoff/candidates.json` is the runtime candidate-pool contract; its current host mount is `/Volumes/ExpansionDrive/qlib-results/_handoff/candidates.json`.
+`/results/_handoff/preparation_backlog.json` is the reviewed-candidate preparation input; after host-only preparation validation, ready entries are promoted into the runtime production-pool contract `/Volumes/ExpansionDrive/qlib-results/_handoff/candidates.json`. Intake remains the sole eligibility judgment; neither preparation nor C3 adds a suitability gate.
 
 Valid public source contract for all four Scouts: GitHub / FMZ / TradingView / papers / blogs / public research. For TradingView, only public, traceable strategy/idea/script/research URLs are valid — preserve the stable URL and as-of date; private or paid/invite-only scripts are not valid sources.
 
@@ -61,7 +62,7 @@ Valid public source contract for all four Scouts: GitHub / FMZ / TradingView / p
 
 This repository is the **upstream public staging and research-only handoff layer** of a broader quantitative workflow. It does not perform Intake decisions, Qlib full backtests, survivor promotion, or trading execution itself.
 
-After ChatGPT Research Intake Review, the same PASS / PASS-WITH-CAVEAT decision produces the Hermes Wiki Brain research-only record and one production candidate-pool entry as sibling outputs. The candidate then enters the n8n C3 production handoff: an already prepared candidate goes through staged P1–P10 validation, while a candidate without `execution_file` receives one lease-protected Hermes `quant-preparation` pass before the next C3 cadence performs the fixed direct Qlib dispatch. Wiki Brain is research-only knowledge preservation and a non-gating sibling output, not a second candidate-eligibility gate.
+After ChatGPT Research Intake Review, the same PASS / PASS-WITH-CAVEAT decision produces the Hermes Wiki Brain research-only record and an exact, idempotent candidate append to `preparation_backlog.json` as sibling outputs. The existing scheduled no-agent invocation of `runtime/prepare_candidate.py` runs outside C3: a bounded Hermes session may stage artifacts, but the host performs the focused test/P1–P10 checks and promotes only a valid execution-ready entry into `candidates.json`. n8n C3 is a deterministic pure consumer: it validates the prepared entry and performs fixed direct Qlib dispatch; it never launches JIT preparation. Intake remains the only eligibility judgment; Wiki Brain is a non-gating sibling output.
 
 After a Qlib run reaches PASS with at least one cohort survivor, the frozen survivor bundle, survivor index/leaderboard, and §28 evidence feed a guarded compact private survivor mirror at `HCH725/validated-survivor-research`. The mirror accepts all formal leaderboard entries; it is not a Top-10 gate. It remains a downstream research mirror: Qlib remains the canonical performance truth, and the mirror does not self-pass, self-rank, or self-promote.
 References to retired engines preserved in legacy research records are historical provenance only, not the current workflow; existing strategy records are not rewritten.
@@ -78,12 +79,13 @@ ChatGPT Research Intake Review
         ↓
 ├── Hermes Wiki Brain (research-only / knowledge preservation / non-gating)
 │   └── knowledge preservation only
-└── /results/_handoff/candidates.json (production candidate pool)
+└── /results/_handoff/preparation_backlog.json (exact reviewed candidate; idempotent)
     ↓
-n8n C3 production handoff
-    ├── execution_file present → staged P1–P10 validation
-    └── execution_file absent → lease-protected Hermes quant-preparation
-                               → validated execution_file
+scheduled no-agent runtime/prepare_candidate.py (outside C3)
+    ↓
+host validates staged package and promotes into candidates.json
+    ↓
+n8n C3 deterministic execution-ready consumer
     ↓
 fixed direct Qlib dispatch
     ↓
@@ -515,7 +517,7 @@ unless the document itself is a versioned specification.
 7. **Do not copy large source-code blocks unnecessarily.** Prefer normalized logic plus source references.
 8. **Do not confuse risk management with alpha.** Stops, sizing, leverage, DCA, grid or martingale rules should be identified separately from the predictive signal.
 9. **Do not confuse complexity with quality.** Multi-indicator combinations need a coherent thesis and remain unvalidated until tested.
-10. **Do not write to downstream systems.** Push the normalized research artifact here. ChatGPT performs Research Intake Review and, if accepted, produces the Hermes Wiki Brain record and production candidate-pool entry as sibling outputs; later Qlib, Paper, Testnet, and Live stages are separate and gated.
+10. **Do not write to downstream systems.** Push the normalized research artifact here. ChatGPT performs Research Intake Review and, if accepted, produces the Hermes Wiki Brain record and an exact idempotent append to the preparation backlog as sibling outputs; host-only preparation later promotes an execution-ready entry into the production candidate pool, while Qlib, Paper, Testnet, and Live stages remain separate and gated.
 
 ---
 
@@ -548,7 +550,7 @@ For each research run:
 4. Preserve source provenance and label all third-party results as source-reported.
 5. Commit the resulting Markdown record(s).
 6. Push them to this repository.
-7. Stop there. ChatGPT will perform Research Intake Review separately; a PASS / PASS-WITH-CAVEAT decision produces the Hermes Wiki Brain record and production candidate-pool entry as sibling outputs. The Scout must not write either output or any later Qlib, Paper, Testnet, or Live stage.
+7. Stop there. ChatGPT will perform Research Intake Review separately; a PASS / PASS-WITH-CAVEAT decision produces the Hermes Wiki Brain record and an exact idempotent preparation-backlog entry as sibling outputs. The Scout must not write either output, the production candidate pool, or any later Qlib, Paper, Testnet, or Live stage.
 
 The goal is simple:
 

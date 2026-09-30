@@ -24,12 +24,13 @@ Research Intake Review
 PASS / PASS-WITH-CAVEAT decision 產生兩個 sibling outputs：
 ├── Hermes Wiki Brain（research-only / knowledge preservation / non-gating）
 │   └── 僅作知識保存
-└── /results/_handoff/candidates.json（production candidate pool）
+└── /results/_handoff/preparation_backlog.json（exact reviewed candidate；idempotent）
     ↓
-n8n C3 production handoff
-    ├── 已有 execution_file → staged P1–P10 validation
-    └── 缺 execution_file → lease-protected Hermes quant-preparation
-                           → validated execution_file
+既有 no-agent 排程 runtime/prepare_candidate.py（C3 之外）
+    ↓
+host 驗證 staged package 後 promotion 至 candidates.json
+    ↓
+n8n C3 deterministic execution-ready consumer
     ↓
 fixed direct Qlib dispatch
     ↓
@@ -51,7 +52,7 @@ Qlib full backtest
          §28 evidence package）
 ```
 
-`/results/_handoff/candidates.json` 是 runtime candidate-pool contract；目前 host mount 為 `/Volumes/ExpansionDrive/qlib-results/_handoff/candidates.json`。
+`/results/_handoff/preparation_backlog.json` 是 reviewed candidate 的 preparation input；host-only preparation 驗證通過後，才 promotion 至 runtime production-pool contract `/Volumes/ExpansionDrive/qlib-results/_handoff/candidates.json`。Intake 仍是唯一 eligibility judgment；preparation 與 C3 都不新增 suitability gate。
 
 四個 Scout 的有效公開來源契約：GitHub / FMZ / TradingView / papers / blogs / public research。TradingView 僅限公開、可追溯的 strategy/idea/script/research URL，須保留 stable URL 與 as-of date；private/paid/invite-only 不可用。
 
@@ -61,7 +62,7 @@ Qlib full backtest
 
 本 repository 是整體量化工作流中的**上游公開 staging 與 research-only handoff layer**。它本身不負責 Intake decision、Qlib full backtest、survivor promotion 或交易執行。
 
-經過 ChatGPT Research Intake Review 後，同一個 PASS / PASS-WITH-CAVEAT decision 會同時產生 Hermes Wiki Brain 的 research-only record 與一筆 production candidate-pool entry，兩者是 sibling outputs。Candidate 接著進入 n8n C3 production handoff：已有 `execution_file` 的 candidate 先經 staged P1–P10 validation；缺 `execution_file` 時只啟動一次 lease-protected Hermes `quant-preparation`，完成後由下一個 C3 cadence 走 fixed direct Qlib dispatch。Wiki Brain 是 research-only 的知識保存、non-gating sibling output，不是第二道 candidate eligibility gate。
+經過 ChatGPT Research Intake Review 後，同一個 PASS / PASS-WITH-CAVEAT decision 會同時產生 Hermes Wiki Brain 的 research-only record 與一筆精確、idempotent 的 candidate append 到 `preparation_backlog.json`，兩者是 sibling outputs。既有 no-agent 排程在 C3 之外呼叫 `runtime/prepare_candidate.py`：有界 Hermes session 只 staging artifacts，由 host 執行 focused test／P1–P10，再將 execution-ready entry promotion 至 `candidates.json`。n8n C3 是 deterministic pure consumer，只驗證已準備好的 entry 並執行 fixed direct Qlib dispatch，絕不進行 JIT preparation。Intake 是唯一 eligibility judgment；Wiki Brain 是 non-gating sibling output。
 
 Qlib run 達到 PASS 且至少有一個 cohort survivor 後，frozen survivor bundle、survivor index/leaderboard 與 §28 evidence 會進入受保護的 compact private survivor mirror：`HCH725/validated-survivor-research`。Mirror 收錄所有 formal leaderboard entries，不是 Top-10 gate；它只是 downstream research mirror，Qlib 仍是 canonical performance truth，mirror 不得 self-pass、self-rank 或 self-promote。
 既有 legacy research records 中保留的退役引擎 references 只屬 historical provenance，不代表 current workflow；既有 strategy records 不重寫。
@@ -78,12 +79,13 @@ ChatGPT Research Intake Review
         ↓
 ├── Hermes Wiki Brain（research-only / knowledge preservation / non-gating）
 │   └── 僅作知識保存
-└── /results/_handoff/candidates.json（production candidate pool）
+└── /results/_handoff/preparation_backlog.json（exact reviewed candidate；idempotent）
     ↓
-n8n C3 production handoff
-    ├── 已有 execution_file → staged P1–P10 validation
-    └── 缺 execution_file → lease-protected Hermes quant-preparation
-                           → validated execution_file
+既有 no-agent 排程 runtime/prepare_candidate.py（C3 之外）
+    ↓
+host 驗證 staged package 後 promotion 至 candidates.json
+    ↓
+n8n C3 deterministic execution-ready consumer
     ↓
 fixed direct Qlib dispatch
     ↓
@@ -515,7 +517,7 @@ v2-final-final
 7. **不要不必要地複製大量 source code。** 優先使用標準化邏輯加 source references。
 8. **不要把風險管理誤認為 alpha。** Stops、sizing、leverage、DCA、grid、martingale 等規則應與 predictive signal 分開辨識。
 9. **不要把複雜度誤認為品質。** 多指標組合必須有一致的 thesis，而且在正式測試前都仍然是 unvalidated。
-10. **不要寫入 downstream systems。** 將標準化 research artifact push 到本 repository，由 ChatGPT 執行 Research Intake Review；若 PASS / PASS-WITH-CAVEAT，再由同一個 decision 產生 Hermes Wiki Brain record 與 production candidate-pool entry，後續 Qlib、Paper、Testnet、Live stages 另行 gated 處理。
+10. **不要寫入 downstream systems。** 將標準化 research artifact push 到本 repository，由 ChatGPT 執行 Research Intake Review；若 PASS / PASS-WITH-CAVEAT，同一個 decision 產生 Hermes Wiki Brain record 與一筆精確、idempotent 的 preparation-backlog entry；之後由 host-only preparation 將 execution-ready entry promotion 至 production candidate pool，Qlib、Paper、Testnet、Live stages 另行 gated 處理。
 
 ---
 
@@ -548,7 +550,7 @@ v2-final-final
 4. 保留 source provenance，並把所有第三方結果標示為 source-reported。
 5. Commit 產生的 Markdown record(s)。
 6. Push 到本 repository。
-7. 到此停止。ChatGPT 會另外進行 Research Intake Review；PASS / PASS-WITH-CAVEAT decision 會產生 Hermes Wiki Brain record 與 production candidate-pool entry 兩個 sibling outputs。Scout 不得寫入這兩個 output，也不得寫入後續 Qlib、Paper、Testnet 或 Live stage。
+7. 到此停止。ChatGPT 會另外進行 Research Intake Review；PASS / PASS-WITH-CAVEAT decision 會產生 Hermes Wiki Brain record 與一筆精確、idempotent 的 preparation-backlog entry 兩個 sibling outputs。Scout 不得寫入這兩個 output、production candidate pool，也不得寫入後續 Qlib、Paper、Testnet 或 Live stage。
 
 目標很簡單：
 

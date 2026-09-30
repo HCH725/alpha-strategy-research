@@ -30,13 +30,14 @@ alpha-strategy-research
         ↓
 Research Intake Review
         ├──→ ① Hermes Wiki Brain (research-only knowledge)                    [sibling output A]
-        └──→ ② production candidate pool (/Volumes/ExpansionDrive/qlib-results/_handoff/candidates.json)
+        └──→ ② preparation backlog (/Volumes/ExpansionDrive/qlib-results/_handoff/preparation_backlog.json)
                                                                               [sibling output B]
                 ↓
-        n8n C3
+        scheduled no-agent runtime/prepare_candidate.py (outside C3)
                 ↓
-        JIT prepare-only when execution_file is absent
-        (Hermes may implement/freeze runner + specs; no Qlib compute)
+        host validates staged package and promotes into candidates.json
+                ↓
+        n8n C3 deterministic execution-ready consumer
                 ↓
         deterministic Qlib-only full backtest
         ├──→ REJECT / TECHNICAL_INCOMPLETE
@@ -49,9 +50,9 @@ Research Intake Review
          not a Top-10 gate; Qlib remains canonical performance truth)
 ```
 
-The two outputs are **siblings produced by the same review decision**: one `PASS` / `PASS-WITH-CAVEAT` decision creates (①) the Wiki Brain record **and** (②) exactly one schema-complete production candidate. Wiki Brain is knowledge preservation; it is **not** a second eligibility gate for candidateization, and there is no crypto/runnable suitability screening after intake.
+The two outputs are **siblings produced by the same review decision**: one `PASS` / `PASS-WITH-CAVEAT` decision creates (①) the Wiki Brain record **and** (②) exactly one exact reviewed candidate appended idempotently to the preparation backlog. Intake remains the sole eligibility judgment; the backlog is only a transport handoff, not a second gate. Wiki Brain is knowledge preservation, not a prerequisite, and there is no crypto/runnable suitability screening after intake.
 
-A candidate does **not** need an `execution_file` to be complete at Intake Review. Missing `execution_file` means only "not yet mechanically prepared". n8n C3 owns that boundary: when the head candidate lacks `execution_file`, C3 may launch one JIT **prepare-only** Hermes session to implement/test/freeze the runner and specs and then add only the validated `execution_file`. That session must not create canonical `/results/<family>`, run Qlib, write terminal/verdict evidence, or re-adjudicate the research decision.
+A candidate does **not** need an `execution_file` to be complete at Intake Review. Intake Review appends the exact reviewed candidate object to `/Volumes/ExpansionDrive/qlib-results/_handoff/preparation_backlog.json` idempotently; it does not rewrite candidate identity/body/provenance/lineage, implement a runner, build a package, run preflight/Qlib, or launch a preparation session. The existing scheduled no-agent invocation of `runtime/prepare_candidate.py` handles one FIFO head outside C3; its bounded Hermes session only stages artifacts, while the host performs tests/preflight and promotion into `candidates.json`. C3 remains a deterministic pure consumer of execution-ready pool entries and never performs JIT preparation.
 
 Never collapse these stages. Intake Review remains research/canonicalization only; Qlib-only full backtest remains downstream under n8n. The downstream mirror is research-only, does not replace Qlib truth, and does not self-pass, self-rank, or self-promote entries.
 
@@ -162,9 +163,9 @@ Intake Review does not require:
 - profitability judgment;
 - Paper/Testnet/Live approval.
 
-Those belong downstream to n8n C3 JIT preparation (when needed), deterministic Qlib-only full backtest, frozen-survivor/evidence processing, and later trading authorization.
+Those belong downstream to the scheduled host preparation runner (when needed), deterministic Qlib-only full backtest, frozen-survivor/evidence processing, and later trading authorization.
 
-Also do not turn the decision into a two-step gate: once `PASS` / `PASS-WITH-CAVEAT` is finalized, the candidate-pool append (sibling output, see below) must not be re-adjudicated for crypto/runnable suitability, and Wiki Brain presence must not be treated as a precondition for it.
+Also do not turn the decision into a two-step gate: once `PASS` / `PASS-WITH-CAVEAT` is finalized, the exact candidate's idempotent preparation-backlog append (sibling output, see below) must not be re-adjudicated for crypto/runnable suitability, and Wiki Brain presence must not be treated as a precondition for it.
 
 ## Decisions
 
@@ -262,7 +263,7 @@ Normal scheduled review is commit-delta based and uses **small immutable batches
 10. Run `apply` via `intake_control.py apply` (fresh-fetch guarded; fetch failure aborts as `transient` with no offline advancement). Under the short OS mutex it must re-check the checkpoint CAS, prove `reviewed_snapshot` ancestry, and prove the payload exactly covers the frozen strategy diff. CAS or coverage mismatch aborts without Wiki writes. On success, checkpoint, decision buckets, remediation backlog, findings, deferred information, and pending ingestion advance atomically. A newer REMEDIATE/REJECT for the same staging path cancels any older unresolved pending entry for that path.
 11. Re-run state validation. Only after successful state apply may this run process the newly durable pending Wiki entries, using the exact content/hash already stored in state. Read back every exact canonical Wiki file and verify its hash before completion.
 12. Atomically clear only the successfully completed pending entries and append their canonical paths to `ingested_wiki_records`. If ingestion or cleanup fails, leave the pending entry durable for the next run; do not roll back the reviewed checkpoint.
-13. Append the sibling candidate-pool output: for every item this run finalized as `PASS` / `PASS-WITH-CAVEAT`, append exactly one entry to `/Volumes/ExpansionDrive/qlib-results/_handoff/candidates.json` (idempotent: no-op when the same `reviewed_source` / `family_id` / fingerprint already exists). Write all new card bodies first, then replace the pool file atomically. This is canonicalization of the same review decision, not a second review, and it happens regardless of whether the Wiki entry was already ingested.
+13. Append the sibling preparation-backlog output: for every item this run finalized as `PASS` / `PASS-WITH-CAVEAT`, append the exact reviewed candidate object once to `/Volumes/ExpansionDrive/qlib-results/_handoff/preparation_backlog.json` (idempotent: no-op when the same `reviewed_source` / `family_id` / fingerprint already exists in backlog, production pool, or registered runtime). Do not re-author the candidate at this step. This is transport of the same review decision, not a second review, and it happens regardless of whether the Wiki entry was already ingested. Intake must not write a runner, run P1–P10, invoke Qlib, or launch `quant-preparation`.
 
 Do not advance the checkpoint halfway through a partially reviewed batch. A failed pre-CAS batch is retried from the same base checkpoint. A post-CAS Wiki failure is retried from `pending_ingestion`; it does not cause the research review to repeat.
 
@@ -291,24 +292,24 @@ It does not mean:
 - passed the Qlib-only full-backtest or survivor/evidence process;
 - approved for Paper, Testnet, or Live trading.
 
-## Candidate pool sibling output (contract 14.4)
+## Preparation backlog sibling output (contract 14.4)
 
-The production candidate pool is a **file contract, not a service**:
+The preparation backlog is a **file contract, not a service**:
 
 ```text
-/Volumes/ExpansionDrive/qlib-results/_handoff/candidates.json
+/Volumes/ExpansionDrive/qlib-results/_handoff/preparation_backlog.json
 ```
 
 Rules:
 
-- **Same decision, two outputs.** Every item finalized as `PASS` or `PASS-WITH-CAVEAT` in this review gets exactly one candidate appended to that pool before the run ends, in addition to its Wiki Brain record. `REMEDIATE` and `REJECT` never enter the pool.
-- **No new states, no new stage.** The four decisions are unchanged, and the pool append is not a fifth state, not a second review, and not a new pipeline stage.
-- **Candidate eligibility is decided here.** `PASS` / `PASS-WITH-CAVEAT` must be sufficient to candidateize. There is no later crypto/runnable suitability screening, and Wiki Brain presence is not a precondition (Wiki ingestion and the pool append are sibling outputs of the same decision).
-- **Appends are idempotent.** If the same `reviewed_source` / `family_id` / fingerprint already exists in the pool or in `/results/*/family.json`, the append is a no-op. Never rewrite, renumber, or re-author an existing entry; write every new card body file first, then replace `candidates.json` atomically. `execution_file` is optional at Intake time and must not be fabricated or treated as a completion gate; only n8n C3 JIT preparation may later add it after validating the frozen execution package.
+- **Same decision, two outputs.** Every item finalized as `PASS` or `PASS-WITH-CAVEAT` in this review gets exactly one exact reviewed candidate appended to the backlog before the run ends, in addition to its Wiki Brain record. `REMEDIATE` and `REJECT` never enter the backlog.
+- **No new states, no new stage.** The four decisions are unchanged, and the backlog append is transport only—not a fifth state, second review, or new eligibility gate.
+- **Candidate eligibility is decided here.** `PASS` / `PASS-WITH-CAVEAT` must be sufficient to candidateize. There is no later crypto/runnable suitability screening, and Wiki Brain presence is not a precondition (Wiki ingestion and the backlog append are sibling outputs of the same decision).
+- **Appends are idempotent and exact.** If the same `reviewed_source` / `family_id` / fingerprint already exists in backlog, production pool, or `/results/*/family.json`, the append is a no-op. Do not change the reviewed candidate's body, identity, provenance, or lineage. Never sweep, reorder, reprioritize, or rewrite existing backlog entries; Intake only appends. `execution_file` is optional at Intake time and must not be fabricated or treated as a completion gate; the scheduled host preparation runner may later validate and promote an execution-ready entry into `candidates.json`.
 - **Body generation is format/canonicalization, not review.** The card body is produced from the frozen GitHub artifact plus this review's normalized content, crypto portability, caveats, and the contract-14.4 v1.3.0 candidate requirements (mechanism, eligible universe, parameter domain, historical/OOS split, `DCA PARAMETER DOMAIN`, `COHORT SURVIVOR SEMANTICS`, robustness/falsification, Qlib-only runtime rules). Execution details the source does not specify may be labeled `research-defined` without changing the core hypothesis.
 - **Universe fidelity.** Never force a non-crypto source onto BTC/ETH/BNB/SOL; when a research-defined universe is needed, keep it inside the same market/mechanism range and label it `research-defined`. Where the record itself carries a crypto portability statement, canonicalize from that statement.
-- **A missing prerequisite is not a gate.** `PASS` / `PASS-WITH-CAVEAT` still enters the pool directly. Production execution uses the complete local eligible universe in canonical local raw where the core signal/mechanism can be validly computed, across all preregistered symbols, timeframes, strategy-parameter domain, DCA-parameter domain, and historical/OOS/robustness coverage. Source venue and named symbols are provenance/external-validity references, not exact-match prerequisites; a mismatch alone is not `TECHNICAL_INCOMPLETE`. Only when the core signal requires a data type/field completely absent locally, making every legal local universe impossible to compute, may the execution result be prerequisite-missing `TECHNICAL_INCOMPLETE`. Never re-adjudicate suitability to keep the pool clean.
-- **No new machinery.** Appending is plain file work by the recurring owner. Intake Review must not implement strategy runners, build prepared packages, run P1–P10, or launch Qlib. Do not add a helper service/manager/registry/daemon/queue/cron or a new file-type framework for it; JIT mechanical preparation is owned downstream by the existing n8n C3 cadence.
+- **A missing prerequisite is not a gate.** `PASS` / `PASS-WITH-CAVEAT` still enters the preparation backlog directly. The later production execution uses the complete local eligible universe in canonical local raw where the core signal/mechanism can be validly computed, across all preregistered symbols, timeframes, strategy-parameter domain, DCA-parameter domain, and historical/OOS/robustness coverage. Source venue and named symbols are provenance/external-validity references, not exact-match prerequisites; a mismatch alone is not `TECHNICAL_INCOMPLETE`. Only when the core signal requires a data type/field completely absent locally, making every legal local universe impossible to compute, may the execution result be prerequisite-missing `TECHNICAL_INCOMPLETE`. Never re-adjudicate suitability to keep the backlog clean.
+- **No intake machinery.** Intake Review only appends the exact candidate to the existing backlog file. It must not implement strategy runners, build prepared packages, run P1–P10/Qlib, or launch `quant-preparation`. The existing no-agent scheduled invocation of `runtime/prepare_candidate.py` owns mechanical preparation outside C3; do not add a service, manager, registry, daemon, queue, or new pipeline stage.
 
 ## Operating rule for Hermes
 
@@ -319,6 +320,6 @@ As the current recurring owner, Hermes `default` should:
 3. review only the unreviewed commit delta;
 4. preserve the four-decision model and downstream boundaries;
 5. use an independent auditor when appropriate;
-6. append the sibling schema-complete production candidate for every `PASS` / `PASS-WITH-CAVEAT` (idempotently, same run), without requiring or fabricating `execution_file`;
-7. never implement/run the strategy inside Intake Review; n8n C3 owns JIT preparation and Qlib handoff;
+6. append the exact reviewed candidate to `preparation_backlog.json` for every `PASS` / `PASS-WITH-CAVEAT` (idempotently, same run), without requiring or fabricating `execution_file`;
+7. never implement/run the strategy inside Intake Review; the scheduled host preparation runner is outside C3, and C3 only consumes execution-ready candidates;
 8. keep ownership explicit in this skill and canonical state; any future ownership change must be user-directed.
