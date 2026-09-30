@@ -156,7 +156,7 @@ not independently reproduced
 - The source does not report a complete market-impact or spread/slippage reconstruction, despite intentionally targeting low-liquidity assets.
 - Cross-venue evidence is absent.
 
-## Falsification
+## Falsification plan
 
 1. **Strict post-publication OOS test** — Recreate the source signal on point-in-time Binance data after 2025-03-01 without reusing the source's asset selection or thresholds for tuning. `research-defined falsification threshold`: materially reject the hypothesis if the low-trade-count ALT basket does not produce positive net incremental return over buy-and-hold / flat baselines after realistic fees and spread in a predeclared 2025-2026 holdout.
 2. **Liquidity-gradient test** — Form point-in-time trade-count deciles and estimate one-minute BTC-to-ALT lag response by decile. `research-defined falsification threshold`: reject the liquidity-delay mechanism if lag coefficients / predictive IC do not become systematically stronger toward lower-liquidity deciles or if the gradient reverses across most independent subperiods.
