@@ -26,7 +26,12 @@ PASS / PASS-WITH-CAVEAT decision 產生兩個 sibling outputs：
 │   └── 僅作知識保存
 └── /results/_handoff/candidates.json（production candidate pool）
     ↓
-Hermes production card
+n8n C3 production handoff
+    ├── 已有 execution_file → staged P1–P10 validation
+    └── 缺 execution_file → lease-protected Hermes quant-preparation
+                           → validated execution_file
+    ↓
+fixed direct Qlib dispatch
     ↓
 Qlib full backtest
     ├── PASS + >=1 cohort survivor
@@ -56,7 +61,7 @@ Qlib full backtest
 
 本 repository 是整體量化工作流中的**上游公開 staging 與 research-only handoff layer**。它本身不負責 Intake decision、Qlib full backtest、survivor promotion 或交易執行。
 
-經過 ChatGPT Research Intake Review 後，同一個 PASS / PASS-WITH-CAVEAT decision 會同時產生 Hermes Wiki Brain 的 research-only record 與一筆 production candidate-pool entry，兩者是 sibling outputs。Candidate 之後直接進入 Hermes production card 與 Qlib full backtest；Wiki Brain 是 research-only 的知識保存、non-gating sibling output，不是第二道 candidate eligibility gate。
+經過 ChatGPT Research Intake Review 後，同一個 PASS / PASS-WITH-CAVEAT decision 會同時產生 Hermes Wiki Brain 的 research-only record 與一筆 production candidate-pool entry，兩者是 sibling outputs。Candidate 接著進入 n8n C3 production handoff：已有 `execution_file` 的 candidate 先經 staged P1–P10 validation；缺 `execution_file` 時只啟動一次 lease-protected Hermes `quant-preparation`，完成後由下一個 C3 cadence 走 fixed direct Qlib dispatch。Wiki Brain 是 research-only 的知識保存、non-gating sibling output，不是第二道 candidate eligibility gate。
 
 Qlib run 達到 PASS 且至少有一個 cohort survivor 後，frozen survivor bundle、survivor index/leaderboard 與 §28 evidence 會進入受保護的 compact private survivor mirror：`HCH725/validated-survivor-research`。Mirror 收錄所有 formal leaderboard entries，不是 Top-10 gate；它只是 downstream research mirror，Qlib 仍是 canonical performance truth，mirror 不得 self-pass、self-rank 或 self-promote。
 既有 legacy research records 中保留的退役引擎 references 只屬 historical provenance，不代表 current workflow；既有 strategy records 不重寫。
@@ -75,7 +80,12 @@ ChatGPT Research Intake Review
 │   └── 僅作知識保存
 └── /results/_handoff/candidates.json（production candidate pool）
     ↓
-Hermes production card
+n8n C3 production handoff
+    ├── 已有 execution_file → staged P1–P10 validation
+    └── 缺 execution_file → lease-protected Hermes quant-preparation
+                           → validated execution_file
+    ↓
+fixed direct Qlib dispatch
     ↓
 Qlib full backtest
     ├── PASS + >=1 cohort survivor
