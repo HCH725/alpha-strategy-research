@@ -256,6 +256,17 @@ Do not use only `main`, `master`, `latest`, a tag, or a shortened SHA when a fix
 
 For TradingView sources, only public, traceable strategy/idea/script/research URLs are valid — preserve the stable URL and as-of date; private or paid/invite-only scripts are not valid sources. For papers, blogs, FMZ or other public sources, preserve the most stable URL and the source/data as-of date.
 
+**Optional challenger lineage block (Deep-Research-generated challengers only).** A challenger record — a Deep Research artifact written to challenge an existing cohort survivor — may carry one optional, exact machine-readable lineage block inside this Provenance section. Ordinary records omit it entirely:
+
+```yaml
+lineage:
+  challenger_of: <survivor_id>
+  parent_family: <family_id>
+  lineage_note: <short evidence-based rationale>
+```
+
+When present, the block is all-or-nothing: exactly these three keys, single-line scalar values, nothing else. It is content inside the existing `## Provenance` section only — not frontmatter and not a schema change: `strategy-research-record-v1` and its required structure are unchanged, with no new schema, version bump, service, or registry. On `PASS` / `PASS-WITH-CAVEAT`, Research Intake Review carries the three lineage fields unchanged into the exact reviewed candidate appended to the preparation backlog; ordinary non-challenger records are appended unchanged, and eligibility remains decided solely by the four Intake decisions.
+
 ### 2. Economic mechanism
 
 Separate what the original source claims from our normalized interpretation.

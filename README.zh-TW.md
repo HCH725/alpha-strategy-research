@@ -256,6 +256,17 @@ approval_scope: research-only
 
 對 TradingView 來源，僅限公開、可追溯的 strategy/idea/script/research URL，須保留 stable URL 與 as-of date；private/paid/invite-only 不可用。對 papers、blogs、FMZ 或其他公開來源，保留最穩定的 URL 與 source/data as-of date。
 
+**可選 challenger lineage block（僅限 Deep Research 產生的 challenger）。** Challenger record——用來挑戰既有 cohort survivor 的 Deep Research 產物——可以在此 Provenance section 內附上一個可選、精確、機器可讀的 lineage block。一般 record 完全省略：
+
+```yaml
+lineage:
+  challenger_of: <survivor_id>
+  parent_family: <family_id>
+  lineage_note: <short evidence-based rationale>
+```
+
+存在時為全有或全無：只允許這三個 key、單行純量值，不可有其他內容。它只是既有 `## Provenance` section 內的內容——不是 frontmatter、不是 schema 變更：`strategy-research-record-v1` 與其既有 required structure 完全不變，不新增 schema、不 bump 版本、不新增 service 或 registry。在 `PASS` / `PASS-WITH-CAVEAT` 時，Research Intake Review 會把三個 lineage 欄位原樣帶進 append 到 preparation backlog 的精確 reviewed candidate；一般非 challenger record 的 append 也完全不變，eligibility 仍只由四個 Intake 決定裁決。
+
 ### 2. Economic mechanism
 
 要把原始來源的主張與我們的標準化解讀分開。

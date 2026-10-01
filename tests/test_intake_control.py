@@ -651,5 +651,31 @@ class IntakeControlV6Test(unittest.TestCase):
         self.assertFalse(batch.get("deferred"))
 
 
+class LineageContractTextTest(unittest.TestCase):
+    """Smallest check for the optional Deep-Research challenger lineage block:
+    SKILL.md must pin the three-field preservation rule for PASS/PASS-WITH-CAVEAT
+    backlog appends, and README.md must document the block inside the existing
+    Provenance section only (not frontmatter, same strategy-research-record-v1)."""
+
+    KEYS = ("challenger_of", "parent_family", "lineage_note")
+
+    def test_lineage_block_pinned_in_skill_and_readme(self):
+        repo = Path(__file__).resolve().parents[1]
+        skill = (repo / ".agents" / "skills" / "research-intake-review"
+                 / "SKILL.md").read_text(encoding="utf-8")
+        for key in self.KEYS:
+            self.assertIn(key, skill)
+        # PASS / PASS-WITH-CAVEAT backlog append must preserve the three fields
+        self.assertIn("must preserve `challenger_of`, `parent_family`, and "
+                      "`lineage_note` unchanged", skill)
+        readme = (repo / "README.md").read_text(encoding="utf-8")
+        self.assertIn("schema: strategy-research-record-v1", readme)
+        head, prov = readme.split("### 1. Provenance", 1)
+        prov = prov.split("### 2. Economic mechanism", 1)[0]
+        for key in self.KEYS:
+            self.assertIn(f"  {key}:", prov)
+        self.assertNotIn("lineage:", head)  # never frontmatter
+
+
 if __name__ == "__main__":
     unittest.main()
