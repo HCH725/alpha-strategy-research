@@ -6,7 +6,7 @@
 
 ## 用途
 
-本 repository 是 **四個獨立 Research Scout（ChatGPT / Hermes / Antigravity / MiMo）** 與 **ChatGPT Research Intake Review** 之間的公開 staging 與交接層。
+本 repository 是目前啟用中的 Research Scout（**ChatGPT / Hermes**）與 **ChatGPT Research Intake Review** 之間的公開 staging 與交接層。Antigravity 與 MiMo 仍保留既有歷史 Scout 身分，但排程研究 lane 已停用。
 
 運作流程：
 
@@ -14,7 +14,7 @@
 外部公開來源
 （GitHub / FMZ / TradingView / papers / blogs / public research）
         ↓
-ChatGPT / Hermes / Antigravity / MiMo（獨立平行的 Research Scout）
+ChatGPT / Hermes（目前啟用中的 scheduled Scout，刻意錯開）
 尋找 alpha 想法 → 理解 → 標準化 → push 到這裡
         ↓
 ChatGPT
@@ -54,7 +54,7 @@ Qlib full backtest
 
 `/results/_handoff/preparation_backlog.json` 是 reviewed candidate 的 preparation input；host-only preparation 驗證通過後，才 promotion 至 runtime production-pool contract `/Volumes/ExpansionDrive/qlib-results/_handoff/candidates.json`。Intake 仍是唯一 eligibility judgment；preparation 與 C3 都不新增 suitability gate。
 
-四個 Scout 的有效公開來源契約：GitHub / FMZ / TradingView / papers / blogs / public research。TradingView 僅限公開、可追溯的 strategy/idea/script/research URL，須保留 stable URL 與 as-of date；private/paid/invite-only 不可用。
+任何 Scout 的有效公開來源契約：GitHub / FMZ / TradingView / papers / blogs / public research。TradingView 僅限公開、可追溯的 strategy/idea/script/research URL，須保留 stable URL 與 as-of date；private/paid/invite-only 不可用。
 
 **任何 Scout 都不得寫入 Hermes Wiki Brain、candidate pool、Qlib runtime 或 Paper/Testnet/Live workflows。** 每個 Scout 唯一的輸出管道是本 repository。Push 到這裡的 artifact 應該已經是 Wiki Brain-native 格式，讓 ChatGPT 可以完成 Research Intake Review，而不需要再做一次翻譯或重新整理。
 
@@ -71,7 +71,7 @@ Qlib run 達到 PASS 且至少有一個 cohort survivor 後，frozen survivor bu
 外部公開來源
 （GitHub / FMZ / TradingView / papers / blogs / public research）
         ↓
-ChatGPT / Hermes / Antigravity / MiMo 研究 Scout（獨立平行）
+ChatGPT / Hermes 研究 Scout（目前啟用中的 scheduled writers，刻意錯開）
         ↓
 alpha-strategy-research
         ↓
@@ -115,7 +115,7 @@ Qlib full backtest
 
 你的工作是從公開外部來源搜尋可能有價值的 **alpha 策略或 alpha 假說**，然後把每一個值得保留的項目轉換成下方規定的研究紀錄格式，再 push 到本 repository。
 
-你是四個獨立平行 Research Scout（ChatGPT / Hermes / Antigravity / MiMo）之一。每個 Scout 自主運作，指向同一個 repository。不要重複或覆蓋其他 Scout 已有的 artifact；產出新紀錄前請先 inspect 近期 commits。
+目前啟用中的 scheduled writers 是 ChatGPT 與 Hermes。Antigravity 與 MiMo 的 scheduled research 已停用；既有歷史紀錄仍然有效。未來若明確重新啟用任何 Scout，仍必須遵循同一份 contract。不要重複或覆蓋其他 Scout 已有的 artifact；產出新紀錄前請先 inspect 近期 commits。
 
 有效公開來源：GitHub / FMZ / TradingView / papers / blogs / public research。TradingView 僅限公開、可追溯的 strategy/idea/script/research URL，須保留 stable URL 與 as-of date；private/paid/invite-only 不可用。
 
@@ -562,11 +562,16 @@ v2-final-final
 
 ## Scheduled Research Scouts
 
-每一個 Research Scout 都有自己的排程，整體設計刻意採用**高頻率、低產出**。目標是持續尋找高品質研究，不是為了湊數量。
+Scheduled research 刻意改成**低頻率、低產出**，讓 downstream intake／backtest pipeline 有時間消化既有 pool，同時降低不必要的 Git write contention。
 
-Scheduled Antigravity Scout 每一輪都必須從最新 `origin/main` 建立全新的 detached temporary Git worktree。一般 checkout 只作 coordinator，即使其中存在其他流程留下的 unrelated local dirt，也不得因此污染或阻塞 Antigravity；Antigravity 不得 inspect、修改、stage 或清理 coordinator 的 dirt，而某一輪失敗也不得傳染後續排程。
+目前啟用的 cadence：
 
-Scheduled MiMo Desktop Scout 是第四條獨立研究 lane，優先研究公開 academic papers、arXiv/SSRN/journals、公開 GitHub research/code repositories、FMZ、公開 quantitative research/blogs 與其他可追溯 primary sources。MiMo lane 刻意排除 TradingView，因為 ChatGPT 已維持獨立的 TradingView Scout。MiMo 與其他 Scout 一樣，必須遵循相同的 canonical schema、dedup、provenance、research-only 邊界與 Git concurrency 規則。
+- **Hermes Quant Research Scout：**每 4 小時一次，Asia/Taipei `01:15 / 05:15 / 09:15 / 13:15 / 17:15 / 21:15`。
+- **ChatGPT TradingView Strategy Scout：**每 4 小時一次，Asia/Taipei `03:00 / 07:00 / 11:00 / 15:00 / 19:00 / 23:00`。
+- **Antigravity Alpha Scout：**scheduled research 停用。
+- **MiMo Desktop Alpha Strategy Scout：**scheduled research 停用。
+
+兩個啟用中的 writer 刻意錯開。已停用的 Antigravity／MiMo 不作自動 fallback；未來若要重新啟用，必須先有明確 operating decision，並先更新本文件再排程。
 
 每一次 scheduled run：
 
@@ -579,7 +584,7 @@ Scheduled MiMo Desktop Scout 是第四條獨立研究 lane，優先研究公開 
 7. 若 strategy identity、signal semantics、causal timing、required data、provenance 或 public-use rights 仍有重大不確定性，不要猜。這次直接略過該 candidate。凡 primary source 未明確指定的 threshold、entry/exit trigger、execution timestamp 或 fill model、fee/slippage assumption、capacity claim、universe/liquidity filter、crypto-porting rule、position-sizing choice 或其他 operational rule，都必須標成 `research-proposed`；凡由 Scout 自行設定的 acceptance/failure/falsification cutoff，都必須標成 `research-defined falsification threshold`。若任何重大欄位無法明確判定為 source-reported 或 research-proposed，直接略過該 candidate。
 8. 每一筆輸出的 artifact 都必須符合 current canonical strategy-research schema，並維持 `research-only`、`not-implemented`、`not-approved` 邊界。Commit 前必須 read back 該 artifact，確認上述 operational fields 的 source-vs-research 標籤正確；不得默默補完來源本身 underspecified 的缺口。
 9. 只 commit 本次刻意建立或修正的 artifact。若沒有 candidate 通過品質門檻，不得建立 empty commit。
-10. 明確 push 並確認 remote 已包含該 commit 後停止。Antigravity 的 detached worktree 必須使用 `git push origin HEAD:main`，不得 force-push；若研究期間其他 Scout 已先推進 `origin/main` 而造成 non-fast-forward，僅讓本輪 fail closed，下一輪再從新的 remote head 重新開始。不得寫入 Hermes Wiki Brain、`/results/_handoff/candidates.json`、Qlib runtime、Paper、Testnet 或 Live workflow。
+10. 明確 push 並確認 remote 已包含該 commit 後停止。不得 force-push；若研究期間其他 Scout 已先推進 `origin/main` 而造成 non-fast-forward，僅讓本輪 fail closed，下一輪再從新的 remote head 重新開始。不得寫入 Hermes Wiki Brain、`/results/_handoff/candidates.json`、Qlib runtime、Paper、Testnet 或 Live workflow。
 11. 若 **active isolated run worktree 本身**出現 unrelated dirt、merge/rebase conflict、repository sync failure、source/provenance failure、secret/public-safety 問題或 push failure，必須 fail closed。Separate coordinator checkout 的 dirt 本身不是 blocker，也不得被 stage、清理或帶入本輪。回報真正的 block，不得另外建立 fallback artifact。
 
 Scheduled Scouts 與 ChatGPT Research Intake Review 是刻意分離的兩個流程。Scout 成功 push 只代表 research artifact 進入公開 staging pool，**不代表**已通過 Research Intake Review、已進入 Hermes Wiki Brain 或 production candidate pool、已完成 Qlib validation，或已進入 Paper、Testnet、Live。
