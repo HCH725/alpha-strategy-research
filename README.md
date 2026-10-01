@@ -6,7 +6,7 @@ Public staging repository for external alpha-strategy research normalized for Re
 
 ## Purpose
 
-This repository is the public staging and handoff layer between **four independent Research Scouts (ChatGPT / Hermes / Antigravity / MiMo)** and **ChatGPT Research Intake Review**.
+This repository is the public staging and handoff layer between the active Research Scouts (**ChatGPT / Hermes**) and **ChatGPT Research Intake Review**. Antigravity and MiMo remain valid historical Scout identities, but their scheduled research lanes are disabled.
 
 Operating flow:
 
@@ -14,7 +14,7 @@ Operating flow:
 External public sources
 (GitHub / FMZ / TradingView / papers / blogs / public research)
         ↓
-ChatGPT / Hermes / Antigravity / MiMo (independent, parallel scouts)
+ChatGPT / Hermes (active scheduled scouts, deliberately staggered)
 find alpha ideas → understand → normalize → push here
         ↓
 ChatGPT
@@ -54,7 +54,7 @@ Qlib full backtest
 
 `/results/_handoff/preparation_backlog.json` is the reviewed-candidate preparation input; after host-only preparation validation, ready entries are promoted into the runtime production-pool contract `/Volumes/ExpansionDrive/qlib-results/_handoff/candidates.json`. Intake remains the sole eligibility judgment; neither preparation nor C3 adds a suitability gate.
 
-Valid public source contract for all four Scouts: GitHub / FMZ / TradingView / papers / blogs / public research. For TradingView, only public, traceable strategy/idea/script/research URLs are valid — preserve the stable URL and as-of date; private or paid/invite-only scripts are not valid sources.
+Valid public source contract for every Scout: GitHub / FMZ / TradingView / papers / blogs / public research. For TradingView, only public, traceable strategy/idea/script/research URLs are valid — preserve the stable URL and as-of date; private or paid/invite-only scripts are not valid sources.
 
 **No Scout writes to Hermes Wiki Brain, the candidate pool, Qlib runtime, or Paper/Testnet/Live workflows.** Each Scout's only output channel is this repository. The artifact pushed here should already be in Wiki Brain-native form so ChatGPT can review it without another translation pass.
 
@@ -71,7 +71,7 @@ References to retired engines preserved in legacy research records are historica
 External public sources
 (GitHub / FMZ / TradingView / papers / blogs / public research)
         ↓
-ChatGPT / Hermes / Antigravity / MiMo research scouts (independent, parallel)
+ChatGPT / Hermes research scouts (active scheduled writers, deliberately staggered)
         ↓
 alpha-strategy-research
         ↓
@@ -115,7 +115,7 @@ Qlib full backtest
 
 Your job is to search public external sources for potentially useful **alpha strategies or alpha hypotheses**, then convert each worthwhile item into the exact research-record format below and push it to this repository.
 
-You are one of four independent, parallel Research Scouts (ChatGPT / Hermes / Antigravity / MiMo). Each Scout operates autonomously and targets the same repository. Do not duplicate or overwrite another Scout's existing artifact; inspect recent commits before producing new records.
+The currently active scheduled writers are ChatGPT and Hermes. Antigravity and MiMo scheduled research are disabled; their historical records remain valid. Any Scout explicitly re-enabled later must follow this same contract. Do not duplicate or overwrite another Scout's existing artifact; inspect recent commits before producing new records.
 
 Valid public sources: GitHub / FMZ / TradingView / papers / blogs / public research. For TradingView, only public, traceable strategy/idea/script/research URLs are valid — preserve the stable URL and as-of date; private or paid/invite-only scripts are not valid sources.
 
@@ -562,11 +562,16 @@ This minimizes repeated interpretation, repeated summarization and unnecessary t
 
 ## Scheduled Research Scouts
 
-Each Research Scout runs on its own schedule and is intentionally **high-frequency but low-output**. Its job is to keep looking, not to manufacture a quota.
+Scheduled research is intentionally **low-cadence and low-output** so the downstream intake/backtest pipeline can drain the existing pool without avoidable Git write contention.
 
-The scheduled Antigravity Scout executes each run in a fresh detached temporary Git worktree created from the latest `origin/main`. The normal checkout is only a coordinator and may contain unrelated local dirt; Antigravity must neither inspect nor modify that dirt, and a failed run must not contaminate later runs.
+Active cadence:
 
-The scheduled MiMo Desktop Scout is a fourth independent lane. It prioritizes public academic papers, arXiv/SSRN/journals, public GitHub research/code repositories, FMZ, public quantitative research/blogs, and other traceable primary sources. TradingView is intentionally excluded from the MiMo lane because ChatGPT maintains a dedicated TradingView Scout. MiMo follows the same canonical schema, dedup, provenance, research-only and Git concurrency rules as every other Scout.
+- **Hermes Quant Research Scout:** every 4 hours at `01:15 / 05:15 / 09:15 / 13:15 / 17:15 / 21:15` (Asia/Taipei).
+- **ChatGPT TradingView Strategy Scout:** every 4 hours at `03:00 / 07:00 / 11:00 / 15:00 / 19:00 / 23:00` (Asia/Taipei).
+- **Antigravity Alpha Scout:** scheduled research disabled.
+- **MiMo Desktop Alpha Strategy Scout:** scheduled research disabled.
+
+The two active writers are deliberately staggered. Disabled Antigravity/MiMo lanes are not automatic fallbacks; re-enabling either requires an explicit operating decision and a documentation update before scheduling.
 
 For every scheduled run:
 
@@ -579,7 +584,7 @@ For every scheduled run:
 7. If strategy identity, signal semantics, causal timing, required data, provenance, or public-use rights are materially ambiguous, do not guess. Skip that candidate for this run rather than emitting false precision. Any threshold, entry/exit trigger, execution timestamp or fill model, fee/slippage assumption, capacity claim, universe/liquidity filter, crypto-porting rule, position-sizing choice, or other operational rule that is not explicitly specified by the primary source must be labeled `research-proposed`; any Scout-chosen acceptance/failure/falsification cutoff must be labeled `research-defined falsification threshold`. If a material field cannot be confidently classified as source-reported versus research-proposed, skip the candidate.
 8. Every emitted artifact must already satisfy the current canonical strategy-research schema and remain `research-only`, `not-implemented`, and `not-approved`. Before commit, read the artifact back and verify the operational fields above carry the correct source-vs-research labels; do not silently fill an underspecified source gap.
 9. Commit only artifacts intentionally created or corrected by the current run. If no candidate clears the bar, create no empty commit.
-10. Push explicitly and verify the remote contains the commit, then stop. For the detached Antigravity worktree, the required push form is `git push origin HEAD:main`; never force-push. If another Scout advances `origin/main` first and the push becomes non-fast-forward, fail only that run and let the next scheduled run restart from the new remote head. Do not write to Hermes Wiki Brain, `/results/_handoff/candidates.json`, Qlib runtime, Paper, Testnet, or Live workflows.
+10. Push explicitly and verify the remote contains the commit, then stop. Never force-push. If another Scout advances `origin/main` first and the push becomes non-fast-forward, fail only that run and let the next scheduled run restart from the new remote head. Do not write to Hermes Wiki Brain, `/results/_handoff/candidates.json`, Qlib runtime, Paper, Testnet, or Live workflows.
 11. Fail closed on dirty/unrelated state **inside the active isolated run worktree**, merge/rebase conflict, repository-sync failure, source/provenance failure, secret/public-safety concern, or push failure. Dirt in the separate coordinator checkout is not by itself a blocker and must not be staged, cleaned, or imported into the run. Report the exact block instead of creating a fallback artifact elsewhere.
 
 The scheduled scouts and the ChatGPT Research Intake Review process are deliberately separate. A successful Scout push means only that a research artifact entered the public staging pool; it does **not** mean the artifact passed Research Intake Review, entered Hermes Wiki Brain or the production candidate pool, completed Qlib validation, or reached Paper, Testnet, or Live.
