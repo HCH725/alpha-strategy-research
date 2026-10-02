@@ -1,5 +1,15 @@
 # alpha-strategy-research
 
+<!-- AUTO-RESEARCH-POOL-STATUS:START -->
+## 🔬 Current Research Pool
+
+**Strategy research records: 1,121**  
+Intake accepted: **383**  
+Pending Intake Review: **496**  
+Remediation backlog: **216**  
+Last review: `2026-10-02 15:12 (UTC+8)`
+<!-- AUTO-RESEARCH-POOL-STATUS:END -->
+
 **English** | [繁體中文](README.zh-TW.md)
 
 Public staging repository for external alpha-strategy research normalized for Research Intake Review and its downstream sibling outputs.
