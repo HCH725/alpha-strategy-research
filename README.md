@@ -3,9 +3,9 @@
 <!-- AUTO-RESEARCH-POOL-STATUS:START -->
 ## 🔬 Current Research Pool
 
-**Strategy research records: 1,123**  
+**Strategy research records: 1,125**  
 Intake accepted: **383**  
-Pending Intake Review: **498**  
+Pending Intake Review: **500**  
 Remediation backlog: **216**  
 Last review: `2026-10-02 15:12 (UTC+8)`
 <!-- AUTO-RESEARCH-POOL-STATUS:END -->
