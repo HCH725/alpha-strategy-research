@@ -32,6 +32,7 @@ default, TimeoutExpired maps to transient here).
 from __future__ import annotations
 
 import argparse
+import datetime as dt
 import hashlib
 import json
 import os
@@ -151,6 +152,11 @@ DEFAULT_REPO = Path("/Users/hong/workspace/alpha-strategy-research")
 DEFAULT_SKILL = Path(__file__).with_name("SKILL.md")
 DEFAULT_WIKI_ROOT = Path("/Users/hong/.hermes/wiki")
 DEFAULT_MAX_ARTIFACTS = 5
+README_PATH = "README.md"
+README_STATUS_START = "<!-- AUTO-RESEARCH-POOL-STATUS:START -->"
+README_STATUS_END = "<!-- AUTO-RESEARCH-POOL-STATUS:END -->"
+README_STATUS_COMMIT = "docs: refresh research pool status"
+UTC_PLUS_8 = dt.timezone(dt.timedelta(hours=8))
 
 
 class BlockedIngestion(Exception):
@@ -317,6 +323,127 @@ def status_report(state_path: Path = DEFAULT_STATE, repo: Path = DEFAULT_REPO,
                   skill_path: Path = DEFAULT_SKILL) -> dict:
     """Offline-safe read-only status. No fetch, no mutation."""
     return bootstrap(state_path, repo, skill_path, fetch=False)
+
+
+def _research_record_count(repo: Path, ref: str = "origin/main") -> int:
+    names = rs.git(repo, "ls-tree", "-r", "--name-only", ref).splitlines()
+    return sum(1 for name in names if rs.is_strategy_path(name))
+
+
+def _research_pool_status_block(state: dict, strategy_records: int, pending_review: int) -> str:
+    snapshot = state.get("current_snapshot", {})
+    accepted = len(snapshot.get("pass", [])) + len(snapshot.get("pass_with_caveat", []))
+    remediation = len(state.get("remediation_backlog", []))
+    reviewed_at = rs.parse_iso(state["last_reviewed_at"]).astimezone(UTC_PLUS_8)
+    last_review = reviewed_at.strftime("%Y-%m-%d %H:%M")
+    return "\n".join([
+        README_STATUS_START,
+        "## 🔬 Current Research Pool",
+        "",
+        "**Strategy research records: %s**  " % f"{strategy_records:,}",
+        "Intake accepted: **%s**  " % f"{accepted:,}",
+        "Pending Intake Review: **%s**  " % f"{pending_review:,}",
+        "Remediation backlog: **%s**  " % f"{remediation:,}",
+        "Last review: `%s (UTC+8)`" % last_review,
+        README_STATUS_END,
+    ])
+
+
+def _managed_readme_status(current: str, block: str) -> str:
+    start_count = current.count(README_STATUS_START)
+    end_count = current.count(README_STATUS_END)
+    if start_count or end_count:
+        if start_count != 1 or end_count != 1:
+            raise RuntimeError("README managed research-pool status markers are malformed")
+        start = current.index(README_STATUS_START)
+        end = current.index(README_STATUS_END, start) + len(README_STATUS_END)
+        return current[:start] + block + current[end:]
+
+    first_newline = current.find("\n")
+    if current.startswith("# ") and first_newline >= 0:
+        return current[:first_newline + 1] + "\n" + block + "\n" + current[first_newline + 1:]
+    return block + "\n\n" + current
+
+
+def sync_readme_status(state_path: Path = DEFAULT_STATE, repo: Path = DEFAULT_REPO,
+                       max_artifacts: int = DEFAULT_MAX_ARTIFACTS) -> dict:
+    """Refresh the README operator summary from canonical review state + origin/main."""
+    state = rs.load_json(state_path)
+    errors = rs.validate_state(state)
+    if errors:
+        raise RuntimeError("state invariant failure before README sync: " + "; ".join(errors))
+    version_error = _check_supported_version(state)
+    if version_error:
+        raise RuntimeError(version_error)
+
+    branch = rs.git(repo, "branch", "--show-current")
+    if branch != "main":
+        raise RuntimeError("README sync requires local main branch")
+    tracked = rs.git(repo, "status", "--porcelain", "--untracked-files=no")
+    if tracked:
+        raise RuntimeError("README sync refuses tracked working-tree changes")
+
+    pf = rs.preflight(state_path, repo, max_artifacts, fetch_timeout=FETCH_TIMEOUT_S)
+    if not pf.get("ok"):
+        if pf.get("history_reconciliation_required"):
+            raise RuntimeError("history reconciliation required before README sync")
+        raise RuntimeError("README sync preflight failed: %s" % pf)
+
+    origin_head = rs.git(repo, "rev-parse", "origin/main")
+    local_head = rs.git(repo, "rev-parse", "HEAD")
+    if local_head != origin_head:
+        ancestor = subprocess.run(
+            ["git", "merge-base", "--is-ancestor", local_head, origin_head],
+            cwd=repo, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        ).returncode == 0
+        if not ancestor:
+            raise RuntimeError("local main is not a fast-forward ancestor of origin/main")
+        rs.git(repo, "merge", "--ff-only", "origin/main")
+
+    strategy_records = _research_record_count(repo)
+    pending_review = int(pf.get("total_unreviewed_artifact_count", 0))
+    block = _research_pool_status_block(state, strategy_records, pending_review)
+    readme = repo / README_PATH
+    if not readme.is_file():
+        raise RuntimeError("README.md is missing")
+    current = readme.read_text(encoding="utf-8")
+    desired = _managed_readme_status(current, block)
+    summary = {
+        "strategy_research_records": strategy_records,
+        "intake_accepted": len(state.get("current_snapshot", {}).get("pass", []))
+                           + len(state.get("current_snapshot", {}).get("pass_with_caveat", [])),
+        "pending_intake_review": pending_review,
+        "remediation_backlog": len(state.get("remediation_backlog", [])),
+        "last_review": rs.parse_iso(state["last_reviewed_at"]).astimezone(UTC_PLUS_8).strftime("%Y-%m-%d %H:%M"),
+    }
+    if desired == current:
+        return {"ok": True, "result": "unchanged", "summary": summary,
+                "commit_sha": rs.git(repo, "rev-parse", "HEAD")}
+
+    remote_now = rs.git(repo, "ls-remote", "origin", "refs/heads/main").split()[0]
+    if remote_now != origin_head:
+        raise RuntimeError("origin/main advanced during README sync; retry next run")
+
+    fd, tmp_name = tempfile.mkstemp(prefix=".README.status.", dir=repo)
+    tmp = Path(tmp_name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(desired)
+            fh.flush()
+            os.fsync(fh.fileno())
+        os.replace(tmp, readme)
+    finally:
+        if tmp.exists():
+            tmp.unlink()
+
+    rs.git(repo, "add", "--", README_PATH)
+    rs.git(repo, "commit", "--only", "-m", README_STATUS_COMMIT, "--", README_PATH)
+    commit_sha = rs.git(repo, "rev-parse", "HEAD")
+    rs.git(repo, "push", "origin", "main")
+    remote_after = rs.git(repo, "ls-remote", "origin", "refs/heads/main").split()[0]
+    if remote_after != commit_sha:
+        raise RuntimeError("origin/main readback mismatch after README sync")
+    return {"ok": True, "result": "updated", "summary": summary, "commit_sha": commit_sha}
 
 
 def is_safe_wiki_path(wiki_path: str) -> tuple[bool, str]:
@@ -603,6 +730,7 @@ def main() -> int:
     ig.add_argument("--dry-run", action="store_true", help="preview without wiki/state mutation")
     al = sub.add_parser("apply", help="guarded apply (fetch + CAS + coverage)")
     al.add_argument("--payload", type=Path, required=True)
+    sub.add_parser("sync-readme", help="refresh + push managed README research-pool status")
     args = ap.parse_args()
     try:
         if args.command == "bootstrap":
@@ -623,6 +751,10 @@ def main() -> int:
             return 0
         if args.command == "apply":
             res = apply_review(args.state, args.payload, args.repo)
+            print(json.dumps(res, ensure_ascii=False, indent=2))
+            return 0
+        if args.command == "sync-readme":
+            res = sync_readme_status(args.state, args.repo, args.max_artifacts)
             print(json.dumps(res, ensure_ascii=False, indent=2))
             return 0
     except BlockedIngestion as exc:

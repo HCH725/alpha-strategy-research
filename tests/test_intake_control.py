@@ -138,6 +138,58 @@ class IntakeControlV6Test(unittest.TestCase):
         self.assertIn(5, vc.get("supported_state_versions", []))
         self.assertEqual(res["state_summary"].get("state_control_version"), 5)
 
+    def test_sync_readme_status_tracks_pool_counts_and_is_idempotent(self):
+        repo = init_repo(self.tmp, "repo-readme")
+        (repo / "README.md").write_text("# alpha-strategy-research\n\nHuman text.\n", encoding="utf-8")
+        (repo / "base-strategy-2026-10-02.md").write_text("base\n", encoding="utf-8")
+        run_git(repo, "add", "README.md", "base-strategy-2026-10-02.md")
+        run_git(repo, "commit", "-m", "research: base", "--quiet")
+        base = run_git(repo, "rev-parse", "HEAD")
+        add_origin_and_push(repo, self.tmp / "origin-readme", "origin-readme.git")
+        commit_file(repo, "new-strategy-2026-10-02.md", "new\n", "research: new")
+        run_git(repo, "push", "origin", "main", "--quiet")
+
+        st = minimal_state(base)
+        st["last_reviewed_at"] = "2026-10-02T15:12:22+08:00"
+        st["current_snapshot"]["pass"] = ["base-strategy-2026-10-02.md"]
+        st["current_snapshot"]["remediate"] = ["needs-work-2026-10-02.md"]
+        st["remediation_backlog"] = [{
+            "path": "needs-work-2026-10-02.md",
+            "blob": "0" * 40,
+            "reason": "fixture",
+            "reason_status": "structured",
+            "first_seen": "2026-10-02T14:00:00+08:00",
+            "last_seen": "2026-10-02T15:12:22+08:00",
+            "last_reviewed_commit": base,
+        }]
+        state_path = self.tmp / "state-readme.json"
+        write_json(state_path, st)
+
+        first = ic.sync_readme_status(state_path, repo, max_artifacts=4)
+        self.assertTrue(first["ok"], first)
+        self.assertEqual(first["result"], "updated")
+        self.assertEqual(first["summary"]["strategy_research_records"], 2)
+        self.assertEqual(first["summary"]["intake_accepted"], 1)
+        self.assertEqual(first["summary"]["pending_intake_review"], 1)
+        self.assertEqual(first["summary"]["remediation_backlog"], 1)
+        self.assertEqual(first["summary"]["last_review"], "2026-10-02 15:12")
+        readme = (repo / "README.md").read_text(encoding="utf-8")
+        self.assertIn("**Strategy research records: 2**", readme)
+        self.assertIn("Intake accepted: **1**", readme)
+        self.assertIn("Pending Intake Review: **1**", readme)
+        self.assertIn("Remediation backlog: **1**", readme)
+        self.assertIn("Human text.", readme)
+        self.assertEqual(readme.count(ic.README_STATUS_START), 1)
+        self.assertEqual(readme.count(ic.README_STATUS_END), 1)
+        self.assertEqual(run_git(repo, "rev-parse", "HEAD"), first["commit_sha"])
+        remote = run_git(repo, "ls-remote", "origin", "refs/heads/main").split()[0]
+        self.assertEqual(remote, first["commit_sha"])
+
+        second = ic.sync_readme_status(state_path, repo, max_artifacts=4)
+        self.assertTrue(second["ok"], second)
+        self.assertEqual(second["result"], "unchanged")
+        self.assertEqual(second["commit_sha"], first["commit_sha"])
+
     def test_run_lease_null_invariant(self):
         repo = init_repo(self.tmp, "repo2")
         base = commit_file(repo, "a-2026-09-05.md", "x\n", "init")

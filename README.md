@@ -4,6 +4,8 @@
 
 Public staging repository for external alpha-strategy research normalized for Research Intake Review and its downstream sibling outputs.
 
+The repository-home research-pool summary is managed by the existing Research Intake Review control plane from canonical review state plus current `origin/main`. It is observability-only and does not change Intake decisions, candidate eligibility, Qlib, or survivor promotion.
+
 ## Purpose
 
 This repository is the public staging and handoff layer between the active Research Scouts (**ChatGPT / Hermes**) and **ChatGPT Research Intake Review**. Antigravity and MiMo remain valid historical Scout identities, but their scheduled research lanes are disabled.
