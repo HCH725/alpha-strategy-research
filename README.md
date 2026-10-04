@@ -1,246 +1,371 @@
 # alpha-strategy-research
 
-<!-- AUTO-RESEARCH-POOL-STATUS:START -->
-## 🔬 Current Research Pool
-
-**Strategy research records: 0**  
-Intake accepted: **0**  
-Pending Intake Review: **0**  
-Remediation backlog: **0**  
-Last reset: `2026-10-04 (UTC+8)`
-<!-- AUTO-RESEARCH-POOL-STATUS:END -->
-
 **English** | [繁體中文](README.zh-TW.md)
 
+Public canonical strategy-research repository for strategies that have passed the current **LOSSLESS HB_READY** GitHub admission gate.
 
-## Current admission contract — LOSSLESS HB_READY (authoritative)
+## Current contract
 
-Effective **2026-10-05 (UTC+8)**, this repository has been reset and repurposed. The current contract below **supersedes legacy workflow text later in this README** where the two conflict.
+Effective **2026-10-05 (UTC+8)**:
 
-`main` is no longer a broad research staging area. It is the canonical pool of strategy research records that have already passed GitHub PR review for **LOSSLESS HB_READY** under the pinned Hummingbot baseline:
+- `main` is the canonical pool of admitted strategy records.
+- A root-level strategy Markdown record on `main` means it has passed GitHub review for **LOSSLESS HB_READY** under the current pinned Hummingbot semantics.
+- Scheduled Scouts do **not** push strategy records directly to `main`.
+- Every new strategy enters through a same-repository `research/*` pull request.
+- OpenCode GitHub review is the admission gate.
+- If a missing fact is explicitly recoverable from a primary source, the reviewer may repair the same PR branch and re-review it.
+- If the source itself cannot support a complete lossless strategy, the PR is closed.
+- A passing strategy PR is squash-merged to `main`.
+- There is no separate validated-strategy repository and no second semantic suitability gate after merge.
+
+The detailed reviewer policy is [`.github/HB_READY_REVIEW.md`](.github/HB_READY_REVIEW.md).
+
+### Pinned admission baseline
+
+Current strategy admission is evaluated against:
 
 - Hummingbot package: `20260920`
 - Hummingbot VERSION: `dev-2.17.0`
 
-A strategy record on `main` therefore means: **its source strategy is sufficiently complete and can be represented 1:1 by the pinned Hummingbot backtester without approximation.** The same canonical strategy semantics are intended to be reusable by Qlib; downstream engines may translate format, but may not reinterpret or invent strategy rules.
+A newer Hummingbot build does **not** silently broaden eligibility. The admission contract must be explicitly reviewed and updated before new engine semantics are assumed.
 
-### Admission flow
+## Repository meaning
+
+This repository is intentionally narrow.
+
+A strategy record on `main` means:
+
+> The source strategy is complete enough, causal enough, and compatible enough to be represented by the pinned Hummingbot backtester **1:1 without material approximation**.
+
+It does **not** mean:
+
+- the strategy is profitable;
+- the source-reported performance has been independently reproduced;
+- the strategy is a survivor;
+- the strategy has passed Hummingbot or Qlib performance validation;
+- the strategy is approved for Paper, Testnet, Mainnet, or live trading.
+
+All admitted records remain research-only unless a later workflow explicitly changes that status.
+
+## Current flow
 
 ```text
 public primary source
         ↓
 ChatGPT / Hermes Scout
         ↓
-research/<scout>-<slug>-<date> branch
+research/<scout>-<slug>-<YYYYMMDD-HHMM>
         ↓
 GitHub pull request
         ↓
 OpenCode LOSSLESS HB_READY review
-        ├─ source-backed missing fact found → repair same PR branch → re-review
-        ├─ HB_READY → squash merge
-        └─ NOT_LOSSLESS / source underspecified → close PR
+        ├─ source-backed fact missing
+        │      ↓
+        │  repair same PR branch
+        │      ↓
+        │  synchronize → fresh review
+        │
+        ├─ HB_READY: PASS
+        │      ↓
+        │  exact-head squash merge
+        │
+        └─ HB_READY: NOT_LOSSLESS
+               ↓
+             close PR
         ↓
-main = HB_READY strategy pool
+main = canonical HB_READY strategy pool
 ```
 
-Rules:
+Automated strategy PRs must not be left indefinitely in `REQUEST_CHANGES`.
 
-1. Scheduled Scouts **must not push strategy records directly to `main`**. Each run may open at most one strategy PR.
-2. Automated strategy branches must begin with `research/` and contain exactly one new root-level strategy Markdown record with no unrelated changes.
-3. GitHub review is the admission gate. There is no separate validated-strategy repository and no second semantic suitability gate after merge.
-4. Review may auto-remediate only facts explicitly recoverable from a primary source, public source code/Pine script, immutable GitHub source, or paper methods/tables/figures.
-5. Review must never invent parameters, choose among plausible variants, add risk rules, alter execution timing, or remove a material dependency merely to make a strategy pass.
-6. If the source itself cannot support a complete lossless rule, the PR is closed rather than left indefinitely in REQUEST_CHANGES.
-7. Maintenance/documentation PRs are not strategy-admission PRs and are not auto-merged by the HB_READY reviewer.
+## LOSSLESS HB_READY hard gate
 
-The detailed reviewer contract is in [`.github/HB_READY_REVIEW.md`](.github/HB_READY_REVIEW.md).
+Every admitted strategy must satisfy all applicable requirements below.
 
-### HB_READY hard boundary
+### 1. Market structure
 
-Every merged strategy must satisfy all applicable requirements:
+- one trading pair per run;
+- spot or perpetual applicability must be explicit or deterministically inferable from the primary source;
+- no cross-sectional ranking;
+- no pair-spread strategy;
+- no shared portfolio-capital logic across symbols;
+- no multi-pair shared state;
+- spot strategies must not require naked shorting.
 
-- single-pair strategy; no cross-sectional ranking, pair spread, shared portfolio capital, or multi-pair state;
-- exactly one decision timeframe: `1h`, `4h`, or `1d`;
-- core signal uses OHLCV and deterministic candle-derived indicators only;
-- exact formulas, indicator variants, source prices, lookbacks, smoothing, thresholds, comparison logic, and state transitions;
-- explicit long/short rules, or one side explicitly disabled;
-- exact entry and exit semantics, including explicit none/disabled values where applicable;
-- completed-bar decision + same-bar-close execution compatibility;
-- explicit or provably irrelevant sizing, pyramiding, max same-side concurrency, cooldown/re-entry, and fixed-vs-compounding semantics;
-- no strategy edge that materially depends on funding, OI, mark/index, L2/order book, aggressor feed, liquidation feed, on-chain, options/Greeks, news/sentiment, macro, cross-venue state, maker/taker asymmetry, queue position, partial fills, funding PnL, margin/liquidation mechanics, or unsupported leverage effects;
-- all warmup lookbacks known and no repainting/look-ahead/future reference.
+### 2. Timeframe
 
-Any material approximation means **NOT_LOSSLESS** and the strategy must not be merged.
+- current decision timeframe must be one of `1h`, `4h`, or `1d`;
+- current Scouts should prefer a single decision timeframe;
+- multi-timeframe candidates are out of the normal Phase-1 lane unless exact causal alignment can be demonstrated without changing source semantics.
 
-This repository still represents **research-only** material. HB_READY means semantic/backtest expressibility, not profitability, survivor status, Paper/Testnet/Live approval, or trading authorization.
+### 3. Data dependency
 
-> Legacy references below to direct Scout pushes, the old four-state Research Intake Review, automatic preparation-backlog candidateization, or the former Qlib-first production flow are historical documentation and are **not the current admission contract**. Those scheduled paths remain paused unless explicitly redesigned and re-enabled.
+The core trading signal must be computable from candle data available to the current Hummingbot backtester:
 
+- OHLCV;
+- deterministic, causal indicators derived from those candles.
 
-Public staging repository for external alpha-strategy research normalized for Research Intake Review and its downstream sibling outputs.
+A strategy is not admitted when its edge materially requires unsupported data such as:
 
-The repository-home research-pool summary is managed by the existing Research Intake Review control plane from canonical review state plus current `origin/main`. It is observability-only and does not change Intake decisions, candidate eligibility, Qlib, or survivor promotion.
+- funding;
+- open interest;
+- mark/index price;
+- liquidation feed;
+- trade/aggressor feed;
+- L2/order book;
+- on-chain data;
+- options / IV / Greeks;
+- sentiment or news;
+- macro data;
+- cross-venue state.
 
-## Purpose
+### 4. Deterministic signal
 
-This repository is the public staging and handoff layer between the active Research Scouts (**ChatGPT / Hermes**) and **ChatGPT Research Intake Review**. Antigravity and MiMo remain valid historical Scout identities, but their scheduled research lanes are disabled.
+Every strategy-critical rule must be explicit enough that two independent implementers would produce the same causal signal logic.
 
-Operating flow:
+As applicable, the record must preserve:
+
+- indicator/formula variant;
+- source price;
+- lookback;
+- smoothing method;
+- threshold;
+- crossover / comparison semantics;
+- AND / OR logic;
+- state transitions;
+- conflict priority.
+
+Missing strategy-critical values must not be invented.
+
+### 5. Direction
+
+- long and short rules must both be explicit; or
+- one side must be explicitly disabled.
+
+### 6. Entry / exit / risk semantics
+
+The source strategy must make all applicable behavior explicit:
+
+- entry;
+- signal exit;
+- opposite-signal exit;
+- stop loss;
+- take profit;
+- trailing stop;
+- time limit;
+- no-exit / disabled behavior.
+
+Do not rely on silent Hummingbot defaults.
+
+### 7. Execution timing
+
+Current lossless admission requires compatibility with:
 
 ```text
-External public sources
-(GitHub / FMZ / TradingView / papers / blogs / public research)
-        ↓
-ChatGPT / Hermes (active scheduled scouts, deliberately staggered)
-find alpha ideas → understand → normalize → push here
-        ↓
-ChatGPT
-Research Intake Review
-(PASS / PASS-WITH-CAVEAT / REMEDIATE / REJECT)
-        ↓
-PASS / PASS-WITH-CAVEAT decision produces two sibling outputs:
-├── Hermes Wiki Brain (research-only / knowledge preservation / non-gating)
-│   └── knowledge preservation only
-└── /results/_handoff/preparation_backlog.json (exact reviewed candidate; idempotent)
+completed bar
     ↓
-scheduled no-agent runtime/prepare_candidate.py (outside C3)
+signal decision
     ↓
-host validates staged package and promotes into candidates.json
-    ↓
-n8n C3 deterministic execution-ready consumer
-    ↓
-fixed direct Qlib dispatch
-    ↓
-Qlib full backtest
-    ├── PASS + >=1 cohort survivor
-    │   (terminal DONE / coverage complete / assertions valid)
-    │   ↓
-    │   frozen survivor bundle(s)
-    │   ↓
-    │   survivor index / leaderboard
-    │   ↓
-    │   §28 survivor evidence preservation
-    │   ↓
-    │   guarded compact private survivor mirror
-    │   (all formal leaderboard entries; not a Top-10 gate)
-    │   → HCH725/validated-survivor-research
-    └── REJECT / TECHNICAL_INCOMPLETE
-        (terminal; no new survivor promotion, index entry, or
-         §28 evidence package)
+same-bar close execution
 ```
 
-`/results/_handoff/preparation_backlog.json` is the reviewed-candidate preparation input; after host-only preparation validation, ready entries are promoted into the runtime production-pool contract `/Volumes/ExpansionDrive/qlib-results/_handoff/candidates.json`. Intake remains the sole eligibility judgment; neither preparation nor C3 adds a suitability gate.
+The current lane rejects strategies that materially require:
 
-Valid public source contract for every Scout: GitHub / FMZ / TradingView / papers / blogs / public research. For TradingView, only public, traceable strategy/idea/script/research URLs are valid — preserve the stable URL and as-of date; private or paid/invite-only scripts are not valid sources.
+- next-bar-open execution;
+- maker-touch / queue semantics;
+- intrabar path ordering;
+- any fill convention the pinned Hummingbot backtester cannot reproduce 1:1.
 
-**No Scout writes to Hermes Wiki Brain, the candidate pool, Qlib runtime, or Paper/Testnet/Live workflows.** Each Scout's only output channel is this repository. The artifact pushed here should already be in Wiki Brain-native form so ChatGPT can review it without another translation pass.
+Never approximate next-open with close.
 
-## Where this repository fits
+### 8. Position / re-entry / gating
 
-This repository is the **upstream public staging and research-only handoff layer** of a broader quantitative workflow. It does not perform Intake decisions, Qlib full backtests, survivor promotion, or trading execution itself.
+Where material, the source must define or make provably irrelevant:
 
-After ChatGPT Research Intake Review, the same PASS / PASS-WITH-CAVEAT decision produces the Hermes Wiki Brain research-only record and an exact, idempotent candidate append to `preparation_backlog.json` as sibling outputs. The existing scheduled no-agent invocation of `runtime/prepare_candidate.py` runs outside C3: a bounded Hermes session may stage artifacts, but the host performs the focused test/P1–P10 checks and promotes only a valid execution-ready entry into `candidates.json`. n8n C3 is a deterministic pure consumer: it validates the prepared entry and performs fixed direct Qlib dispatch; it never launches JIT preparation. Intake remains the only eligibility judgment; Wiki Brain is a non-gating sibling output.
+- sizing behavior;
+- fixed vs compounding sizing;
+- pyramiding / repeated entry;
+- maximum same-side concurrency;
+- cooldown;
+- re-entry behavior.
 
-After a Qlib run reaches PASS with at least one cohort survivor, the frozen survivor bundle, survivor index/leaderboard, and §28 evidence feed a guarded compact private survivor mirror at `HCH725/validated-survivor-research`. The mirror accepts all formal leaderboard entries; it is not a Top-10 gate. It remains a downstream research mirror: Qlib remains the canonical performance truth, and the mirror does not self-pass, self-rank, or self-promote.
-References to retired engines preserved in legacy research records are historical provenance only, not the current workflow; existing strategy records are not rewritten.
+If ambiguity can change trade count, timing, direction, or amount, the strategy is not LOSSLESS.
 
-```text
-External public sources
-(GitHub / FMZ / TradingView / papers / blogs / public research)
-        ↓
-ChatGPT / Hermes research scouts (active scheduled writers, deliberately staggered)
-        ↓
-alpha-strategy-research
-        ↓
-ChatGPT Research Intake Review
-        ↓
-├── Hermes Wiki Brain (research-only / knowledge preservation / non-gating)
-│   └── knowledge preservation only
-└── /results/_handoff/preparation_backlog.json (exact reviewed candidate; idempotent)
-    ↓
-scheduled no-agent runtime/prepare_candidate.py (outside C3)
-    ↓
-host validates staged package and promotes into candidates.json
-    ↓
-n8n C3 deterministic execution-ready consumer
-    ↓
-fixed direct Qlib dispatch
-    ↓
-Qlib full backtest
-    ├── PASS + >=1 cohort survivor
-    │   (terminal DONE / coverage complete / assertions valid)
-    │   ↓
-    │   frozen survivor bundle(s)
-    │   ↓
-    │   survivor index / leaderboard
-    │   ↓
-    │   §28 survivor evidence preservation
-    │   ↓
-    │   guarded compact private survivor mirror
-    │   (all formal leaderboard entries; not a Top-10 gate)
-    │   → HCH725/validated-survivor-research
-    └── REJECT / TECHNICAL_INCOMPLETE
-        (terminal; no new survivor promotion, index entry, or
-         §28 evidence package)
-```
+### 9. Cost / engine-model compatibility
 
-*A strategy record being present here means only normalized research material in the public staging pool. A Scout push does **not** mean the artifact passed Research Intake Review, entered Hermes Wiki Brain or the production candidate pool, completed Qlib validation, became a frozen survivor, reached the survivor leaderboard/evidence-preservation stage, or received Paper, Testnet, or Live approval. Paper/Testnet/Live remain future gated stages and must not be implied as already connected.*
+The strategy edge must not depend materially on behavior the current backtester cannot model losslessly, including:
 
----
+- maker/taker asymmetry;
+- spread capture;
+- queue priority;
+- partial fills;
+- unsupported slippage / impact;
+- funding PnL;
+- liquidation / margin mechanics;
+- leverage effects not reproduced by the backtester.
 
-## Research Scouts: read this README before every research run
+If the source does not state a cost model and costs are not part of the signal or trade-sequence semantics, record the gap explicitly. A later benchmark fee is a runtime assumption, not a source-reported strategy rule.
 
-Your job is to search public external sources for potentially useful **alpha strategies or alpha hypotheses**, then convert each worthwhile item into the exact research-record format below and push it to this repository.
+### 10. Warmup / causality
 
-The currently active scheduled writers are ChatGPT and Hermes. Antigravity and MiMo scheduled research are disabled; their historical records remain valid. Any Scout explicitly re-enabled later must follow this same contract. Do not duplicate or overwrite another Scout's existing artifact; inspect recent commits before producing new records.
+- all indicator lookbacks must be known so warmup can be derived;
+- no repainting;
+- no future-bar reference;
+- no negative shift that leaks future information;
+- no future extrema;
+- no full-sample normalization that leaks future data;
+- no other look-ahead leakage.
 
-Valid public sources: GitHub / FMZ / TradingView / papers / blogs / public research. For TradingView, only public, traceable strategy/idea/script/research URLs are valid — preserve the stable URL and as-of date; private or paid/invite-only scripts are not valid sources.
+### Admission rule
 
-Scout dedup contract: same canonical source identity + materially same normalized rule => do not create a new artifact. Same source but materially distinct hypothesis/signal/horizon/mechanism may be independent (independent only when the core hypothesis differs materially in at least one of mechanism, signal construction, universe/market type, horizon/regime, or material data dependency).
+If **any material strategy rule requires approximation, semantic invention, or unresolved interpretation**, the strategy is `NOT_LOSSLESS` and must not be merged.
 
-Strategies may be:
+## GitHub review and auto-remediation
 
-- single-signal strategies;
-- multi-signal strategies;
-- composite / hybrid strategies;
-- regime + signal + confirmation combinations;
-- cross-sectional, time-series, relative-value, spread, basis, funding, volatility, order-flow, market-microstructure or other defensible alpha ideas.
+The reviewer may repair a strategy PR only when the corrected fact is explicitly verifiable from a primary source, for example:
 
-A hybrid strategy is valid. Do **not** force a multi-component strategy into separate records if its economic thesis depends on the components working together. Instead, preserve the component roles clearly inside `Economic mechanism` and `Signal`.
+- public Pine/source code;
+- immutable GitHub source;
+- paper methods / tables / figures;
+- official first-party strategy documentation.
 
-Examples of valid hybrid structure:
+Examples of acceptable repair:
 
-```text
-regime filter
-+ entry signal
-+ confirmation filter
-+ exit / risk logic
-```
+- omitted indicator length;
+- threshold;
+- source price;
+- timeframe;
+- `process_orders_on_close`;
+- pyramiding;
+- explicit direction;
+- source-declared stop / target;
+- source-declared execution or cost assumption.
 
-Avoid treating arbitrary indicator stacking as stronger evidence. A complicated rule set with no coherent economic or behavioral mechanism should be described as such.
+The reviewer must **not**:
 
----
+- invent a parameter;
+- choose among plausible variants;
+- add a stop / target / cooldown;
+- convert next-bar-open into same-bar-close;
+- remove a material data dependency;
+- redesign a strategy merely to make it HB_READY.
 
-## Canonical Wiki Brain schema
+### Terminal review outcomes
 
-The authoritative strategy-research contract is versioned in Hermes Wiki Brain. At the time of this README update, the current canonical specification is:
+`HB_READY: AUTO_REMEDIATED`
 
-```text
-quant/strategy-research-record-spec-v1.md
+- reviewer repairs only source-verifiable facts on the same PR branch;
+- commits only the corrected strategy file;
+- stops;
+- the resulting `synchronize` webhook triggers a fresh review.
+
+`HB_READY: PASS`
+
+- current immutable PR head passes every admission gate;
+- reviewer records the evidence;
+- merge uses the exact reviewed head SHA;
+- PR is squash-merged to `main`.
+
+`HB_READY: NOT_LOSSLESS`
+
+- source is materially underspecified, incompatible, or would require invention;
+- reviewer records the exact blocker;
+- PR is closed.
+
+Maintenance/documentation/configuration PRs are **not** strategy-admission PRs. They receive ordinary review and are not automatically merged or closed by the HB_READY strategy policy.
+
+## Scout contract
+
+Current active scheduled writers:
+
+- **ChatGPT TradingView HB-Ready Scout** — hourly at `:14` Asia/Taipei; TradingView-only.
+- **Hermes HB-Ready Quant Research Scout** — hourly at `:35` Asia/Taipei; broader public-source research.
+
+Antigravity and MiMo scheduled strategy-research lanes remain disabled.
+
+For every Scout cycle:
+
+1. read current `README.md` and `.github/HB_READY_REVIEW.md`;
+2. inspect current `main`;
+3. deduplicate against both `main` and open `research/*` PRs;
+4. read the primary source directly;
+5. apply the LOSSLESS HB_READY hard gate before writing;
+6. create at most **one** candidate PR;
+7. zero candidates is a valid successful cycle;
+8. never lower the gate to satisfy cadence.
+
+### PR-only write rule
+
+A scheduled Scout that finds one valid candidate must:
+
+1. create a same-repository branch beginning with `research/`;
+2. use a unique branch name, normally including Scout identity, strategy slug, and Asia/Taipei timestamp;
+3. add exactly **one** new root-level strategy Markdown record;
+4. make no unrelated file changes;
+5. open a PR to `main`;
+6. stop after verifying the PR.
+
+The Scout must not:
+
+- push a strategy directly to `main`;
+- approve its own PR;
+- merge its own PR;
+- close its own PR;
+- bypass GitHub review;
+- write to Hummingbot, Qlib, n8n, survivor, Paper, Testnet, or Live systems.
+
+## Public source contract
+
+Eligible sources include public, traceable material such as:
+
+- TradingView public strategy / idea / script pages;
+- GitHub implementations;
+- FMZ;
+- papers / preprints;
+- reputable public research;
+- public technical documentation.
+
+Reject or skip:
+
+- private content;
+- paid-only / invite-only content;
+- inaccessible source logic;
+- marketing-only pages;
+- generic explainers without reconstructable rules;
+- materially underspecified strategy sources.
+
+### Provenance
+
+For GitHub sources, preserve:
+
+- repository URL;
+- full commit SHA;
+- exact file path;
+- relevant source URL.
+
+For TradingView sources, preserve the stable public URL and source/as-of date. Public Pine/source logic may be inspected, but large copyrighted source blocks should not be copied into this repository.
+
+For papers, preserve the stable paper identity, version/date, and exact table/figure/section provenance for quantitative claims where available.
+
+## Deduplication
+
+Before opening a PR, search current `main` and open `research/*` PRs.
+
+Do not create a new candidate when the same canonical source identity and materially identical normalized rule already exist.
+
+Exact duplicates, paraphrases, and trivial parameter variants are not new strategies.
+
+A source may justify another record only when it contains a materially distinct trading mechanism, signal construction, market/universe, horizon/regime, or material data dependency.
+
+## Strategy record schema
+
+Current records use:
+
+```yaml
 schema: strategy-research-record-v1
 ```
 
-The `v1` label above describes the **current** canonical version; it is not a permanent hardcoded contract.
-
-**GitHub-only Scout rule:** when a Scout is explicitly constrained to GitHub-only operation, this repository README is its complete operational contract for the current strategy-record schema, required frontmatter, document structure, provenance, naming, deduplication, and research-only boundaries. A GitHub-only Scout MUST NOT access Hermes Wiki Brain, CatDesk, local files, shell/Git CLI, or any other local dependency to resolve the schema. It should fail closed only if the current README itself does not expose enough information to construct a compliant record unambiguously.
-
-**Local Scout rule:** a Scout that is explicitly allowed local/Wiki access may resolve and read the current versioned `quant/strategy-research-record-spec-v*.md` specification in Hermes Wiki Brain. If that local canonical specification is newer than the README, the local Scout should follow the newer specification and the repository documentation should subsequently be synchronized.
-
-Do not invent another candidate schema and do not silently migrate older records. Existing records remain valid under the schema version they were created with unless an explicit versioned migration rule says otherwise.
-
-### Required frontmatter
-
-The block below is the required frontmatter for the current `strategy-research-record-v1` contract. GitHub-only Scouts use this README directly; local Scouts may use a newer canonical Wiki Brain specification when explicitly allowed by their own operating contract:
+Required frontmatter:
 
 ```yaml
 ---
@@ -257,7 +382,7 @@ status: research-only
 confidence: low | medium | high
 source_as_of: <source/data as-of date>
 sources:
-  - <traceable source URL or repository reference>
+  - <traceable public source>
 implementation_status: not-implemented
 adoption: not-approved
 approval_scope: research-only
@@ -266,22 +391,9 @@ contradictions: []
 ---
 ```
 
-For newly discovered external strategies, the following defaults are mandatory unless independently verified evidence already exists in our own research system:
+`confidence` describes confidence in the research interpretation, not expected profitability.
 
-```yaml
-status: research-only
-implementation_status: not-implemented
-adoption: not-approved
-approval_scope: research-only
-```
-
-`confidence` describes confidence in the **research interpretation**, not confidence that the strategy is profitable and not authorization to trade it.
-
----
-
-## Required document structure
-
-Use this structure for every strategy record. If information is unavailable, keep the section and state the gap explicitly rather than deleting it.
+### Required document structure
 
 ```markdown
 # <Title>
@@ -318,363 +430,98 @@ Use this structure for every strategy record. If information is unavailable, kee
 ## Sources
 ```
 
-### 1. Provenance
+Keep unavailable information explicit rather than deleting required sections.
 
-Record enough information to reproduce where the idea came from.
-
-For GitHub sources, preserve:
-
-- repository URL;
-- **full commit SHA**;
-- exact file path;
-- relevant source URL.
-
-Do not use only `main`, `master`, `latest`, a tag, or a shortened SHA when a fixed commit is available.
-
-For TradingView sources, only public, traceable strategy/idea/script/research URLs are valid — preserve the stable URL and as-of date; private or paid/invite-only scripts are not valid sources. For papers, blogs, FMZ or other public sources, preserve the most stable URL and the source/data as-of date.
-
-**Optional challenger lineage block (Deep-Research-generated challengers only).** A challenger record — a Deep Research artifact written to challenge an existing cohort survivor — may carry one optional, exact machine-readable lineage block inside this Provenance section. Ordinary records omit it entirely:
-
-```yaml
-lineage:
-  challenger_of: <survivor_id>
-  parent_family: <family_id>
-  lineage_note: <short evidence-based rationale>
-```
-
-When present, the block is all-or-nothing: exactly these three keys, single-line scalar values, nothing else. It is content inside the existing `## Provenance` section only — not frontmatter and not a schema change: `strategy-research-record-v1` and its required structure are unchanged, with no new schema, version bump, service, or registry. On `PASS` / `PASS-WITH-CAVEAT`, Research Intake Review carries the three lineage fields unchanged into the exact reviewed candidate appended to the preparation backlog; ordinary non-challenger records are appended unchanged, and eligibility remains decided solely by the four Intake decisions.
-
-### 2. Economic mechanism
-
-Separate what the original source claims from our normalized interpretation.
-
-`Source-reported` should describe the author's stated rationale without upgrading it into a fact.
-
-`Research interpretation` should state the hypothesized mechanism in falsifiable terms, for example:
-
-- trend persistence;
-- liquidity provision / mean reversion;
-- volatility expansion after compression;
-- crowded positioning / funding pressure;
-- cross-sectional momentum;
-- basis convergence;
-- order-flow imbalance;
-- behavioral or structural market effects.
-
-For a hybrid strategy, explicitly identify the role of each component, e.g.:
-
-```text
-Regime: 200 EMA trend filter
-Primary signal: Donchian breakout
-Confirmation: volume expansion
-Risk / exit: ATR stop
-```
-
-Do not assume every component contributes alpha; later research may require ablation tests.
-
-### 3. Signal
-
-Normalize the trading logic so a researcher can understand and, where possible, reconstruct it independently.
-
-Include as applicable:
-
-- signal formation timestamp;
-- lookback window;
-- long entry;
-- short entry;
-- exit;
-- holding period;
-- re-entry rules;
-- parameters;
-- position-sizing logic;
-- multi-timeframe dependencies;
-- whether the rule is fully specified or underspecified.
-
-Do not paste large amounts of source code when a normalized rule is sufficient. Keep the source link / commit / path for auditability.
-
-### 4. Required data
-
-State the actual data needed, including as applicable:
-
-- instrument / universe;
-- venue;
-- market type (spot / perpetual / futures / options);
-- timeframe;
-- OHLCV fields;
-- funding;
-- mark / index / basis data;
-- trades / aggressor side;
-- order book / depth;
-- open interest;
-- options surface / Greeks;
-- timestamp and timezone requirements;
-- point-in-time / availability requirements;
-- missing-data assumptions.
-
-### 5. Execution assumptions
-
-Record material assumptions such as:
-
-- signal-to-order timing;
-- next-bar vs same-bar execution;
-- market / limit order;
-- fill model;
-- fees;
-- spread;
-- slippage;
-- impact / capacity;
-- funding;
-- leverage / margin;
-- borrow / shorting;
-- latency;
-- partial fills / failures.
-
-If the source omits them, say so.
-
-### 6. Evidence
-
-Keep three evidence classes separate.
-
-#### Source-reported
-
-Third-party backtest, Sharpe, win rate, CAGR, drawdown or profitability claims belong here.
-
-Never rewrite a source-reported claim as our verified result.
-
-Every source-reported performance figure, parameter, threshold, win rate, Sharpe, t-statistic, CAGR, drawdown, or other quantitative claim must trace to a specific source listed in `## Sources` (for example a stable URL/DOI, commit SHA, or page/table reference). If the exact figure cannot be traced, omit it or state the provenance gap explicitly; never invent precision. Figures from equities, commodities, traditional futures, or other non-crypto samples must identify that asset class and must not be presented as crypto evidence.
-
-For each source-reported empirical claim, verify that the cited author(s), paper title, sample/universe, methodology, and reported result all belong to the same source. Never merge a sample, method, statistic, or finding from a different paper merely because the papers study a similar topic. If multiple papers are used, attribute each claim to its own source explicitly.
-
-Example:
-
-```text
-Source reports Sharpe 2.1 over the stated sample. This result has not been independently reproduced.
-```
-
-#### Independently reproduced
-
-For newly discovered Scout research, normally write:
+For newly researched material, normally state:
 
 ```text
 Not independently reproduced.
 ```
 
-Only record our own evidence when it actually exists and is traceable.
+unless independent reproduction actually occurred.
 
-#### Negative evidence
+### Strategy-critical source gaps
 
-Record known failures, contrary findings, unstable regimes, transaction-cost sensitivity, data problems or other evidence against the thesis.
+A research record may describe non-critical provenance limitations, but an admitted strategy must not contain an unresolved strategy-critical gap.
 
-If none was found, write something equivalent to:
+Examples of strategy-critical gaps:
 
-```text
-None identified in the reviewed sources; absence is not evidence of no negative result.
-```
+- unknown indicator length;
+- unknown threshold;
+- ambiguous entry timing;
+- ambiguous exit rule;
+- unknown direction;
+- unknown pyramiding/re-entry behavior when material;
+- execution convention that changes trade timing;
+- required unsupported data.
 
-### 7. Falsification plan
-
-State what would disprove or materially weaken the hypothesis.
-
-Prefer specific items such as:
-
-- required sample;
-- relevant regimes;
-- baseline / control;
-- ablation tests for hybrid strategies;
-- cost sensitivity;
-- out-of-sample requirement;
-- failure metric or threshold;
-- what action follows failure.
-
-### 8. Crypto portability
-
-Use one of these interpretations where useful:
-
-```text
-direct
-adapted
-unproven
-not applicable
-```
-
-A strategy whose mechanism originates from traditional-asset research must not be labeled `direct` unless the cited source itself demonstrates that mechanism in crypto markets. Otherwise use `adapted` or `unproven`, and state under Research interpretation that this is a ported hypothesis rather than crypto empirical evidence.
-
-Explain any crypto-specific portability risks, especially:
-
-- spot vs perpetual differences;
-- funding;
-- 24/7 session structure;
-- venue fragmentation;
-- liquidity;
-- mark / index price;
-- contract specification;
-- timestamp / candle boundaries.
-
-### 9. Limitations
-
-Preserve ambiguity rather than inventing certainty.
-
-Useful explicit markers include:
-
-```text
-underspecified
-not independently reproduced
-data gap
-unproven
-```
-
-### 10. Implementation status
-
-For newly researched external material, normally state that no implementation in our research stack has been completed.
-
-Do not imply Qlib full-backtest validation, Paper, Testnet, or Live verification unless it actually occurred.
-
-### 11. Adoption boundary
-
-Every newly collected external strategy is research material only.
-
-A record being present in this repository does **not** mean:
-
-- passed Research Intake Review;
-- entered Hermes Wiki Brain;
-- entered the production candidate pool;
-- completed Qlib full-backtest validation;
-- became a frozen survivor or leaderboard entry;
-- profitable;
-- validated alpha;
-- approved for implementation;
-- approved for paper trading;
-- approved for testnet;
-- approved for live trading.
-
-### 12. Related Wiki records
-
-Link known related concepts or strategy families when identifiable. Use Wiki-style links where a stable Hermes Wiki Brain page is known, for example:
-
-```markdown
-[[quant/leakage-safe-validation-purging-embargo-cpcv-2026-08-27]]
-```
-
-Do not fabricate Wiki links.
-
-### 13. Sources
-
-List the exact public sources used for the record.
-
----
+Such a candidate must be repaired from the primary source before merge or closed as `NOT_LOSSLESS`.
 
 ## File naming
 
 Use lowercase, hyphen-separated filenames without spaces.
 
-Preferred pattern for a concrete research capture:
+Preferred pattern:
 
 ```text
 <strategy-or-topic-slug>-<YYYY-MM-DD>.md
 ```
 
-Examples:
+Do not use ambiguous suffixes such as `latest`, `final`, or `new`.
+
+## Downstream boundary
+
+This repository owns **research normalization + HB_READY admission** only.
+
+Current intended downstream model:
 
 ```text
-bitcoin-negative-funding-contrarian-reversal-2026-08-31.md
-volatility-compression-volume-breakout-2026-08-31.md
-cross-sectional-crypto-momentum-2026-08-31.md
+alpha-strategy-research/main
+        │
+        ├── thin deterministic translation → Hummingbot Controller/config
+        │                                   → Hummingbot backtest
+        │
+        └── thin deterministic translation → Qlib signal/adapter
+                                            → Qlib backtest
 ```
 
-Do not use ambiguous suffixes such as:
+The same canonical strategy semantics must feed both engines.
 
-```text
-latest
-final
-new
-v2-final-final
-```
+Downstream translators may change format, but must not reinterpret or invent:
 
-unless the document itself is a versioned specification.
+- indicators / parameters;
+- timing;
+- entry / exit;
+- sizing;
+- pyramiding;
+- cooldown / re-entry;
+- execution semantics.
 
----
+Qlib may be more expressive than Hummingbot, but strategies admitted here intentionally stay inside the stricter current Hummingbot-lossless subset.
 
-## Research rules for all Scouts
+The automatic repo-to-Hummingbot/Qlib execution bridge is **not defined by this repository README as already active**. Backtest dispatch, result reconciliation, survivor promotion, Testnet, and Live execution remain separate workflows.
 
-1. **Search for alpha, not marketing claims.** A high reported return is not itself an alpha thesis.
-2. **Single and hybrid strategies are both allowed.** Preserve meaningful component structure.
-3. **Normalize before pushing.** Resolve the current strategy-research schema according to the Scout's operating mode: GitHub-only Scouts use this README directly; local Scouts may use the canonical Wiki Brain specification when explicitly permitted.
-4. **Keep provenance.** External claims must remain traceable to their source.
-5. **Do not claim independent validation that has not happened.**
-6. **Do not silently repair missing information.** Mark gaps explicitly.
-7. **Do not copy large source-code blocks unnecessarily.** Prefer normalized logic plus source references.
-8. **Do not confuse risk management with alpha.** Stops, sizing, leverage, DCA, grid or martingale rules should be identified separately from the predictive signal.
-9. **Do not confuse complexity with quality.** Multi-indicator combinations need a coherent thesis and remain unvalidated until tested.
-10. **Do not write to downstream systems.** Push the normalized research artifact here. ChatGPT performs Research Intake Review and, if accepted, produces the Hermes Wiki Brain record and an exact idempotent append to the preparation backlog as sibling outputs; host-only preparation later promotes an execution-ready entry into the production candidate pool, while Qlib, Paper, Testnet, and Live stages remain separate and gated.
-
----
+The old Research Intake Review → Wiki ingestion → preparation backlog → Qlib-first automatic flow is no longer the current admission contract and must not be inferred from historical commits.
 
 ## Public-repository hygiene
 
-This is a public repository. Only use public research material and public-safe normalized records.
+This is a public repository.
 
-Do not commit:
+Never commit:
 
-- API keys, tokens, credentials or secrets;
-- private account, wallet or portfolio information;
-- private Telegram / Discord / paid-source content;
-- Hermes private configuration;
-- local-machine secrets;
-- copyrighted source material that cannot legally be redistributed.
+- credentials, tokens, API keys, or secrets;
+- private account, wallet, or portfolio information;
+- private chats;
+- paid/private research content;
+- local-machine secrets or private Hermes configuration;
+- copyrighted source material that should not be redistributed.
 
-Where redistribution rights are unclear, cite and normalize the idea instead of copying the original work wholesale.
+Normalize and cite source logic instead of copying large source passages.
 
----
+## Principle
 
-## Push workflow
+The repository should remain simple:
 
-Any Scout may use the local GitHub CLI / Git tooling to update this repository.
+> **If a strategy record is on `main`, downstream systems may trust that its source semantics have already passed the current LOSSLESS HB_READY admission gate.**
 
-For each research run:
-
-1. Read this README.
-2. Search public external sources for worthwhile alpha candidates.
-3. Resolve the strategy-record schema according to the Scout's operating mode: GitHub-only Scouts use this README directly; local Scouts may resolve the current canonical Wiki Brain specification when explicitly permitted. Normalize each worthwhile candidate to that resolved schema.
-4. Preserve source provenance and label all third-party results as source-reported.
-5. Commit the resulting Markdown record(s).
-6. Push them to this repository.
-7. Stop there. ChatGPT will perform Research Intake Review separately; a PASS / PASS-WITH-CAVEAT decision produces the Hermes Wiki Brain record and an exact idempotent preparation-backlog entry as sibling outputs. The Scout must not write either output, the production candidate pool, or any later Qlib, Paper, Testnet, or Live stage.
-
-The goal is simple:
-
-> **Scout output should already equal Wiki Brain-ready input.**
-
-This minimizes repeated interpretation, repeated summarization and unnecessary token consumption across Antigravity, ChatGPT, Hermes and MiMo.
-
----
-
-## Scheduled Research Scouts
-
-Scheduled research is intentionally **low-cadence and low-output** so the downstream intake/backtest pipeline can drain the existing pool without avoidable Git write contention.
-
-Active cadence:
-
-- **Hermes Quant Research Scout:** every 4 hours at `01:15 / 05:15 / 09:15 / 13:15 / 17:15 / 21:15` (Asia/Taipei).
-- **ChatGPT TradingView Strategy Scout:** every 4 hours at `03:00 / 07:00 / 11:00 / 15:00 / 19:00 / 23:00` (Asia/Taipei).
-- **Antigravity Alpha Scout:** scheduled research disabled.
-- **MiMo Desktop Alpha Strategy Scout:** scheduled research disabled.
-
-The two active writers are deliberately staggered. Disabled Antigravity/MiMo lanes are not automatic fallbacks; re-enabling either requires an explicit operating decision and a documentation update before scheduling.
-
-For every scheduled run:
-
-1. Inspect the latest repository `main` before researching. GitHub-only Scouts do this through the GitHub connector/app; local Scouts may sync `origin/main`. Do not overwrite or casually rewrite another scout's existing artifact.
-2. Read this README on every run for the workflow contract. GitHub-only Scouts use the schema and required structure declared here and MUST NOT access Hermes Wiki Brain or any local dependency. Local Scouts may additionally resolve the current canonical versioned Wiki Brain strategy-research specification when their own operating contract explicitly permits it.
-3. Search public, traceable sources (GitHub / FMZ / TradingView / papers / blogs / public research; TradingView limited to public, traceable strategy/idea/script/research URLs with stable URL and as-of date preserved, private/paid not valid) for new alpha strategies or falsifiable alpha hypotheses. Before creating any Markdown record, directly read the primary source itself (paper/full text, official research, or the exact public implementation/code path). Search-result summaries, snippets, secondary summaries, and model-generated summaries are discovery aids only and must not be used to fill strategy rules or empirical claims.
-4. Check existing repository records and sources before creating anything. Scout dedup: same canonical source identity + materially same normalized rule => do not create a new artifact; same source but materially distinct hypothesis/signal/horizon/mechanism may be independent (independent only when the core hypothesis differs materially in at least one of mechanism, signal construction, universe/market type, horizon/regime, or material data dependency). Exact duplicates, trivial paraphrases, and materially identical captures should produce no new artifact.
-5. Default to **at most 1** new strategy record per run. **Zero is a valid and successful result. Never manufacture candidates to satisfy a quota.** A second or third record is allowed only when each candidate is clearly independent under the dedup criteria and each is individually source-complete after direct primary-source verification. Three remains the absolute hard ceiling, never a target.
-6. Preserve hybrid/composite structure when the thesis depends on multiple components. Do not collapse a hybrid into one prominent indicator.
-7. If strategy identity, signal semantics, causal timing, required data, provenance, or public-use rights are materially ambiguous, do not guess. Skip that candidate for this run rather than emitting false precision. Any threshold, entry/exit trigger, execution timestamp or fill model, fee/slippage assumption, capacity claim, universe/liquidity filter, crypto-porting rule, position-sizing choice, or other operational rule that is not explicitly specified by the primary source must be labeled `research-proposed`; any Scout-chosen acceptance/failure/falsification cutoff must be labeled `research-defined falsification threshold`. If a material field cannot be confidently classified as source-reported versus research-proposed, skip the candidate.
-8. Every emitted artifact must already satisfy the current canonical strategy-research schema and remain `research-only`, `not-implemented`, and `not-approved`. Before commit, read the artifact back and verify the operational fields above carry the correct source-vs-research labels; do not silently fill an underspecified source gap.
-9. Commit only artifacts intentionally created or corrected by the current run. If no candidate clears the bar, create no empty commit.
-10. Push explicitly and verify the remote contains the commit, then stop. Never force-push. If another Scout advances `origin/main` first and the push becomes non-fast-forward, fail only that run and let the next scheduled run restart from the new remote head. Do not write to Hermes Wiki Brain, `/results/_handoff/candidates.json`, Qlib runtime, Paper, Testnet, or Live workflows.
-11. Fail closed on dirty/unrelated state **inside the active isolated run worktree**, merge/rebase conflict, repository-sync failure, source/provenance failure, secret/public-safety concern, or push failure. Dirt in the separate coordinator checkout is not by itself a blocker and must not be staged, cleaned, or imported into the run. Report the exact block instead of creating a fallback artifact elsewhere.
-
-The scheduled scouts and the ChatGPT Research Intake Review process are deliberately separate. A successful Scout push means only that a research artifact entered the public staging pool; it does **not** mean the artifact passed Research Intake Review, entered Hermes Wiki Brain or the production candidate pool, completed Qlib validation, or reached Paper, Testnet, or Live.
-
-**No Scout may directly promote or write to any downstream output.** Hermes Wiki Brain ingestion and production candidate-pool handoff go through ChatGPT Research Intake Review exclusively; Qlib, Paper, Testnet, and Live are not written by Scouts.
+That is the purpose of this repository.

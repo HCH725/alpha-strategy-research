@@ -2,233 +2,370 @@
 
 [English](README.md) | **繁體中文**
 
+這是一個公開的 canonical strategy-research repository，只保存已通過目前 **LOSSLESS HB_READY** GitHub 准入審查的策略研究紀錄。
 
-## 目前准入規則 — LOSSLESS HB_READY（最高優先）
+## 目前規則
 
-自 **2026-10-05（UTC+8）** 起，本 repo 已重置並重新定位。若下方舊文件內容與本節衝突，**以本節為準**。
+自 **2026-10-05（UTC+8）** 起：
 
-`main` 不再是寬鬆的研究暫存池，而是已經通過 GitHub PR Review 的 **LOSSLESS HB_READY canonical strategy pool**。目前鎖定的 Hummingbot baseline：
+- `main` 是正式准入後的 canonical strategy pool。
+- 只要 root-level strategy Markdown 存在於 `main`，就代表已通過目前 Hummingbot 語意下的 **LOSSLESS HB_READY** GitHub Review。
+- 自動 Scout **不得直接把策略 push 到 `main`**。
+- 所有新策略一律先進 same-repository 的 `research/*` PR。
+- OpenCode GitHub Review 就是 admission gate。
+- 如果缺少的是 primary source 可以明確查到的事實，Reviewer 可以直接補正同一個 PR branch，再觸發重新審查。
+- 如果 source 本身不足以形成完整、無損的策略規則，PR 直接關閉。
+- 通過的策略 PR 才 squash merge 進 `main`。
+- 不另外建立 validated-strategy repo，merge 後也不再做第二次「這策略能不能給 Hummingbot」的語意適用性審查。
+
+完整 Reviewer 規則見 [`.github/HB_READY_REVIEW.md`](.github/HB_READY_REVIEW.md)。
+
+### 目前鎖定的准入基準
+
+現行策略准入依據：
 
 - Hummingbot package：`20260920`
 - Hummingbot VERSION：`dev-2.17.0`
 
-因此，策略只要存在於 `main`，就代表它的來源規則已完整到足以讓目前 Hummingbot backtester **1:1、無近似** 表達；同一份 canonical semantics 也應可供 Qlib 後續轉譯使用。Downstream 可以換格式，但不得重新解讀或補創策略規則。
+未來 Hummingbot 更新，不代表 eligibility 自動放寬。只有在准入 contract 明確重新審查並更新後，才能使用新的 engine semantics。
 
-### 准入流程
+## 這個 repo 代表什麼
+
+本 repo 現在刻意維持很窄的職責。
+
+策略只要存在於 `main`，代表：
+
+> 來源策略的規則已完整、因果關係明確，而且目前 pinned Hummingbot backtester 可以在**不做 material approximation** 的前提下 1:1 表達。
+
+這**不代表**：
+
+- 策略一定獲利；
+- source-reported 績效已經被我們獨立重現；
+- 策略已成為 survivor；
+- 已通過 Hummingbot 或 Qlib 績效驗證；
+- 已核准 Paper、Testnet、Mainnet 或任何 live trading。
+
+所有正式准入紀錄仍維持 research-only，除非後續流程明確改變其狀態。
+
+## 目前流程
 
 ```text
 公開 primary source
         ↓
 ChatGPT / Hermes Scout
         ↓
-research/<scout>-<slug>-<date> branch
+research/<scout>-<slug>-<YYYYMMDD-HHMM>
         ↓
-GitHub PR
+GitHub Pull Request
         ↓
 OpenCode LOSSLESS HB_READY Review
-        ├─ 缺的是 source 可查證事實 → 自動補正同一 PR → 再 review
-        ├─ HB_READY → squash merge
-        └─ NOT_LOSSLESS / source 本身不足 → close PR
+        ├─ 缺的是 source 可查證事實
+        │      ↓
+        │  補正同一 PR branch
+        │      ↓
+        │  synchronize → 重新 review
+        │
+        ├─ HB_READY: PASS
+        │      ↓
+        │  exact-head squash merge
+        │
+        └─ HB_READY: NOT_LOSSLESS
+               ↓
+             close PR
         ↓
-main = HB_READY strategy pool
+main = canonical HB_READY strategy pool
 ```
 
-核心規則：
+自動策略 PR 不允許永久停在 `REQUEST_CHANGES` 無人處理。
 
-1. Scout **不得再把策略直接 push 到 `main`**；每輪最多建立一個策略 PR。
-2. 自動策略 branch 必須以 `research/` 開頭，且 PR 只能新增一筆 root-level strategy Markdown，不得夾帶無關修改。
-3. GitHub Review 就是 admission gate；merge 後不再另建一個 validated strategy repo，也不再做第二次語意適用性審查。
-4. Reviewer 可以自動補正，但只能補 primary source、公開 source code/Pine、immutable GitHub source、paper methods/table/figure 明確存在的事實。
-5. 不得自己猜參數、挑版本、增加 stop/TP/cooldown、改 execution timing，或刪掉不相容依賴來硬湊 HB_READY。
-6. 若 source 本身無法補齊 lossless 規則，就直接 close PR，不留下永久 REQUEST_CHANGES。
-7. README、設定或其他 maintenance PR 不屬於 strategy admission，不由 HB_READY reviewer 自動 merge。
+## LOSSLESS HB_READY 硬門檻
 
-完整規則見 [`.github/HB_READY_REVIEW.md`](.github/HB_READY_REVIEW.md)。
+每一筆正式准入的策略，都必須符合所有適用條件。
 
-### HB_READY 硬邊界
+### 1. 市場結構
 
-每一筆 merge 的策略都必須符合：
+- 每次回測只處理一個 trading pair；
+- spot / perpetual 適用性必須由 primary source 明確指出，或能從來源確定判讀；
+- 不接受 cross-sectional ranking；
+- 不接受 pair spread；
+- 不接受跨 symbol 共用 portfolio capital 的策略；
+- 不接受 multi-pair shared state；
+- spot 策略不得需要 naked short。
 
-- single-pair；不接受 cross-sectional、pair spread、shared portfolio capital、multi-pair state；
-- decision timeframe 僅 `1h / 4h / 1d`；
-- signal 核心只使用 OHLCV 與 deterministic candle-derived indicators；
-- formula、indicator variant、source price、lookback、smoothing、threshold、comparison/state logic 都要明確；
-- long/short 規則明確，或明確關閉其中一側；
-- entry / exit / SL / TP / trailing / time limit 等適用語意完整，未使用者必須明確為 none/disabled；
-- 符合 completed-bar decision + same-bar-close execution；
-- sizing、pyramiding、same-side concurrency、cooldown/re-entry、fixed-vs-compounding 明確或可證明不影響交易序列；
-- 不依賴目前 backtester 無法 lossless 重現的 funding、OI、mark/index、L2/order book、aggressor feed、liquidation、on-chain、options/Greeks、sentiment/news、macro、cross-venue、maker/taker asymmetry、queue、partial fill、funding PnL、margin/liquidation 或 leverage effect；
-- warmup lookback 可推導，且不得 repaint / look-ahead / future reference。
+### 2. 時間框
 
-只要有任何 material approximation，就屬於 **NOT_LOSSLESS**，不得 merge。
+- 目前 decision timeframe 必須是 `1h`、`4h` 或 `1d`；
+- 現階段 Scout 應優先收 single decision timeframe；
+- multi-timeframe 不屬一般 Phase-1 lane，除非能證明 causal alignment 完整且不改變 source semantics。
 
-HB_READY 只代表「策略語意可無損回測」，**不代表獲利、survivor、Paper/Testnet/Live 核准或交易授權**。
+### 3. 資料依賴
 
-> 下方若仍出現 direct Scout push、舊四狀態 Research Intake Review、preparation backlog candidateization、Qlib-first pipeline 等內容，皆屬歷史文件，不再是目前 admission contract；相關舊排程仍維持暫停，除非之後另行重設並啟用。
+核心交易訊號必須能由目前 Hummingbot backtester 可取得的 candle data 計算：
 
+- OHLCV；
+- 由 candle deterministic、causal 地衍生的 indicators。
 
-這是一個公開的策略研究暫存 repository，用來把外部 alpha 策略研究整理成可供 Research Intake Review 與後續 sibling outputs 使用的標準化格式。
+如果策略 edge 必須依賴下列資料，現階段不得准入：
 
-## 用途
+- funding；
+- open interest；
+- mark / index price；
+- liquidation feed；
+- trade / aggressor feed；
+- L2 / order book；
+- on-chain；
+- options / IV / Greeks；
+- sentiment / news；
+- macro data；
+- cross-venue state。
 
-本 repository 是目前啟用中的 Research Scout（**ChatGPT / Hermes**）與 **ChatGPT Research Intake Review** 之間的公開 staging 與交接層。Antigravity 與 MiMo 仍保留既有歷史 Scout 身分，但排程研究 lane 已停用。
+### 4. 訊號必須 deterministic
 
-運作流程：
+所有會影響交易的規則，都要完整到讓兩個不同實作者可以產生同一份 causal signal logic。
+
+依策略需要，必須明確保存：
+
+- indicator / formula variant；
+- source price；
+- lookback；
+- smoothing；
+- threshold；
+- crossover / comparison semantics；
+- AND / OR 邏輯；
+- state transition；
+- conflict priority。
+
+策略關鍵參數缺失時，不得自行發明。
+
+### 5. Direction
+
+- long 與 short 規則都要明確；或
+- 明確標示其中一側 disabled。
+
+### 6. Entry / Exit / Risk
+
+來源策略所有適用行為都必須明確：
+
+- entry；
+- signal exit；
+- opposite-signal exit；
+- stop loss；
+- take profit；
+- trailing stop；
+- time limit；
+- no-exit / disabled。
+
+不得依賴 Hummingbot silent defaults。
+
+### 7. Execution timing
+
+目前 LOSSLESS 准入必須相容：
 
 ```text
-外部公開來源
-（GitHub / FMZ / TradingView / papers / blogs / public research）
-        ↓
-ChatGPT / Hermes（目前啟用中的 scheduled Scout，刻意錯開）
-尋找 alpha 想法 → 理解 → 標準化 → push 到這裡
-        ↓
-ChatGPT
-Research Intake Review
-（PASS / PASS-WITH-CAVEAT / REMEDIATE / REJECT）
-        ↓
-PASS / PASS-WITH-CAVEAT decision 產生兩個 sibling outputs：
-├── Hermes Wiki Brain（research-only / knowledge preservation / non-gating）
-│   └── 僅作知識保存
-└── /results/_handoff/preparation_backlog.json（exact reviewed candidate；idempotent）
+completed bar
     ↓
-既有 no-agent 排程 runtime/prepare_candidate.py（C3 之外）
+signal decision
     ↓
-host 驗證 staged package 後 promotion 至 candidates.json
-    ↓
-n8n C3 deterministic execution-ready consumer
-    ↓
-fixed direct Qlib dispatch
-    ↓
-Qlib full backtest
-    ├── PASS + >=1 cohort survivor
-    │   （terminal DONE / coverage complete / assertions valid）
-    │   ↓
-    │   frozen survivor bundle(s)
-    │   ↓
-    │   survivor index / leaderboard
-    │   ↓
-    │   §28 survivor evidence preservation
-    │   ↓
-    │   guarded compact private survivor mirror
-    │   （所有 formal leaderboard entries；不是 Top-10 gate）
-    │   → HCH725/validated-survivor-research
-    └── REJECT / TECHNICAL_INCOMPLETE
-        （terminal；不產生新的 survivor promotion、index entry 或
-         §28 evidence package）
+same-bar close execution
 ```
 
-`/results/_handoff/preparation_backlog.json` 是 reviewed candidate 的 preparation input；host-only preparation 驗證通過後，才 promotion 至 runtime production-pool contract `/Volumes/ExpansionDrive/qlib-results/_handoff/candidates.json`。Intake 仍是唯一 eligibility judgment；preparation 與 C3 都不新增 suitability gate。
+現階段不接受 materially 依賴：
 
-任何 Scout 的有效公開來源契約：GitHub / FMZ / TradingView / papers / blogs / public research。TradingView 僅限公開、可追溯的 strategy/idea/script/research URL，須保留 stable URL 與 as-of date；private/paid/invite-only 不可用。
+- next-bar-open；
+- maker-touch / queue；
+- intrabar path ordering；
+- 其他目前 pinned Hummingbot backtester 無法 1:1 重現的 fill convention。
 
-**任何 Scout 都不得寫入 Hermes Wiki Brain、candidate pool、Qlib runtime 或 Paper/Testnet/Live workflows。** 每個 Scout 唯一的輸出管道是本 repository。Push 到這裡的 artifact 應該已經是 Wiki Brain-native 格式，讓 ChatGPT 可以完成 Research Intake Review，而不需要再做一次翻譯或重新整理。
+不得拿 close 去近似 next-open。
 
-## 本 repository 在整體系統中的位置
+### 8. Position / Re-entry / Gating
 
-本 repository 是整體量化工作流中的**上游公開 staging 與 research-only handoff layer**。它本身不負責 Intake decision、Qlib full backtest、survivor promotion 或交易執行。
+只要會影響交易，都必須明確，或能證明對結果無關：
 
-經過 ChatGPT Research Intake Review 後，同一個 PASS / PASS-WITH-CAVEAT decision 會同時產生 Hermes Wiki Brain 的 research-only record 與一筆精確、idempotent 的 candidate append 到 `preparation_backlog.json`，兩者是 sibling outputs。既有 no-agent 排程在 C3 之外呼叫 `runtime/prepare_candidate.py`：有界 Hermes session 只 staging artifacts，由 host 執行 focused test／P1–P10，再將 execution-ready entry promotion 至 `candidates.json`。n8n C3 是 deterministic pure consumer，只驗證已準備好的 entry 並執行 fixed direct Qlib dispatch，絕不進行 JIT preparation。Intake 是唯一 eligibility judgment；Wiki Brain 是 non-gating sibling output。
+- sizing；
+- fixed vs compounding；
+- pyramiding / repeated entry；
+- max same-side concurrency；
+- cooldown；
+- re-entry。
 
-Qlib run 達到 PASS 且至少有一個 cohort survivor 後，frozen survivor bundle、survivor index/leaderboard 與 §28 evidence 會進入受保護的 compact private survivor mirror：`HCH725/validated-survivor-research`。Mirror 收錄所有 formal leaderboard entries，不是 Top-10 gate；它只是 downstream research mirror，Qlib 仍是 canonical performance truth，mirror 不得 self-pass、self-rank 或 self-promote。
-既有 legacy research records 中保留的退役引擎 references 只屬 historical provenance，不代表 current workflow；既有 strategy records 不重寫。
+如果模糊處可能改變 trade count、timing、direction 或 amount，就不是 LOSSLESS。
 
-```text
-外部公開來源
-（GitHub / FMZ / TradingView / papers / blogs / public research）
-        ↓
-ChatGPT / Hermes 研究 Scout（目前啟用中的 scheduled writers，刻意錯開）
-        ↓
-alpha-strategy-research
-        ↓
-ChatGPT Research Intake Review
-        ↓
-├── Hermes Wiki Brain（research-only / knowledge preservation / non-gating）
-│   └── 僅作知識保存
-└── /results/_handoff/preparation_backlog.json（exact reviewed candidate；idempotent）
-    ↓
-既有 no-agent 排程 runtime/prepare_candidate.py（C3 之外）
-    ↓
-host 驗證 staged package 後 promotion 至 candidates.json
-    ↓
-n8n C3 deterministic execution-ready consumer
-    ↓
-fixed direct Qlib dispatch
-    ↓
-Qlib full backtest
-    ├── PASS + >=1 cohort survivor
-    │   （terminal DONE / coverage complete / assertions valid）
-    │   ↓
-    │   frozen survivor bundle(s)
-    │   ↓
-    │   survivor index / leaderboard
-    │   ↓
-    │   §28 survivor evidence preservation
-    │   ↓
-    │   guarded compact private survivor mirror
-    │   （所有 formal leaderboard entries；不是 Top-10 gate）
-    │   → HCH725/validated-survivor-research
-    └── REJECT / TECHNICAL_INCOMPLETE
-        （terminal；不產生新的 survivor promotion、index entry 或
-         §28 evidence package）
-```
+### 9. Cost / Engine model 相容性
 
-*因此，一筆策略紀錄出現在本 repository，只代表它是公開 staging pool 中的標準化**研究素材**。Scout push **不代表**已通過 Research Intake Review、已進入 Hermes Wiki Brain 或 production candidate pool、已完成 Qlib validation、已成為 frozen survivor、已進入 survivor leaderboard/evidence preservation，或已取得 Paper、Testnet、Live 授權。Paper/Testnet/Live 仍是未來的 gated stages，不得暗示它們已經接通。*
+策略 edge 不能 materially 依賴目前 backtester 無法 lossless 模擬的行為，例如：
 
----
+- maker / taker asymmetry；
+- spread capture；
+- queue priority；
+- partial fills；
+- unsupported slippage / impact；
+- funding PnL；
+- liquidation / margin mechanics；
+- 目前 backtester 無法重現的 leverage effect。
 
-## Research Scout：每次研究前都必須先閱讀本 README
+如果 source 沒有說明 cost model，而且成本不是 signal 或 trade-sequence semantics 的一部分，可以明確標記 data gap。之後使用的 benchmark fee 是 runtime assumption，不得冒充 source-reported strategy rule。
 
-你的工作是從公開外部來源搜尋可能有價值的 **alpha 策略或 alpha 假說**，然後把每一個值得保留的項目轉換成下方規定的研究紀錄格式，再 push 到本 repository。
+### 10. Warmup / Causality
 
-目前啟用中的 scheduled writers 是 ChatGPT 與 Hermes。Antigravity 與 MiMo 的 scheduled research 已停用；既有歷史紀錄仍然有效。未來若明確重新啟用任何 Scout，仍必須遵循同一份 contract。不要重複或覆蓋其他 Scout 已有的 artifact；產出新紀錄前請先 inspect 近期 commits。
+- 所有 indicator lookback 都要已知，才能推導 warmup；
+- 不得 repaint；
+- 不得 future-bar reference；
+- 不得用 negative shift 取得未來資訊；
+- 不得 future extrema；
+- 不得 full-sample normalization 造成 future leakage；
+- 不得有其他 look-ahead leakage。
 
-有效公開來源：GitHub / FMZ / TradingView / papers / blogs / public research。TradingView 僅限公開、可追溯的 strategy/idea/script/research URL，須保留 stable URL 與 as-of date；private/paid/invite-only 不可用。
+### 准入原則
 
-Scout dedup 契約：同 canonical source identity + 實質相同的 normalized rule => 不得新建 artifact；同 source 但 hypothesis/signal/horizon/mechanism 實質不同則可獨立（僅當核心假說在 mechanism、signal construction、universe/market type、horizon/regime、material data dependency 任一處實質不同時，才視為獨立）。
+只要**任何 material strategy rule 需要 approximation、自己補創語意、或仍有 unresolved interpretation**，就是 `NOT_LOSSLESS`，不得 merge。
 
-策略可以是：
+## GitHub Review 與自動補正
 
-- 單一訊號策略；
-- 多訊號策略；
-- 複合／混合策略；
-- regime + signal + confirmation 組合；
-- cross-sectional、time-series、relative-value、spread、basis、funding、volatility、order-flow、market-microstructure 或其他具備合理論證的 alpha 想法。
+Reviewer 只有在缺少／錯誤的資料能由 primary source 明確驗證時，才可以直接補正 PR，例如：
 
-混合策略是有效的策略形式。若一個策略的經濟假說本來就依賴多個元件共同作用，**不要**強迫把它拆成多筆獨立紀錄；應該在 `Economic mechanism` 與 `Signal` 中清楚保留每個元件的角色。
+- 公開 Pine / source code；
+- immutable GitHub implementation；
+- paper methods / tables / figures；
+- 官方 first-party strategy documentation。
 
-有效的混合策略結構例如：
+允許補正的例子：
 
-```text
-regime filter
-+ entry signal
-+ confirmation filter
-+ exit / risk logic
-```
+- 漏掉的 indicator length；
+- threshold；
+- source price；
+- timeframe；
+- `process_orders_on_close`；
+- pyramiding；
+- explicit direction；
+- source 明確定義的 stop / target；
+- source 明確定義的 execution / cost assumption。
 
-不要把任意堆疊技術指標視為更強的證據。若一套複雜規則缺乏一致的經濟或行為機制，應如實描述這個問題。
+Reviewer **不可以**：
 
----
+- 自己發明參數；
+- 從幾種合理版本中自行挑一種；
+- 自己加 stop / target / cooldown；
+- 把 next-bar-open 改成 same-bar-close；
+- 刪除不相容的資料依賴；
+- 為了通過 HB_READY 而重新設計策略。
 
-## Canonical Wiki Brain schema
+### 最終 Review 結果
 
-策略研究 contract 以版本化 specification 的方式保存在 Hermes Wiki Brain。以本 README 更新當下而言，目前的 canonical specification 是：
+`HB_READY: AUTO_REMEDIATED`
 
-```text
-quant/strategy-research-record-spec-v1.md
+- Reviewer 只補 source 可以證實的資料；
+- 只修改同一 PR branch 的 strategy file；
+- commit 後停止；
+- `synchronize` webhook 會觸發新的完整 review。
+
+`HB_READY: PASS`
+
+- 目前 immutable PR head 通過所有條件；
+- Reviewer 留下 evidence；
+- merge 必須鎖定 exact reviewed head SHA；
+- squash merge 到 `main`。
+
+`HB_READY: NOT_LOSSLESS`
+
+- source 本身 underspecified、不相容，或需要自行發明策略；
+- Reviewer 留下明確 blocker；
+- close PR。
+
+README、文件、設定等 maintenance PR 不屬於 strategy admission PR。它們只做一般 review，不會被 HB_READY strategy policy 自動 merge 或 close。
+
+## Scout 規則
+
+目前啟用中的自動研究：
+
+- **ChatGPT TradingView HB-Ready Scout** — Asia/Taipei 每小時 `:14`；只研究 TradingView。
+- **Hermes HB-Ready Quant Research Scout** — Asia/Taipei 每小時 `:35`；研究較廣泛的公開來源。
+
+Antigravity 與 MiMo 的自動策略研究目前維持停用。
+
+每輪 Scout：
+
+1. 先讀最新 `README.md` 與 `.github/HB_READY_REVIEW.md`；
+2. 查看目前 `main`；
+3. 同時對 `main` 與 open `research/*` PR 做 dedup；
+4. 直接讀 primary source；
+5. 寫入前先套用 LOSSLESS HB_READY hard gate；
+6. 每輪最多建立 **1 個** candidate PR；
+7. 找不到合格候選時，0 筆就是成功；
+8. 不得為了 cadence 降低門檻。
+
+### PR-only 寫入規則
+
+Scout 找到一筆合格候選時：
+
+1. 在同一 repo 建立 `research/*` branch；
+2. branch 名應保持唯一，通常包含 Scout、strategy slug 與 Asia/Taipei timestamp；
+3. 只新增 **1 個** root-level strategy Markdown；
+4. 不得夾帶無關修改；
+5. 開 PR 到 `main`；
+6. 驗證 PR 後停止。
+
+Scout 不可以：
+
+- 直接 push strategy 到 `main`；
+- 自己 approve；
+- 自己 merge；
+- 自己 close；
+- 繞過 GitHub Review；
+- 寫入 Hummingbot、Qlib、n8n、survivor、Paper、Testnet 或 Live 系統。
+
+## 公開來源規則
+
+可使用的來源包含：
+
+- TradingView 公開 strategy / idea / script；
+- GitHub implementations；
+- FMZ；
+- papers / preprints；
+- 高品質公開研究；
+- 公開技術文件。
+
+下列來源應跳過：
+
+- private；
+- paid-only / invite-only；
+- 無法取得實際規則；
+- 純行銷內容；
+- 沒有 reconstructable rules 的 generic explainer；
+- materially underspecified strategy source。
+
+### Provenance
+
+GitHub source 必須保存：
+
+- repository URL；
+- full commit SHA；
+- exact file path；
+- relevant source URL。
+
+TradingView 必須保存 stable public URL 與 source/as-of date。可以讀公開 Pine/source logic，但不要把大量 copyrighted source code 複製進 repo。
+
+Paper 的 quantitative claim，應盡量保留 stable paper identity、version/date，以及 exact Table/Figure/Section provenance。
+
+## Dedup
+
+開 PR 前必須搜尋目前 `main` 與 open `research/*` PR。
+
+相同 canonical source identity + materially identical normalized rule，不得重複建 candidate。
+
+exact duplicate、paraphrase、trivial parameter variant 都不算新策略。
+
+只有當同一來源真的包含 materially distinct 的 mechanism、signal construction、market/universe、horizon/regime 或 material data dependency，才有理由形成另一筆獨立紀錄。
+
+## Strategy record schema
+
+目前使用：
+
+```yaml
 schema: strategy-research-record-v1
 ```
 
-上面的 `v1` 只代表**目前**的 canonical 版本，不是永久寫死的 contract。
-
-**GitHub-only Scout 規則：**當 Scout 被明確限制只能使用 GitHub 時，本 README 是目前 strategy-record schema、必要 frontmatter、文件結構、provenance、命名、dedup 與 research-only 邊界的完整 operational contract。GitHub-only Scout **不得**存取 Hermes Wiki Brain、CatDesk、本機檔案、shell/Git CLI 或其他 local dependency 來解析 schema；只有當本 README 本身不足以無歧義建立合規 record 時，才應 fail closed。
-
-**Local Scout 規則：**明確被允許使用 local/Wiki access 的 Scout，可以解析並讀取 Hermes Wiki Brain 中目前版本化的 `quant/strategy-research-record-spec-v*.md` specification。若 local canonical specification 比 README 更新，local Scout 應遵循新版，之後再同步 repository 文件。
-
-不要另外發明新的 candidate schema，也不要默默把舊紀錄搬成新版。既有紀錄仍依建立當時的 schema version 保持有效，除非另外存在明確的 versioned migration rule。
-
-### 必要 frontmatter
-
-下方範例反映目前的 v1 specification。GitHub-only Scout 直接使用本 README；明確允許 local access 的 Scout 可以依其 operating contract 使用更新的 Wiki Brain specification。新紀錄必須使用已解析到的 canonical specification 所要求的完整 frontmatter：
+Required frontmatter：
 
 ```yaml
 ---
@@ -245,7 +382,7 @@ status: research-only
 confidence: low | medium | high
 source_as_of: <source/data as-of date>
 sources:
-  - <traceable source URL or repository reference>
+  - <traceable public source>
 implementation_status: not-implemented
 adoption: not-approved
 approval_scope: research-only
@@ -254,22 +391,9 @@ contradictions: []
 ---
 ```
 
-對於新發現的外部策略，除非我們自己的研究系統中已經存在可獨立驗證的證據，否則以下預設值是強制要求：
+`confidence` 代表我們對 research interpretation 的信心，不代表預期獲利能力。
 
-```yaml
-status: research-only
-implementation_status: not-implemented
-adoption: not-approved
-approval_scope: research-only
-```
-
-`confidence` 描述的是對**研究解讀是否正確**的信心，不是對策略獲利能力的信心，也不代表任何交易授權。
-
----
-
-## 必要文件結構
-
-每一筆策略紀錄都必須使用以下結構。若某項資訊無法取得，仍然保留該 section，並清楚標示缺口，不要直接刪除。
+### Required document structure
 
 ```markdown
 # <Title>
@@ -306,363 +430,100 @@ approval_scope: research-only
 ## Sources
 ```
 
-### 1. Provenance
+如果某項資料無法取得，保留 section 並明確標記，不要把 required section 刪掉。
 
-必須記錄足夠資訊，使研究來源可以被重新定位與重現。
-
-對 GitHub 來源，需保留：
-
-- repository URL；
-- **完整 commit SHA**；
-- 精確 file path；
-- 對應 source URL。
-
-若可以取得固定 commit，不要只使用 `main`、`master`、`latest`、tag 或縮短版 SHA。
-
-對 TradingView 來源，僅限公開、可追溯的 strategy/idea/script/research URL，須保留 stable URL 與 as-of date；private/paid/invite-only 不可用。對 papers、blogs、FMZ 或其他公開來源，保留最穩定的 URL 與 source/data as-of date。
-
-**可選 challenger lineage block（僅限 Deep Research 產生的 challenger）。** Challenger record——用來挑戰既有 cohort survivor 的 Deep Research 產物——可以在此 Provenance section 內附上一個可選、精確、機器可讀的 lineage block。一般 record 完全省略：
-
-```yaml
-lineage:
-  challenger_of: <survivor_id>
-  parent_family: <family_id>
-  lineage_note: <short evidence-based rationale>
-```
-
-存在時為全有或全無：只允許這三個 key、單行純量值，不可有其他內容。它只是既有 `## Provenance` section 內的內容——不是 frontmatter、不是 schema 變更：`strategy-research-record-v1` 與其既有 required structure 完全不變，不新增 schema、不 bump 版本、不新增 service 或 registry。在 `PASS` / `PASS-WITH-CAVEAT` 時，Research Intake Review 會把三個 lineage 欄位原樣帶進 append 到 preparation backlog 的精確 reviewed candidate；一般非 challenger record 的 append 也完全不變，eligibility 仍只由四個 Intake 決定裁決。
-
-### 2. Economic mechanism
-
-要把原始來源的主張與我們的標準化解讀分開。
-
-`Source-reported` 應描述原作者提出的理由，不要把作者的說法升級成已確認事實。
-
-`Research interpretation` 應用可被證偽的方式描述假設中的機制，例如：
-
-- trend persistence；
-- liquidity provision / mean reversion；
-- volatility expansion after compression；
-- crowded positioning / funding pressure；
-- cross-sectional momentum；
-- basis convergence；
-- order-flow imbalance；
-- behavioral or structural market effects。
-
-對混合策略，需明確指出每個元件的角色，例如：
-
-```text
-Regime: 200 EMA trend filter
-Primary signal: Donchian breakout
-Confirmation: volume expansion
-Risk / exit: ATR stop
-```
-
-不要預設每一個元件都會貢獻 alpha；後續研究可能需要進行 ablation tests。
-
-### 3. Signal
-
-將交易邏輯標準化到研究人員能理解，並在可能的情況下能獨立重建。
-
-視策略需要，應包含：
-
-- signal formation timestamp；
-- lookback window；
-- long entry；
-- short entry；
-- exit；
-- holding period；
-- re-entry rules；
-- parameters；
-- position-sizing logic；
-- multi-timeframe dependencies；
-- 規則是否 fully specified 或 underspecified。
-
-當標準化規則已足夠描述策略時，不要貼大量來源程式碼。保留 source link / commit / path 供 audit 即可。
-
-### 4. Required data
-
-清楚列出策略真正需要的資料，視情況包含：
-
-- instrument / universe；
-- venue；
-- market type（spot / perpetual / futures / options）；
-- timeframe；
-- OHLCV fields；
-- funding；
-- mark / index / basis data；
-- trades / aggressor side；
-- order book / depth；
-- open interest；
-- options surface / Greeks；
-- timestamp 與 timezone requirements；
-- point-in-time / availability requirements；
-- missing-data assumptions。
-
-### 5. Execution assumptions
-
-需記錄重要執行假設，例如：
-
-- signal-to-order timing；
-- next-bar vs same-bar execution；
-- market / limit order；
-- fill model；
-- fees；
-- spread；
-- slippage；
-- impact / capacity；
-- funding；
-- leverage / margin；
-- borrow / shorting；
-- latency；
-- partial fills / failures。
-
-若來源沒有提供，就明確寫出缺失，不要自行補想像中的設定。
-
-### 6. Evidence
-
-三種 evidence 必須分開記錄。
-
-#### Source-reported
-
-第三方提供的 backtest、Sharpe、win rate、CAGR、drawdown 或 profitability claims 應放在這裡。
-
-不要把來源聲稱的績效改寫成我們已驗證的結果。
-
-每一個 source-reported 的績效數字、參數、門檻、勝率、Sharpe、t-statistic、CAGR、drawdown 或其他量化主張，都必須能逐項追溯到 `## Sources` 中的明確來源（例如 stable URL/DOI、commit SHA、頁碼或表格）。若無法追溯該精確數字，就應刪除它或明確註記 provenance 缺口，不能自行補出精確值。若數字來自股票、商品、傳統期貨或其他非 crypto 樣本，必須標明該資產類別，不能當成 crypto 實證結果。
-
-對每一個 source-reported empirical claim，都必須確認引用的作者、paper title、sample / universe、methodology 與 reported result 確實屬於同一篇來源。不得僅因多篇研究主題相近，就把另一篇論文的樣本、方法、統計數字或研究發現拼接進來。若同一筆 research record 使用多篇論文，每一項主張都必須明確歸屬到各自的來源。
-
-例如：
-
-```text
-Source reports Sharpe 2.1 over the stated sample. This result has not been independently reproduced.
-```
-
-#### Independently reproduced
-
-對新發現的 Scout 研究，通常應填：
+新研究一般應寫：
 
 ```text
 Not independently reproduced.
 ```
 
-只有在我們自己的 evidence 真實存在而且可追溯時，才可以記錄為 independently reproduced。
+除非真的已完成獨立重現。
 
-#### Negative evidence
+### 策略關鍵缺口
 
-記錄任何已知失敗、相反結果、不穩定 regime、交易成本敏感度、資料問題，或其他會削弱策略假說的證據。
+研究紀錄可以保留非關鍵 provenance limitations，但正式准入策略不能留下 unresolved strategy-critical gap。
 
-若沒有找到，可寫類似：
+例如：
 
-```text
-None identified in the reviewed sources; absence is not evidence of no negative result.
-```
+- indicator length 不明；
+- threshold 不明；
+- entry timing 模糊；
+- exit rule 模糊；
+- direction 不明；
+- pyramiding / re-entry 在會影響結果時不明；
+- execution convention 會改變交易 timing；
+- 需要 unsupported data。
 
-### 7. Falsification plan
+這類候選必須先從 primary source 補齊，否則 close 為 `NOT_LOSSLESS`。
 
-說明什麼條件會推翻或明顯削弱這個假說。
+## File naming
 
-優先記錄具體項目，例如：
+使用 lowercase、hyphen-separated、無空白檔名。
 
-- required sample；
-- relevant regimes；
-- baseline / control；
-- 混合策略的 ablation tests；
-- cost sensitivity；
-- out-of-sample requirement；
-- failure metric 或 threshold；
-- 若失敗後應採取的動作。
-
-### 8. Crypto portability
-
-適用時使用以下其中一種判定：
-
-```text
-direct
-adapted
-unproven
-not applicable
-```
-
-若策略機制源自傳統資產研究，除非引用來源本身已在 crypto 市場直接驗證該機制，否則不得標示為 `direct`。應使用 `adapted` 或 `unproven`，並在 Research interpretation 明確說明這是移植假說，不是 crypto empirical evidence。
-
-並說明任何 crypto-specific portability risks，尤其是：
-
-- spot vs perpetual differences；
-- funding；
-- 24/7 session structure；
-- venue fragmentation；
-- liquidity；
-- mark / index price；
-- contract specification；
-- timestamp / candle boundaries。
-
-### 9. Limitations
-
-保留不確定性，不要自己補出不存在的確定性。
-
-建議使用明確標記，例如：
-
-```text
-underspecified
-not independently reproduced
-data gap
-unproven
-```
-
-### 10. Implementation status
-
-對新研究的外部資料，通常應明確說明尚未在我們的研究 stack 中完成 implementation。
-
-除非真的已經完成，否則不要暗示已完成 Qlib full-backtest validation、Paper、Testnet 或 Live 驗證。
-
-### 11. Adoption boundary
-
-所有新收集的外部策略都只能視為 research material。
-
-一筆紀錄存在於本 repository，**不代表**：
-
-- 已通過 Research Intake Review；
-- 已進入 Hermes Wiki Brain；
-- 已進入 production candidate pool；
-- 已完成 Qlib full-backtest validation；
-- 已成為 frozen survivor 或 leaderboard entry；
-- profitable；
-- validated alpha；
-- approved for implementation；
-- approved for paper trading；
-- approved for testnet；
-- approved for live trading。
-
-### 12. Related Wiki records
-
-若已知有相關概念或 strategy family，可連結到相關 Wiki 紀錄。當 Hermes Wiki Brain 中存在穩定頁面時，可使用 Wiki-style link，例如：
-
-```markdown
-[[quant/leakage-safe-validation-purging-embargo-cpcv-2026-08-27]]
-```
-
-不要自行捏造不存在的 Wiki link。
-
-### 13. Sources
-
-列出這筆紀錄實際使用的所有公開來源。
-
----
-
-## 檔案命名
-
-使用全小寫、hyphen-separated、無空格的 filename。
-
-具體 research capture 建議格式：
+建議：
 
 ```text
 <strategy-or-topic-slug>-<YYYY-MM-DD>.md
 ```
 
-例如：
+不要使用 `latest`、`final`、`new` 這類模糊 suffix。
+
+## Downstream 邊界
+
+這個 repo 只負責：
+
+> **research normalization + HB_READY admission**
+
+目前預期的 downstream：
 
 ```text
-bitcoin-negative-funding-contrarian-reversal-2026-08-31.md
-volatility-compression-volume-breakout-2026-08-31.md
-cross-sectional-crypto-momentum-2026-08-31.md
+alpha-strategy-research/main
+        │
+        ├── thin deterministic translation → Hummingbot Controller/config
+        │                                   → Hummingbot backtest
+        │
+        └── thin deterministic translation → Qlib signal/adapter
+                                            → Qlib backtest
 ```
 
-避免使用含糊 suffix，例如：
+兩個 engine 必須吃同一份 canonical strategy semantics。
 
-```text
-latest
-final
-new
-v2-final-final
-```
+Downstream translator 可以換格式，但不可以重新解讀或補創：
 
-除非該文件本身就是版本化 specification。
+- indicator / parameter；
+- timing；
+- entry / exit；
+- sizing；
+- pyramiding；
+- cooldown / re-entry；
+- execution semantics。
 
----
+Qlib 的可表達範圍比 Hummingbot 大，但本 repo 現在故意只收較嚴格的 Hummingbot-lossless subset。
 
-## Research Scout 研究規則
+**目前 README 不宣稱 repo → Hummingbot/Qlib 的自動執行 bridge 已經啟用。** Backtest dispatch、result reconciliation、survivor promotion、Testnet、Live 都屬其他流程。
 
-1. **搜尋 alpha，不是搜尋行銷績效。** 高報酬聲稱本身不是 alpha thesis。
-2. **單一策略與混合策略都允許。** 保留真正有意義的元件結構。
-3. **Push 前先標準化。** 依 Scout operating mode 解析 current strategy-research schema：GitHub-only Scout 直接使用本 README；明確允許 local access 的 Scout 才可使用 current canonical Wiki Brain specification。
-4. **保留 provenance。** 所有外部主張都必須可以追溯到來源。
-5. **不要宣稱不存在的獨立驗證。**
-6. **不要偷偷補完缺失資訊。** 缺口必須明確標示。
-7. **不要不必要地複製大量 source code。** 優先使用標準化邏輯加 source references。
-8. **不要把風險管理誤認為 alpha。** Stops、sizing、leverage、DCA、grid、martingale 等規則應與 predictive signal 分開辨識。
-9. **不要把複雜度誤認為品質。** 多指標組合必須有一致的 thesis，而且在正式測試前都仍然是 unvalidated。
-10. **不要寫入 downstream systems。** 將標準化 research artifact push 到本 repository，由 ChatGPT 執行 Research Intake Review；若 PASS / PASS-WITH-CAVEAT，同一個 decision 產生 Hermes Wiki Brain record 與一筆精確、idempotent 的 preparation-backlog entry；之後由 host-only preparation 將 execution-ready entry promotion 至 production candidate pool，Qlib、Paper、Testnet、Live stages 另行 gated 處理。
+舊的 Research Intake Review → Wiki ingestion → preparation backlog → Qlib-first 自動流程，已經不是目前 admission contract，不應從歷史 commit 推定仍在使用。
 
----
+## Public repo hygiene
 
-## Public repository 衛生規則
+這是 public repository。
 
-這是一個 public repository。只可以使用公開研究材料與 public-safe 的標準化紀錄。
+不得 commit：
 
-不要 commit：
+- credentials、tokens、API keys、secrets；
+- private account / wallet / portfolio；
+- private chats；
+- paid/private research；
+- 本機 secrets 或 private Hermes config；
+- 不適合再散布的 copyrighted source material。
 
-- API keys、tokens、credentials 或 secrets；
-- 私人帳戶、wallet 或 portfolio 資訊；
-- private Telegram / Discord / paid-source content；
-- Hermes private configuration；
-- local-machine secrets；
-- 無合法再散布權的 copyrighted source material。
+應以 normalize + cite 的方式保存策略，不要直接大量複製 source passages。
 
-若再散布權不明確，應引用來源並標準化策略想法，而不是大量複製原始作品。
+## 核心原則
 
----
+這個 repo 應保持簡單：
 
-## Push workflow
+> **只要 strategy record 在 `main`，downstream 就可以信任它已通過目前 LOSSLESS HB_READY source-semantics admission。**
 
-任何 Scout 都可以使用本機 GitHub CLI / Git tooling 更新本 repository。
-
-每一次 research run：
-
-1. 閱讀本 README。
-2. 從公開外部來源搜尋值得研究的 alpha candidates。
-3. 依 Scout operating mode 解析 strategy-record schema：GitHub-only Scout 直接使用本 README；明確允許 local access 的 Scout 才可解析 current canonical Wiki Brain specification，再依 resolved schema 將每一個值得保留的 candidate 標準化。
-4. 保留 source provenance，並把所有第三方結果標示為 source-reported。
-5. Commit 產生的 Markdown record(s)。
-6. Push 到本 repository。
-7. 到此停止。ChatGPT 會另外進行 Research Intake Review；PASS / PASS-WITH-CAVEAT decision 會產生 Hermes Wiki Brain record 與一筆精確、idempotent 的 preparation-backlog entry 兩個 sibling outputs。Scout 不得寫入這兩個 output、production candidate pool，也不得寫入後續 Qlib、Paper、Testnet 或 Live stage。
-
-目標很簡單：
-
-> **Scout output 應該直接等於 Wiki Brain-ready input。**
-
-如此可以降低 Antigravity、ChatGPT、Hermes 與 MiMo 之間重複理解、重複摘要與不必要的 token 消耗。
-
----
-
-## Scheduled Research Scouts
-
-Scheduled research 刻意改成**低頻率、低產出**，讓 downstream intake／backtest pipeline 有時間消化既有 pool，同時降低不必要的 Git write contention。
-
-目前啟用的 cadence：
-
-- **Hermes Quant Research Scout：**每 4 小時一次，Asia/Taipei `01:15 / 05:15 / 09:15 / 13:15 / 17:15 / 21:15`。
-- **ChatGPT TradingView Strategy Scout：**每 4 小時一次，Asia/Taipei `03:00 / 07:00 / 11:00 / 15:00 / 19:00 / 23:00`。
-- **Antigravity Alpha Scout：**scheduled research 停用。
-- **MiMo Desktop Alpha Strategy Scout：**scheduled research 停用。
-
-兩個啟用中的 writer 刻意錯開。已停用的 Antigravity／MiMo 不作自動 fallback；未來若要重新啟用，必須先有明確 operating decision，並先更新本文件再排程。
-
-每一次 scheduled run：
-
-1. 研究前先同步並檢查最新的 `origin/main`。不得覆蓋或隨意改寫其他 Scout 已有的 artifact。
-2. 每次都完整閱讀本 README 以掌握 workflow contract。GitHub-only Scout 只使用 README 宣告的 schema 與必要結構，**不得**存取 Hermes Wiki Brain 或其他 local dependency；明確允許 local access 的 Scout 才可另外解析、讀取目前 canonical 的 versioned Wiki Brain strategy-research specification。
-3. 從公開且可追溯的來源（GitHub / FMZ / TradingView / papers / blogs / public research；TradingView 僅限公開、可追溯的 strategy/idea/script/research URL 並須保留 stable URL 與 as-of date，private/paid 不可用）搜尋新的 alpha 策略或可被證偽的 alpha 假說。建立任何 Markdown 紀錄前，必須直接閱讀 primary source 本身（論文／全文、官方研究，或精確的公開 implementation/code path）。搜尋結果摘要、snippet、二手摘要與模型生成摘要只能作為 discovery aid，不得用來補寫策略規則或 empirical claim。
-4. 建立新檔案前，先檢查 repository 中既有紀錄與來源。Scout dedup：同 canonical source identity + 實質相同的 normalized rule => 不得新建 artifact；同 source 但 hypothesis/signal/horizon/mechanism 實質不同則可獨立（僅當核心假說在 mechanism、signal construction、universe/market type、horizon/regime、material data dependency 任一處實質不同時）。Exact duplicate、只有措辭不同的 paraphrase、或實質相同的 capture 都不應產生新 artifact。
-5. 每輪預設**最多 1 筆**新策略紀錄。**0 筆完全是有效且成功的結果，不得為了配額硬湊候選。** 只有當第 2 或第 3 個候選在 dedup 判準下彼此明確獨立，而且每一筆都經過直接 primary-source verification 並各自 source-complete 時，才允許例外產出。3 筆仍是絕對上限，不是目標。
-6. 若策略 thesis 本身依賴多個元件，必須保留 hybrid/composite 結構，不要只留下最顯眼的一個 indicator。
-7. 若 strategy identity、signal semantics、causal timing、required data、provenance 或 public-use rights 仍有重大不確定性，不要猜。這次直接略過該 candidate。凡 primary source 未明確指定的 threshold、entry/exit trigger、execution timestamp 或 fill model、fee/slippage assumption、capacity claim、universe/liquidity filter、crypto-porting rule、position-sizing choice 或其他 operational rule，都必須標成 `research-proposed`；凡由 Scout 自行設定的 acceptance/failure/falsification cutoff，都必須標成 `research-defined falsification threshold`。若任何重大欄位無法明確判定為 source-reported 或 research-proposed，直接略過該 candidate。
-8. 每一筆輸出的 artifact 都必須符合 current canonical strategy-research schema，並維持 `research-only`、`not-implemented`、`not-approved` 邊界。Commit 前必須 read back 該 artifact，確認上述 operational fields 的 source-vs-research 標籤正確；不得默默補完來源本身 underspecified 的缺口。
-9. 只 commit 本次刻意建立或修正的 artifact。若沒有 candidate 通過品質門檻，不得建立 empty commit。
-10. 明確 push 並確認 remote 已包含該 commit 後停止。不得 force-push；若研究期間其他 Scout 已先推進 `origin/main` 而造成 non-fast-forward，僅讓本輪 fail closed，下一輪再從新的 remote head 重新開始。不得寫入 Hermes Wiki Brain、`/results/_handoff/candidates.json`、Qlib runtime、Paper、Testnet 或 Live workflow。
-11. 若 **active isolated run worktree 本身**出現 unrelated dirt、merge/rebase conflict、repository sync failure、source/provenance failure、secret/public-safety 問題或 push failure，必須 fail closed。Separate coordinator checkout 的 dirt 本身不是 blocker，也不得被 stage、清理或帶入本輪。回報真正的 block，不得另外建立 fallback artifact。
-
-Scheduled Scouts 與 ChatGPT Research Intake Review 是刻意分離的兩個流程。Scout 成功 push 只代表 research artifact 進入公開 staging pool，**不代表**已通過 Research Intake Review、已進入 Hermes Wiki Brain 或 production candidate pool、已完成 Qlib validation，或已進入 Paper、Testnet、Live。
-
-**任何 Scout 都不得直接 promote 或寫入任何 downstream output。** Hermes Wiki Brain ingestion 與 production candidate-pool handoff 僅透過 ChatGPT Research Intake Review 進行；Qlib、Paper、Testnet、Live 也不由 Scout 直接寫入。
+這就是本 repo 現在的用途。
