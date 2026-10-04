@@ -3,11 +3,11 @@
 <!-- AUTO-RESEARCH-POOL-STATUS:START -->
 ## 🔬 Current Research Pool
 
-**Strategy research records: 1,132**  
-Intake accepted: **388**  
-Pending Intake Review: **499**  
-Remediation backlog: **219**  
-Last review: `2026-10-03 15:08 (UTC+8)`
+**Strategy research records: 0**  
+Intake accepted: **0**  
+Pending Intake Review: **0**  
+Remediation backlog: **0**  
+Last reset: `2026-10-04 (UTC+8)`
 <!-- AUTO-RESEARCH-POOL-STATUS:END -->
 
 **English** | [繁體中文](README.zh-TW.md)
