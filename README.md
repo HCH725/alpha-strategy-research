@@ -2,6 +2,10 @@
 
 **English** | [繁體中文](README.zh-TW.md)
 
+## 📊 HB_READY Strategy Pool
+
+**Admitted strategies on main: 3**
+
 Public canonical strategy-research repository for strategies that have passed the current **LOSSLESS HB_READY** GitHub admission gate.
 
 ## Current contract
