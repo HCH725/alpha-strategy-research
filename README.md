@@ -4,7 +4,7 @@
 
 ## 📊 HB_READY Strategy Pool
 
-**Admitted strategies on main: 3**
+**Admitted strategies on main: 4**
 
 Public canonical strategy-research repository for strategies that have passed the current **LOSSLESS HB_READY** GitHub admission gate.
 
