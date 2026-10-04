@@ -2,6 +2,71 @@
 
 [English](README.md) | **繁體中文**
 
+
+## 目前准入規則 — LOSSLESS HB_READY（最高優先）
+
+自 **2026-10-05（UTC+8）** 起，本 repo 已重置並重新定位。若下方舊文件內容與本節衝突，**以本節為準**。
+
+`main` 不再是寬鬆的研究暫存池，而是已經通過 GitHub PR Review 的 **LOSSLESS HB_READY canonical strategy pool**。目前鎖定的 Hummingbot baseline：
+
+- Hummingbot package：`20260920`
+- Hummingbot VERSION：`dev-2.17.0`
+
+因此，策略只要存在於 `main`，就代表它的來源規則已完整到足以讓目前 Hummingbot backtester **1:1、無近似** 表達；同一份 canonical semantics 也應可供 Qlib 後續轉譯使用。Downstream 可以換格式，但不得重新解讀或補創策略規則。
+
+### 准入流程
+
+```text
+公開 primary source
+        ↓
+ChatGPT / Hermes Scout
+        ↓
+research/<scout>-<slug>-<date> branch
+        ↓
+GitHub PR
+        ↓
+OpenCode LOSSLESS HB_READY Review
+        ├─ 缺的是 source 可查證事實 → 自動補正同一 PR → 再 review
+        ├─ HB_READY → squash merge
+        └─ NOT_LOSSLESS / source 本身不足 → close PR
+        ↓
+main = HB_READY strategy pool
+```
+
+核心規則：
+
+1. Scout **不得再把策略直接 push 到 `main`**；每輪最多建立一個策略 PR。
+2. 自動策略 branch 必須以 `research/` 開頭，且 PR 只能新增一筆 root-level strategy Markdown，不得夾帶無關修改。
+3. GitHub Review 就是 admission gate；merge 後不再另建一個 validated strategy repo，也不再做第二次語意適用性審查。
+4. Reviewer 可以自動補正，但只能補 primary source、公開 source code/Pine、immutable GitHub source、paper methods/table/figure 明確存在的事實。
+5. 不得自己猜參數、挑版本、增加 stop/TP/cooldown、改 execution timing，或刪掉不相容依賴來硬湊 HB_READY。
+6. 若 source 本身無法補齊 lossless 規則，就直接 close PR，不留下永久 REQUEST_CHANGES。
+7. README、設定或其他 maintenance PR 不屬於 strategy admission，不由 HB_READY reviewer 自動 merge。
+
+完整規則見 [`.github/HB_READY_REVIEW.md`](.github/HB_READY_REVIEW.md)。
+
+### HB_READY 硬邊界
+
+每一筆 merge 的策略都必須符合：
+
+- single-pair；不接受 cross-sectional、pair spread、shared portfolio capital、multi-pair state；
+- decision timeframe 僅 `1h / 4h / 1d`；
+- signal 核心只使用 OHLCV 與 deterministic candle-derived indicators；
+- formula、indicator variant、source price、lookback、smoothing、threshold、comparison/state logic 都要明確；
+- long/short 規則明確，或明確關閉其中一側；
+- entry / exit / SL / TP / trailing / time limit 等適用語意完整，未使用者必須明確為 none/disabled；
+- 符合 completed-bar decision + same-bar-close execution；
+- sizing、pyramiding、same-side concurrency、cooldown/re-entry、fixed-vs-compounding 明確或可證明不影響交易序列；
+- 不依賴目前 backtester 無法 lossless 重現的 funding、OI、mark/index、L2/order book、aggressor feed、liquidation、on-chain、options/Greeks、sentiment/news、macro、cross-venue、maker/taker asymmetry、queue、partial fill、funding PnL、margin/liquidation 或 leverage effect；
+- warmup lookback 可推導，且不得 repaint / look-ahead / future reference。
+
+只要有任何 material approximation，就屬於 **NOT_LOSSLESS**，不得 merge。
+
+HB_READY 只代表「策略語意可無損回測」，**不代表獲利、survivor、Paper/Testnet/Live 核准或交易授權**。
+
+> 下方若仍出現 direct Scout push、舊四狀態 Research Intake Review、preparation backlog candidateization、Qlib-first pipeline 等內容，皆屬歷史文件，不再是目前 admission contract；相關舊排程仍維持暫停，除非之後另行重設並啟用。
+
+
 這是一個公開的策略研究暫存 repository，用來把外部 alpha 策略研究整理成可供 Research Intake Review 與後續 sibling outputs 使用的標準化格式。
 
 ## 用途
