@@ -12,6 +12,71 @@ Last reset: `2026-10-04 (UTC+8)`
 
 **English** | [繁體中文](README.zh-TW.md)
 
+
+## Current admission contract — LOSSLESS HB_READY (authoritative)
+
+Effective **2026-10-05 (UTC+8)**, this repository has been reset and repurposed. The current contract below **supersedes legacy workflow text later in this README** where the two conflict.
+
+`main` is no longer a broad research staging area. It is the canonical pool of strategy research records that have already passed GitHub PR review for **LOSSLESS HB_READY** under the pinned Hummingbot baseline:
+
+- Hummingbot package: `20260920`
+- Hummingbot VERSION: `dev-2.17.0`
+
+A strategy record on `main` therefore means: **its source strategy is sufficiently complete and can be represented 1:1 by the pinned Hummingbot backtester without approximation.** The same canonical strategy semantics are intended to be reusable by Qlib; downstream engines may translate format, but may not reinterpret or invent strategy rules.
+
+### Admission flow
+
+```text
+public primary source
+        ↓
+ChatGPT / Hermes Scout
+        ↓
+research/<scout>-<slug>-<date> branch
+        ↓
+GitHub pull request
+        ↓
+OpenCode LOSSLESS HB_READY review
+        ├─ source-backed missing fact found → repair same PR branch → re-review
+        ├─ HB_READY → squash merge
+        └─ NOT_LOSSLESS / source underspecified → close PR
+        ↓
+main = HB_READY strategy pool
+```
+
+Rules:
+
+1. Scheduled Scouts **must not push strategy records directly to `main`**. Each run may open at most one strategy PR.
+2. Automated strategy branches must begin with `research/` and contain exactly one new root-level strategy Markdown record with no unrelated changes.
+3. GitHub review is the admission gate. There is no separate validated-strategy repository and no second semantic suitability gate after merge.
+4. Review may auto-remediate only facts explicitly recoverable from a primary source, public source code/Pine script, immutable GitHub source, or paper methods/tables/figures.
+5. Review must never invent parameters, choose among plausible variants, add risk rules, alter execution timing, or remove a material dependency merely to make a strategy pass.
+6. If the source itself cannot support a complete lossless rule, the PR is closed rather than left indefinitely in REQUEST_CHANGES.
+7. Maintenance/documentation PRs are not strategy-admission PRs and are not auto-merged by the HB_READY reviewer.
+
+The detailed reviewer contract is in [`.github/HB_READY_REVIEW.md`](.github/HB_READY_REVIEW.md).
+
+### HB_READY hard boundary
+
+Every merged strategy must satisfy all applicable requirements:
+
+- single-pair strategy; no cross-sectional ranking, pair spread, shared portfolio capital, or multi-pair state;
+- exactly one decision timeframe: `1h`, `4h`, or `1d`;
+- core signal uses OHLCV and deterministic candle-derived indicators only;
+- exact formulas, indicator variants, source prices, lookbacks, smoothing, thresholds, comparison logic, and state transitions;
+- explicit long/short rules, or one side explicitly disabled;
+- exact entry and exit semantics, including explicit none/disabled values where applicable;
+- completed-bar decision + same-bar-close execution compatibility;
+- explicit or provably irrelevant sizing, pyramiding, max same-side concurrency, cooldown/re-entry, and fixed-vs-compounding semantics;
+- no strategy edge that materially depends on funding, OI, mark/index, L2/order book, aggressor feed, liquidation feed, on-chain, options/Greeks, news/sentiment, macro, cross-venue state, maker/taker asymmetry, queue position, partial fills, funding PnL, margin/liquidation mechanics, or unsupported leverage effects;
+- all warmup lookbacks known and no repainting/look-ahead/future reference.
+
+Any material approximation means **NOT_LOSSLESS** and the strategy must not be merged.
+
+This repository still represents **research-only** material. HB_READY means semantic/backtest expressibility, not profitability, survivor status, Paper/Testnet/Live approval, or trading authorization.
+
+> Legacy references below to direct Scout pushes, the old four-state Research Intake Review, automatic preparation-backlog candidateization, or the former Qlib-first production flow are historical documentation and are **not the current admission contract**. Those scheduled paths remain paused unless explicitly redesigned and re-enabled.
+
+
 Public staging repository for external alpha-strategy research normalized for Research Intake Review and its downstream sibling outputs.
 
 The repository-home research-pool summary is managed by the existing Research Intake Review control plane from canonical review state plus current `origin/main`. It is observability-only and does not change Intake decisions, candidate eligibility, Qlib, or survivor promotion.
