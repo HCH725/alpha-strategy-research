@@ -148,14 +148,19 @@ Automated strategy PRs must not remain indefinitely in REQUEST_CHANGES.
 
 ## Downstream invariant
 
-Once a strategy is merged, downstream Hummingbot and Qlib preparation may **translate format only**. They must not reinterpret or invent:
+HB_READY admission remains a source-semantics gate: the source strategy's core signal, causal logic, timing, direction, entries/exits and source-declared position behavior must be reconstructed without material approximation.
 
-- indicators/parameters;
-- signal timing;
-- entries/exits;
-- sizing;
-- pyramiding;
-- cooldown/re-entry;
-- execution semantics.
+After admission, the performance-research workflow applies one explicit **house execution overlay** to every strategy:
 
-There is no separate validated-strategy repository or second semantic suitability gate after merge.
+- Base Order = 6% of initial capital;
+- Safety Order 1 = 6%;
+- Safety Order 2 = 6%;
+- Isolated margin;
+- 3× and 5× leverage tested separately;
+- DCA spacing and strategy parameters are research-defined before final OOS evaluation.
+
+This overlay is intentionally not source-native semantics and must never be presented as such. It is the standardized execution layer used to compare HB_READY strategies under the current backtest baseline.
+
+Hummingbot is the canonical benchmark engine. Qlib may be used for large-scale screening only after the two engines demonstrate event-level parity on identical data, strategy rules, parameters, DCA overlay, capital and cost assumptions. Matching only final performance metrics is insufficient: signal time, entry/exit time, direction, price, position size, Safety Orders and close transitions must match trade by trade.
+
+There is no second semantic suitability gate after merge. A future Survivor Repo is a performance-promotion output, not another HB_READY admission layer.
