@@ -6,6 +6,18 @@
 
 **Admitted strategies on main: 4**
 
+## 📌 Current Backtest Baseline
+
+**v0.1 — 2026-10-05**
+
+- Universe: `BTCUSDT`, `ETHUSDT`, `BNBUSDT`, `SOLUSDT`, `XRPUSDT`, `DOGEUSDT`, `LINKUSDT`
+- Timeframes: `1h` / `4h` / `1d`
+- Per-strategy capital: Base Order `6%` + Safety Order `6%` + Safety Order `6%` = max `18%`
+- Futures setup: Isolated; test both `3×` and `5×`; single-strategy backtests do not compound
+- Research variables: strategy parameters and DCA spacing; keep the strategy skeleton fixed
+- First-pass hard filters: `ROI > 0` and `Sharpe ≥ 1.0`
+- [Open the full visual baseline →](docs/hb-backtest-baseline-v0.1.html)
+
 Public canonical strategy-research repository for strategies that have passed the current **LOSSLESS HB_READY** GitHub admission gate.
 
 ## Current contract
