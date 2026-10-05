@@ -125,7 +125,10 @@ When the current immutable PR head satisfies every gate:
 
 1. submit a GitHub review comment beginning `HB_READY: PASS`;
 2. summarize the source-backed evidence;
-3. squash-merge using the exact reviewed head SHA.
+3. squash-merge using the exact reviewed head SHA;
+4. after the merge succeeds, re-read current `main`, count root-level strategy Markdown records (exclude `README.md` and `README.zh-TW.md`), and update only the `<!-- HB_READY_POOL_COUNT -->` line in `README.md` to that exact count.
+
+The pool-count synchronization is post-merge bookkeeping only. It must never affect HB_READY admission, alter a strategy record, or create a second review/control path.
 
 ### HB_READY: AUTO_REMEDIATED
 
