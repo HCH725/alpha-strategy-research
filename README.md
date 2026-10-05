@@ -28,7 +28,7 @@ Public canonical strategy-research repository for strategies that have passed th
 
 ## Current contract
 
-Effective **2026-10-05 (UTC+8)**:
+Effective **2026-10-06 (UTC+8)**:
 
 - `main` is the canonical pool of admitted strategy records.
 - A root-level strategy Markdown record on `main` means it has passed GitHub review for **LOSSLESS HB_READY** under the current pinned Hummingbot semantics.
@@ -57,7 +57,7 @@ This repository is intentionally narrow.
 
 A strategy record on `main` means:
 
-> The source strategy is complete enough, causal enough, and compatible enough to be represented by the pinned Hummingbot backtester **1:1 without material approximation**.
+> The source strategy's core signal and causal trade-event semantics are complete enough to be reconstructed without material approximation and evaluated under the pinned Hummingbot backtester with the same explicitly labeled house overlay.
 
 It does **not** mean:
 
@@ -107,7 +107,7 @@ Every admitted strategy must satisfy all applicable requirements below.
 ### 1. Market structure
 
 - one trading pair per run;
-- spot or perpetual applicability must be explicit or deterministically inferable from the primary source;
+- preserve source market/contract identity when it changes signal data, bars, timing, direction, or source applicability; otherwise, the house overlay may choose an explicitly labeled research market;
 - no cross-sectional ranking;
 - no pair-spread strategy;
 - no shared portfolio-capital logic across symbols;
@@ -202,31 +202,30 @@ Never approximate next-open with close.
 
 ### 8. Position / re-entry / gating
 
-Where material, the source must define or make provably irrelevant:
+The source must define or make provably irrelevant any behavior that can change the trade-event sequence, timing, direction, or exits:
 
-- sizing behavior;
-- fixed vs compounding sizing;
 - pyramiding / repeated entry;
 - maximum same-side concurrency;
 - cooldown;
-- re-entry behavior.
+- re-entry behavior;
+- position-aware state used by later signals or exits.
 
-If ambiguity can change trade count, timing, direction, or amount, the strategy is not LOSSLESS.
+Source sizing and fixed-vs-compounding behavior may be replaced by the house overlay only when that replacement is event-neutral. The overlay must not invent missing signal, entry, exit, or re-entry rules. If unresolved behavior can change the trade-event sequence, timing, direction, or exits, the strategy is not LOSSLESS.
 
 ### 9. Cost / engine-model compatibility
 
-The strategy edge must not depend materially on behavior the current backtester cannot model losslessly, including:
+Hard-gate behavior the strategy edge or event logic materially depends on when the current backtester cannot model it losslessly, including:
 
 - maker/taker asymmetry;
 - spread capture;
 - queue priority;
 - partial fills;
 - unsupported slippage / impact;
-- funding PnL;
-- liquidation / margin mechanics;
-- leverage effects not reproduced by the backtester.
+- funding-dependent signal or event logic;
+- liquidation / margin mechanics used by the strategy;
+- leverage effects that change signal or trade events.
 
-If the source does not state a cost model and costs are not part of the signal or trade-sequence semantics, record the gap explicitly. A later benchmark fee is a runtime assumption, not a source-reported strategy rule.
+Pure PnL/accounting costs that do not materially affect the strategy edge or event logic may be normalized using pinned house assumptions; record those assumptions explicitly and do not present them as source-reported rules. The overlay must not substitute a different price series when source contract identity is material.
 
 ### 10. Warmup / causality
 
@@ -240,7 +239,7 @@ If the source does not state a cost model and costs are not part of the signal o
 
 ### Admission rule
 
-If **any material strategy rule requires approximation, semantic invention, or unresolved interpretation**, the strategy is `NOT_LOSSLESS` and must not be merged.
+If any material source-core signal or trade-event rule requires approximation, semantic invention, or unresolved interpretation, the strategy is `NOT_LOSSLESS` and must not be merged. House overlays may replace only event-neutral sizing, capital, or accounting assumptions; they must never invent missing signal, entry, exit, or re-entry rules, or substitute a different price series when contract identity is material.
 
 ## GitHub review and auto-remediation
 
@@ -520,11 +519,11 @@ Formal Survivor
 later Testnet / live qualification
 ```
 
-Hummingbot is the canonical backtest/execution semantic benchmark. Qlib is the mass-screening engine only after the two engines have demonstrated event-level parity on the same data, strategy, parameters, DCA overlay, capital setup and costs.
+Hummingbot is the canonical backtest/execution semantic benchmark. Qlib is the mass-screening engine only after the two engines have demonstrated event-level parity on the same source core strategy, data, house overlay, and pinned assumptions—not source-native sizing.
 
-HB_READY preserves the source strategy's core signal and causal semantics. The standardized DCA/capital/leverage layer is an explicit **research execution overlay** applied downstream to every strategy; it must not be misrepresented as source-native behavior.
+HB_READY preserves the source strategy's core signal and causal trade-event semantics. The standardized DCA/capital/leverage layer is an explicit **research execution overlay** applied downstream to every strategy; it may replace event-neutral source sizing but must not invent missing signal, entry, exit, or re-entry rules, substitute a different price series when contract identity is material, or be misrepresented as source-native behavior.
 
-For parity, matching final ROI or Sharpe is not sufficient. Signal time, entry/exit time, direction, price, position size, Safety Orders and close transitions must agree trade by trade.
+For parity, matching final ROI or Sharpe is not sufficient. Signal time, entry/exit time, direction, price, position size under the same house overlay, Safety Orders and close transitions must agree trade by trade.
 
 The automatic repo-to-Hummingbot/Qlib execution bridge is **not defined by this repository README as already active**. The new Survivor Repo is also not created yet. Formal large-scale screening resumes only after Hummingbot ↔ Qlib parity is proven.
 
