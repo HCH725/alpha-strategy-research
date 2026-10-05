@@ -2,6 +2,24 @@
 
 [English](README.md) | **繁體中文**
 
+## 📌 目前回測基準
+
+**v1.0 — 2026-10-05**
+
+- Universe：`BTCUSDT`、`ETHUSDT`、`BNBUSDT`、`SOLUSDT`、`XRPUSDT`、`DOGEUSDT`、`LINKUSDT`
+- Timeframes：`1h` / `4h` / `1d`
+- 基礎矩陣：`7 幣 × 3 timeframe × 2 槓桿 = 42 cells`，尚未計入策略與 DCA 參數擴張
+- 全量回測：每個 symbol × timeframe 使用當次 campaign 可取得的完整歷史 Kline，不 cherry-pick 行情
+- House execution overlay：所有績效研究策略都使用 Base Order `6%` + Safety Order `6%` + Safety Order `6%`，單策略最大 `18%`
+- DCA 間距與策略參數由 Hermes 研究決定；最終 OOS 不得拿來回頭調參數
+- Futures：Binance USDT-M perpetual、Isolated、分別測 `3×` / `5×`，單策略階段不複利
+- 成本：鎖定 Binance 一般 non-VIP USDⓈ-M 手續費，Funding 使用歷史實際值
+- Engine：Hummingbot 是 canonical benchmark；Qlib 只有在逐筆事件對齊後才負責大量海選
+- Promotion：Qlib 大量海選後，只有 survivor candidates 才交給 Hummingbot 逐筆復驗
+- 第一層門檻維持 `ROI > 0`、`Sharpe ≥ 1.0`；績效統計語意以 Hummingbot benchmark 為準
+- [Backtest Baseline v1.0 →](docs/hb-backtest-baseline-v1.0.md)
+- [歷史視覺版 v0.1 →](docs/hb-backtest-baseline-v0.1.html)
+
 這是一個公開的 canonical strategy-research repository，只保存已通過目前 **LOSSLESS HB_READY** GitHub 准入審查的策略研究紀錄。
 
 ## 目前規則
@@ -479,31 +497,36 @@ Not independently reproduced.
 
 ```text
 alpha-strategy-research/main
-        │
-        ├── thin deterministic translation → Hummingbot Controller/config
-        │                                   → Hummingbot backtest
-        │
-        └── thin deterministic translation → Qlib signal/adapter
-                                            → Qlib backtest
+        ↓
+HB_READY core strategy semantics
+        ↓
+標準化 research execution overlay
+(DCA: 6% + 6% + 6%、Isolated、3× / 5×)
+        ↓
+Qlib 大規模海選
+        ↓
+survivor candidates
+        ↓
+未來的新 Survivor Repo
+        ↓
+Hummingbot 復驗
+        ↓
+逐筆 event-level parity
+        ↓
+Formal Survivor
+        ↓
+後續 Testnet / live qualification
 ```
 
-兩個 engine 必須吃同一份 canonical strategy semantics。
+Hummingbot 是 canonical backtest / execution semantics benchmark。Qlib 只有在兩個 engine 已經針對同一份 data、strategy、parameters、DCA overlay、capital setup 與 costs 證明逐筆事件一致後，才作為大量海選引擎。
 
-Downstream translator 可以換格式，但不可以重新解讀或補創：
+HB_READY 保留來源策略的 core signal 與 causal semantics。所有策略都會在下游績效研究階段套上我們明確的 **DCA / capital / leverage research execution overlay**；這層不能被誤寫成來源策略原生的行為。
 
-- indicator / parameter；
-- timing；
-- entry / exit；
-- sizing；
-- pyramiding；
-- cooldown / re-entry；
-- execution semantics。
+Parity 不是看最終 ROI 或 Sharpe 接近就算通過。Signal、entry / exit 時間、方向、價格、position size、Safety Orders 與 close transition 都必須逐筆一致。
 
-Qlib 的可表達範圍比 Hummingbot 大，但本 repo 現在故意只收較嚴格的 Hummingbot-lossless subset。
+**目前 README 不宣稱 repo → Hummingbot/Qlib 的自動執行 bridge 已經啟用。** 新的 Survivor Repo 也尚未建立；正式大量海選需等 Hummingbot ↔ Qlib parity 完成後才恢復。
 
-**目前 README 不宣稱 repo → Hummingbot/Qlib 的自動執行 bridge 已經啟用。** Backtest dispatch、result reconciliation、survivor promotion、Testnet、Live 都屬其他流程。
-
-舊的 Research Intake Review → Wiki ingestion → preparation backlog → Qlib-first 自動流程，已經不是目前 admission contract，不應從歷史 commit 推定仍在使用。
+舊的 Research Intake Review → Wiki ingestion → preparation backlog → n8n → Qlib-first 自動流程已 deprecated，不再是目前 admission 或 execution contract。
 
 ## Public repo hygiene
 

@@ -8,16 +8,21 @@
 
 ## 📌 Current Backtest Baseline
 
-**v0.1 — 2026-10-05**
+**v1.0 — 2026-10-05**
 
 - Universe: `BTCUSDT`, `ETHUSDT`, `BNBUSDT`, `SOLUSDT`, `XRPUSDT`, `DOGEUSDT`, `LINKUSDT`
 - Timeframes: `1h` / `4h` / `1d`
+- Base matrix: `7 symbols × 3 timeframes × 2 leverage settings = 42 cells` before parameter expansion
 - Backtest scope: full available historical Kline range for each symbol × timeframe; no cherry-picked window
-- Per-strategy capital: Base Order `6%` + Safety Order `6%` + Safety Order `6%` = max `18%`
-- Futures setup: Isolated; test both `3×` and `5×`; single-strategy backtests do not compound
-- Research variables: strategy parameters and DCA spacing; keep the strategy skeleton fixed
-- First-pass hard filters: `ROI > 0` and `Sharpe ≥ 1.0`
-- [Open the full visual baseline →](docs/hb-backtest-baseline-v0.1.html)
+- House execution overlay: every performance-research strategy uses Base Order `6%` + Safety Order `6%` + Safety Order `6%` = max `18%`
+- DCA spacing and strategy parameters are research-defined by Hermes; final OOS data must not be used to retune them
+- Futures setup: Binance USDT-M perpetual, Isolated, `3×` and `5×`, single-strategy stage does not compound
+- Costs: pinned Binance non-VIP USDⓈ-M fees plus historical realized funding; no silent zero-cost assumptions
+- Engine rule: Hummingbot is canonical; Qlib is trusted for mass screening only after event-level parity
+- Promotion rule: Qlib screens at scale; only survivor candidates are later re-run in Hummingbot for trade-by-trade validation
+- First-pass hard filters remain `ROI > 0` and `Sharpe ≥ 1.0`; metric semantics must align to the Hummingbot benchmark
+- [Backtest Baseline v1.0 →](docs/hb-backtest-baseline-v1.0.md)
+- [Archived visual baseline v0.1 →](docs/hb-backtest-baseline-v0.1.html)
 
 Public canonical strategy-research repository for strategies that have passed the current **LOSSLESS HB_READY** GitHub admission gate.
 
@@ -494,31 +499,36 @@ Current intended downstream model:
 
 ```text
 alpha-strategy-research/main
-        │
-        ├── thin deterministic translation → Hummingbot Controller/config
-        │                                   → Hummingbot backtest
-        │
-        └── thin deterministic translation → Qlib signal/adapter
-                                            → Qlib backtest
+        ↓
+HB_READY core strategy semantics
+        ↓
+standardized research overlay
+(DCA: 6% + 6% + 6%, Isolated, 3× / 5×)
+        ↓
+Qlib large-scale screening
+        ↓
+survivor candidates
+        ↓
+future Survivor Repo
+        ↓
+Hummingbot re-validation
+        ↓
+event-level parity confirmed
+        ↓
+Formal Survivor
+        ↓
+later Testnet / live qualification
 ```
 
-The same canonical strategy semantics must feed both engines.
+Hummingbot is the canonical backtest/execution semantic benchmark. Qlib is the mass-screening engine only after the two engines have demonstrated event-level parity on the same data, strategy, parameters, DCA overlay, capital setup and costs.
 
-Downstream translators may change format, but must not reinterpret or invent:
+HB_READY preserves the source strategy's core signal and causal semantics. The standardized DCA/capital/leverage layer is an explicit **research execution overlay** applied downstream to every strategy; it must not be misrepresented as source-native behavior.
 
-- indicators / parameters;
-- timing;
-- entry / exit;
-- sizing;
-- pyramiding;
-- cooldown / re-entry;
-- execution semantics.
+For parity, matching final ROI or Sharpe is not sufficient. Signal time, entry/exit time, direction, price, position size, Safety Orders and close transitions must agree trade by trade.
 
-Qlib may be more expressive than Hummingbot, but strategies admitted here intentionally stay inside the stricter current Hummingbot-lossless subset.
+The automatic repo-to-Hummingbot/Qlib execution bridge is **not defined by this repository README as already active**. The new Survivor Repo is also not created yet. Formal large-scale screening resumes only after Hummingbot ↔ Qlib parity is proven.
 
-The automatic repo-to-Hummingbot/Qlib execution bridge is **not defined by this repository README as already active**. Backtest dispatch, result reconciliation, survivor promotion, Testnet, and Live execution remain separate workflows.
-
-The old Research Intake Review → Wiki ingestion → preparation backlog → Qlib-first automatic flow is no longer the current admission contract and must not be inferred from historical commits.
+The old Research Intake Review → Wiki ingestion → preparation backlog → n8n → Qlib-first automatic flow is deprecated and is not the current admission or execution contract.
 
 ## Public-repository hygiene
 
