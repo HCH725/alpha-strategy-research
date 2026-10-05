@@ -1,6 +1,6 @@
 # LOSSLESS HB_READY GitHub Review Contract
 
-Effective: 2026-10-05 (UTC+8)
+Effective: 2026-10-06 (UTC+8)
 
 This file defines the automated GitHub PR admission gate for new strategy records in `HCH725/alpha-strategy-research`.
 
@@ -8,7 +8,7 @@ This file defines the automated GitHub PR admission gate for new strategy record
 
 This review answers one question only:
 
-> Can the source strategy be represented **1:1, without approximation**, by the pinned Hummingbot backtester?
+> Can the source core strategy's signal and causal trade-event semantics be reconstructed without material approximation and evaluated by the pinned Hummingbot backtester under the same explicitly labeled house overlay?
 
 Pinned baseline:
 
@@ -35,7 +35,7 @@ Every applicable item must be explicit and source-faithful:
 
 1. **Market structure**
    - single trading pair per run;
-   - spot or perpetual applicability is explicit or deterministic;
+   - preserve source market/contract identity when it changes signal data, bars, timing, direction, or source applicability; otherwise, the house overlay may choose an explicitly labeled research market;
    - no cross-sectional ranking, pair spread, shared portfolio capital, portfolio rebalance, or multi-pair shared state;
    - spot cannot require naked shorting.
 
@@ -72,20 +72,20 @@ Every applicable item must be explicit and source-faithful:
    - next-bar-open, maker-touch/queue, or intrabar-path-dependent strategies are NOT_LOSSLESS.
 
 8. **Position / re-entry / gating**
-   - sizing behavior explicit;
-   - pyramiding / repeated-entry semantics explicit;
-   - max same-side concurrency explicit or provably irrelevant;
-   - cooldown/re-entry semantics explicit or provably irrelevant;
-   - fixed-vs-compounding behavior explicit where material.
+   - pyramiding / repeated-entry, max same-side concurrency, cooldown, re-entry, and position-aware state must be explicit or provably irrelevant whenever they can change the trade-event sequence, timing, direction, or exits;
+   - source sizing and fixed-vs-compounding behavior may be replaced by the house overlay only when event-neutral;
+   - the overlay must not invent missing signal, entry, exit, or re-entry rules.
 
 9. **Cost / engine-model compatibility**
-   - edge must not depend on maker/taker asymmetry, spread capture, queue position, partial fills, unsupported slippage/impact, funding PnL, liquidation/margin mechanics, or unsupported leverage effects.
+   - maker/taker asymmetry, spread capture, queue position, partial fills, unsupported slippage/impact, funding, margin, liquidation, or leverage are hard gates when the strategy edge or event logic materially depends on behavior the pinned backtester cannot model losslessly;
+   - pure PnL/accounting costs may be normalized using pinned house assumptions when they do not materially affect the strategy edge or event logic;
+   - the overlay must not substitute a different price series when source contract identity is material.
 
 10. **Warmup / causality**
     - all lookbacks known so warmup can be derived;
     - no repainting, future reference, negative shift, future extrema, full-sample normalization, or look-ahead leakage.
 
-Any material approximation, unresolved source interpretation, or invented rule means **NOT_LOSSLESS**.
+Any material approximation, unresolved source interpretation, or invented source-core signal or trade-event rule means **NOT_LOSSLESS**. The house overlay must never invent missing signal, entry, exit, or re-entry rules, or substitute a different price series when contract identity is material.
 
 ## Auto-remediation
 
@@ -151,7 +151,7 @@ Automated strategy PRs must not remain indefinitely in REQUEST_CHANGES.
 
 ## Downstream invariant
 
-HB_READY admission remains a source-semantics gate: the source strategy's core signal, causal logic, timing, direction, entries/exits and source-declared position behavior must be reconstructed without material approximation.
+HB_READY admission remains a source-semantics gate: the source strategy's core signal and causal trade-event semantics—including timing, direction, entries, exits, and any event-affecting position behavior—must be reconstructed without material approximation. Source sizing or fixed-vs-compounding behavior may be replaced only when event-neutral under the house overlay.
 
 After admission, the performance-research workflow applies one explicit **house execution overlay** to every strategy:
 
@@ -162,8 +162,8 @@ After admission, the performance-research workflow applies one explicit **house 
 - 3× and 5× leverage tested separately;
 - DCA spacing and strategy parameters are research-defined before final OOS evaluation.
 
-This overlay is intentionally not source-native semantics and must never be presented as such. It is the standardized execution layer used to compare HB_READY strategies under the current backtest baseline.
+This overlay is intentionally not source-native semantics and must never be presented as such. It may replace event-neutral source sizing, capital, leverage, and pure accounting assumptions, but must not invent missing signal, entry, exit, or re-entry rules or substitute a different price series when source contract identity is material.
 
-Hummingbot is the canonical benchmark engine. Qlib may be used for large-scale screening only after the two engines demonstrate event-level parity on identical data, strategy rules, parameters, DCA overlay, capital and cost assumptions. Matching only final performance metrics is insufficient: signal time, entry/exit time, direction, price, position size, Safety Orders and close transitions must match trade by trade.
+Hummingbot is the canonical benchmark engine. Qlib may be used for large-scale screening only after the two engines demonstrate event-level parity on the same source core strategy, data, house overlay, and pinned assumptions—not source-native sizing. Matching only final performance metrics is insufficient: signal time, entry/exit time, direction, price, position size under the same overlay, Safety Orders and close transitions must match trade by trade.
 
 There is no second semantic suitability gate after merge. A future Survivor Repo is a performance-promotion output, not another HB_READY admission layer.
