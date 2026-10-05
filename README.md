@@ -12,6 +12,7 @@
 
 - Universe: `BTCUSDT`, `ETHUSDT`, `BNBUSDT`, `SOLUSDT`, `XRPUSDT`, `DOGEUSDT`, `LINKUSDT`
 - Timeframes: `1h` / `4h` / `1d`
+- Backtest scope: full available historical Kline range for each symbol × timeframe; no cherry-picked window
 - Per-strategy capital: Base Order `6%` + Safety Order `6%` + Safety Order `6%` = max `18%`
 - Futures setup: Isolated; test both `3×` and `5×`; single-strategy backtests do not compound
 - Research variables: strategy parameters and DCA spacing; keep the strategy skeleton fixed
