@@ -24,7 +24,7 @@
 
 ## 目前規則
 
-自 **2026-10-05（UTC+8）** 起：
+自 **2026-10-06（UTC+8）** 起：
 
 - `main` 是正式准入後的 canonical strategy pool。
 - 只要 root-level strategy Markdown 存在於 `main`，就代表已通過目前 Hummingbot 語意下的 **LOSSLESS HB_READY** GitHub Review。
@@ -53,7 +53,7 @@
 
 策略只要存在於 `main`，代表：
 
-> 來源策略的規則已完整、因果關係明確，而且目前 pinned Hummingbot backtester 可以在**不做 material approximation** 的前提下 1:1 表達。
+> 來源策略的 core signal 與 causal trade-event semantics 已完整到可以在**不做 material approximation** 的前提下重建，並在相同、明確標示的 house overlay 下交由 pinned Hummingbot backtester 評估。
 
 這**不代表**：
 
@@ -103,7 +103,7 @@ main = canonical HB_READY strategy pool
 ### 1. 市場結構
 
 - 每次回測只處理一個 trading pair；
-- spot / perpetual 適用性必須由 primary source 明確指出，或能從來源確定判讀；
+- 當 market / contract identity 會改變 signal data、bar、timing、direction 或 source applicability 時，必須保留來源市場／合約身份；若只屬 downstream execution choice，house overlay 可以指定明確標示的 research market；
 - 不接受 cross-sectional ranking；
 - 不接受 pair spread；
 - 不接受跨 symbol 共用 portfolio capital 的策略；
@@ -198,31 +198,30 @@ same-bar close execution
 
 ### 8. Position / Re-entry / Gating
 
-只要會影響交易，都必須明確，或能證明對結果無關：
+凡是可能改變 trade-event sequence、timing、direction 或 exit 的行為，都必須由 source 明確定義，或能證明與交易事件無關：
 
-- sizing；
-- fixed vs compounding；
 - pyramiding / repeated entry；
 - max same-side concurrency；
 - cooldown；
-- re-entry。
+- re-entry；
+- 會被後續 signal / exit 使用的 position-aware state。
 
-如果模糊處可能改變 trade count、timing、direction 或 amount，就不是 LOSSLESS。
+Source sizing 與 fixed-vs-compounding 只有在被 house overlay 取代後仍完全 event-neutral 時，才可以由 house overlay 統一。Overlay 不得補創缺失的 signal、entry、exit 或 re-entry 規則。若 unresolved behavior 可能改變 trade-event sequence、timing、direction 或 exit，就不是 LOSSLESS。
 
 ### 9. Cost / Engine model 相容性
 
-策略 edge 不能 materially 依賴目前 backtester 無法 lossless 模擬的行為，例如：
+只要策略 edge 或 event logic materially 依賴目前 backtester 無法 lossless 模擬的行為，就仍是 hard gate，例如：
 
 - maker / taker asymmetry；
 - spread capture；
 - queue priority；
 - partial fills；
 - unsupported slippage / impact；
-- funding PnL；
-- liquidation / margin mechanics；
-- 目前 backtester 無法重現的 leverage effect。
+- funding-dependent signal / event logic；
+- 策略本身使用的 liquidation / margin mechanics；
+- 會改變 signal 或 trade event 的 leverage effect。
 
-如果 source 沒有說明 cost model，而且成本不是 signal 或 trade-sequence semantics 的一部分，可以明確標記 data gap。之後使用的 benchmark fee 是 runtime assumption，不得冒充 source-reported strategy rule。
+如果 fee、funding 或其他成本只影響 PnL / accounting，而不 materially 改變 strategy edge 或 event logic，可以使用 pinned house assumptions 統一計算；必須明確標示 assumption，且不得冒充 source-reported rule。當 source contract identity 對價格序列有實質影響時，overlay 不得換成另一條 price series。
 
 ### 10. Warmup / Causality
 
@@ -236,7 +235,7 @@ same-bar close execution
 
 ### 准入原則
 
-只要**任何 material strategy rule 需要 approximation、自己補創語意、或仍有 unresolved interpretation**，就是 `NOT_LOSSLESS`，不得 merge。
+只要任何 material source-core signal 或 trade-event rule 需要 approximation、自己補創語意、或仍有 unresolved interpretation，就是 `NOT_LOSSLESS`，不得 merge。House overlay 只能取代 event-neutral 的 sizing、capital 或 accounting assumptions；不得補創 signal、entry、exit、re-entry，也不得在 contract identity materially 影響價格序列時偷換另一條 price series。
 
 ## GitHub Review 與自動補正
 
@@ -518,11 +517,11 @@ Formal Survivor
 後續 Testnet / live qualification
 ```
 
-Hummingbot 是 canonical backtest / execution semantics benchmark。Qlib 只有在兩個 engine 已經針對同一份 data、strategy、parameters、DCA overlay、capital setup 與 costs 證明逐筆事件一致後，才作為大量海選引擎。
+Hummingbot 是 canonical backtest / execution semantics benchmark。Qlib 只有在兩個 engine 已經針對相同的 source core strategy、data、house overlay 與 pinned assumptions 證明逐筆事件一致後，才作為大量海選引擎；不再要求 house sizing 等於 source-native sizing。
 
-HB_READY 保留來源策略的 core signal 與 causal semantics。所有策略都會在下游績效研究階段套上我們明確的 **DCA / capital / leverage research execution overlay**；這層不能被誤寫成來源策略原生的行為。
+HB_READY 保留來源策略的 core signal 與 causal trade-event semantics。所有策略都會在下游績效研究階段套上我們明確的 **DCA / capital / leverage research execution overlay**；這層可以取代 event-neutral 的 source sizing，但不得補創 signal、entry、exit、re-entry，不得在 contract identity materially 影響價格序列時偷換另一條 price series，也不能被誤寫成來源策略原生行為。
 
-Parity 不是看最終 ROI 或 Sharpe 接近就算通過。Signal、entry / exit 時間、方向、價格、position size、Safety Orders 與 close transition 都必須逐筆一致。
+Parity 不是看最終 ROI 或 Sharpe 接近就算通過。Signal、entry / exit 時間、方向、價格、相同 house overlay 下的 position size、Safety Orders 與 close transition 都必須逐筆一致。
 
 **目前 README 不宣稱 repo → Hummingbot/Qlib 的自動執行 bridge 已經啟用。** 新的 Survivor Repo 也尚未建立；正式大量海選需等 Hummingbot ↔ Qlib parity 完成後才恢復。
 
