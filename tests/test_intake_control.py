@@ -703,30 +703,34 @@ class IntakeControlV6Test(unittest.TestCase):
         self.assertFalse(batch.get("deferred"))
 
 
-class LineageContractTextTest(unittest.TestCase):
-    """Smallest check for the optional Deep-Research challenger lineage block:
-    SKILL.md must pin the three-field preservation rule for PASS/PASS-WITH-CAVEAT
-    backlog appends, and README.md must document the block inside the existing
-    Provenance section only (not frontmatter, same strategy-research-record-v1)."""
+class LineageCompatibilityTombstoneTest(unittest.TestCase):
+    """Keep legacy challenger lineage names as inert compatibility markers only.
+
+    The old Research Intake / preparation-backlog contract is deprecated. The
+    tombstone skill preserves historical field names so old records remain
+    readable, while README.md follows the current unnumbered record structure.
+    """
 
     KEYS = ("challenger_of", "parent_family", "lineage_note")
 
-    def test_lineage_block_pinned_in_skill_and_readme(self):
+    def test_legacy_lineage_markers_are_inert_and_readme_uses_current_structure(self):
         repo = Path(__file__).resolve().parents[1]
         skill = (repo / ".agents" / "skills" / "research-intake-review"
                  / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("DEPRECATED", skill)
+        self.assertIn("compatibility tombstone", skill)
         for key in self.KEYS:
             self.assertIn(key, skill)
-        # PASS / PASS-WITH-CAVEAT backlog append must preserve the three fields
         self.assertIn("must preserve `challenger_of`, `parent_family`, and "
                       "`lineage_note` unchanged", skill)
+        self.assertIn("Do not append to the old preparation backlog", skill)
+
         readme = (repo / "README.md").read_text(encoding="utf-8")
         self.assertIn("schema: strategy-research-record-v1", readme)
-        head, prov = readme.split("### 1. Provenance", 1)
-        prov = prov.split("### 2. Economic mechanism", 1)[0]
-        for key in self.KEYS:
-            self.assertIn(f"  {key}:", prov)
-        self.assertNotIn("lineage:", head)  # never frontmatter
+        self.assertIn("## Provenance", readme)
+        self.assertIn("## Economic mechanism", readme)
+        self.assertNotIn("### 1. Provenance", readme)
+        self.assertNotIn("### 2. Economic mechanism", readme)
 
 
 if __name__ == "__main__":
