@@ -20,27 +20,28 @@
 - [Backtest Baseline v1.0 →](docs/hb-backtest-baseline-v1.0.md)
 - [歷史視覺版 v0.1 →](docs/hb-backtest-baseline-v0.1.html)
 
-這是一個公開的 canonical strategy-research repository，只保存已通過目前 **LOSSLESS HB_READY** GitHub 准入審查的策略研究紀錄。
+這是一個公開的 canonical strategy-research corpus，保存標準化且有來源依據的策略研究紀錄。**LOSSLESS HB_READY** 是每筆紀錄自己的狀態，不是保留在 `main` 的先決條件。
 
 ## 目前規則
 
 自 **2026-10-06（UTC+8）** 起：
 
-- `main` 是正式准入後的 canonical strategy pool。
-- 只要 root-level strategy Markdown 存在於 `main`，就代表已通過目前 Hummingbot 語意下的 **LOSSLESS HB_READY** GitHub Review。
+- `main` 是 canonical strategy-research corpus，不是只收 PASS 的策略池。
+- root-level strategy record 代表已正規化、具來源依據的研究；出現在 `main` 不會自動代表 HB_READY。
+- 每筆紀錄以 `hb_ready_status: PASS | NOT_LOSSLESS | NOT_ASSESSED` 標示 HB_READY 狀態，應讀取此欄位判斷。
+- 只有 `PASS` 紀錄可進入目前 Hummingbot/Qlib 績效研究下游。`NOT_LOSSLESS` 與 `NOT_ASSESSED` 仍是 `main` 上有效的研究紀錄，不得只因目前 Hummingbot 無法無損表達就丟棄。
+- 排程 Scout 先篩選 HB_READY 候選，並維持同 repo 的 `research/*` 自動准入 PR；自動 Scout PR 必須是 `PASS` 才能 merge，`NOT_LOSSLESS` 候選仍會關閉。
+- 重建或 legacy 研究紀錄走非 Scout branch，例如 `reconstruction/*` 或 `maintenance/*`，經獨立 provenance／研究審查後，即使狀態為 `NOT_LOSSLESS` 或 `NOT_ASSESSED` 也可 merge。它仍是一般 root-level strategy record，不會自動進入下游；branch 差異只區分流程，不區分內容類別。
+- 歷史 survivor/Qlib 證據自然放在一般 Provenance 與 Evidence sections，並標示為歷史證據，不得寫成目前 Hummingbot 重現。同一策略家族的 survivor 變體原則上合併為一筆策略家族紀錄，附多筆歷史證據；除非證據證明 core mechanism 有實質差異。不需要特殊 survivor 資料夾、類別或標籤。
 - 自動 Scout **不得直接把策略 push 到 `main`**。
-- 所有新策略一律先進 same-repository 的 `research/*` PR。
-- OpenCode GitHub Review 就是 admission gate。
-- 如果缺少的是 primary source 可以明確查到的事實，Reviewer 可以直接補正同一個 PR branch，再觸發重新審查。
-- 如果 source 本身不足以形成完整、無損的策略規則，PR 直接關閉。
-- 通過的策略 PR 才 squash merge 進 `main`。
-- 不另外建立 validated-strategy repo，merge 後也不再做第二次「這策略能不能給 Hummingbot」的語意適用性審查。
+- 對自動 Scout 准入而言，OpenCode GitHub Review 是 LOSSLESS HB_READY gate。若缺漏事實可由 primary source 明確查證，可在同一 PR branch 補正並重新審查；source 無法支持無損語意時，不得由此流程以 PASS merge。
+- 通過的 Scout 策略 PR 才 squash merge 進 `main`。不另建 validated-strategy repo；下游 eligibility 由 `hb_ready_status: PASS` 決定，而非只看紀錄是否在 `main`。
 
 完整 Reviewer 規則見 [`.github/HB_READY_REVIEW.md`](.github/HB_READY_REVIEW.md)。
 
 ### 目前鎖定的准入基準
 
-現行策略准入依據：
+目前自動 Scout HB_READY 准入依據：
 
 - Hummingbot package：`20260920`
 - Hummingbot VERSION：`dev-2.17.0`
@@ -49,13 +50,15 @@
 
 ## 這個 repo 代表什麼
 
-本 repo 現在刻意維持很窄的職責。
+本 repo 是標準化、具來源依據的策略研究 canonical corpus。root-level record 存在於 `main`，代表研究已按一般策略紀錄格式保存；單憑此事不代表 HB_READY。
 
-策略只要存在於 `main`，代表：
+每筆紀錄的 `hb_ready_status` 定義目前 engine expressibility：
 
-> 來源策略的 core signal 與 causal trade-event semantics 已完整到可以在**不做 material approximation** 的前提下重建，並在相同、明確標示的 house overlay 下交由 pinned Hummingbot backtester 評估。
+- `PASS`：來源策略的 core signal 與 causal trade-event semantics 可在 pinned Hummingbot 語意下無重大近似地重建；可進入目前 Hummingbot/Qlib 績效研究下游。
+- `NOT_LOSSLESS`：來源規則有重大缺漏，或與目前 Hummingbot 不相容；仍是 `main` 上有效研究，但不得進入該下游。
+- `NOT_ASSESSED`：尚未完成目前 LOSSLESS HB_READY 審查；仍是 `main` 上有效研究，但不得進入該下游。
 
-這**不代表**：
+不得只因目前 Hummingbot 無法無損表達，就丟棄非 PASS 紀錄。`PASS` **不代表**：
 
 - 策略一定獲利；
 - source-reported 績效已經被我們獨立重現；
@@ -63,42 +66,39 @@
 - 已通過 Hummingbot 或 Qlib 績效驗證；
 - 已核准 Paper、Testnet、Mainnet 或任何 live trading。
 
-所有正式准入紀錄仍維持 research-only，除非後續流程明確改變其狀態。
+除非後續流程明確改變狀態，所有紀錄仍維持 research-only。
 
 ## 目前流程
 
 ```text
 公開 primary source
         ↓
-ChatGPT / Hermes Scout
+排程 Scout（先篩選 HB_READY）
         ↓
 research/<scout>-<slug>-<YYYYMMDD-HHMM>
         ↓
-GitHub Pull Request
+自動 Scout PR review
         ↓
-OpenCode LOSSLESS HB_READY Review
-        ├─ 缺的是 source 可查證事實
-        │      ↓
-        │  補正同一 PR branch
-        │      ↓
-        │  synchronize → 重新 review
-        │
-        ├─ HB_READY: PASS
-        │      ↓
-        │  exact-head squash merge
-        │
-        └─ HB_READY: NOT_LOSSLESS
-               ↓
-             close PR
+PASS → exact-head squash merge；NOT_LOSSLESS → 關閉 Scout PR
+
+legacy／重建研究
         ↓
-main = canonical HB_READY strategy pool
+reconstruction/* 或 maintenance/* PR
+        ↓
+獨立 provenance + 研究審查
+        ↓
+一般 root-level record（PASS / NOT_LOSSLESS / NOT_ASSESSED）
+
+main = canonical strategy-research corpus
+        ↓
+目前 Hummingbot/Qlib 績效研究只取 PASS
 ```
 
-自動策略 PR 不允許永久停在 `REQUEST_CHANGES` 無人處理。
+自動 Scout 策略 PR 不允許永久停在 `REQUEST_CHANGES` 無人處理。非 Scout legacy／重建路徑採一般研究審查，不適用 Scout 自動關閉，也不會形成另一種紀錄類別。
 
 ## LOSSLESS HB_READY 硬門檻
 
-每一筆正式准入的策略，都必須符合所有適用條件。
+每一筆標記為 `hb_ready_status: PASS` 的策略紀錄，都必須符合所有適用條件。
 
 ### 1. 市場結構
 
@@ -235,11 +235,11 @@ Source sizing 與 fixed-vs-compounding 只有在被 house overlay 取代後仍�
 
 ### 准入原則
 
-只要任何 material source-core signal 或 trade-event rule 需要 approximation、自己補創語意、或仍有 unresolved interpretation，就是 `NOT_LOSSLESS`，不得 merge。House overlay 只能取代 event-neutral 的 sizing、capital 或 accounting assumptions；不得補創 signal、entry、exit、re-entry，也不得在 contract identity materially 影響價格序列時偷換另一條 price series。
+只要任何 material source-core signal 或 trade-event rule 需要 approximation、自己補創語意、或仍有 unresolved interpretation，該紀錄就不能是 `PASS`。自動 Scout 准入 PR 的結果為 `NOT_LOSSLESS` 時會關閉；一般非 Scout 研究紀錄經獨立審查後仍可用非 PASS 狀態保留在 `main`。House overlay 只能取代 event-neutral 的 sizing、capital 或 accounting assumptions；不得補創 signal、entry、exit、re-entry，也不得在 contract identity materially 影響價格序列時偷換另一條 price series。
 
 ## GitHub Review 與自動補正
 
-Reviewer 只有在缺少／錯誤的資料能由 primary source 明確驗證時，才可以直接補正 PR，例如：
+對自動 Scout `research/*` 准入 PR，Reviewer 只有在缺少／錯誤的資料能由 primary source 明確驗證時，才可以直接補正策略，例如：
 
 - 公開 Pine / source code；
 - immutable GitHub implementation；
@@ -279,6 +279,7 @@ Reviewer **不可以**：
 `HB_READY: PASS`
 
 - 目前 immutable PR head 通過所有條件；
+- 紀錄設定 `hb_ready_status: PASS`；
 - Reviewer 留下 evidence；
 - merge 必須鎖定 exact reviewed head SHA；
 - squash merge 到 `main`。
@@ -287,9 +288,9 @@ Reviewer **不可以**：
 
 - source 本身 underspecified、不相容，或需要自行發明策略；
 - Reviewer 留下明確 blocker；
-- close PR。
+- 關閉自動 Scout `research/*` 准入 PR。
 
-README、文件、設定等 maintenance PR 不屬於 strategy admission PR。它們只做一般 review，不會被 HB_READY strategy policy 自動 merge 或 close。
+非 Scout legacy／重建策略紀錄使用非 `research/*` branch，並經獨立 provenance／研究審查；可用 `NOT_LOSSLESS` 或 `NOT_ASSESSED` merge，且不得自動進入下游。branch 差異不代表內容類別不同。README、文件、設定等 maintenance PR 也採一般 review，不會被 Scout HB_READY policy 自動 merge 或 close。
 
 ## Scout 規則
 
@@ -306,10 +307,11 @@ Antigravity 與 MiMo 的自動策略研究目前維持停用。
 2. 查看目前 `main`；
 3. 同時對 `main` 與 open `research/*` PR 做 dedup；
 4. 直接讀 primary source；
-5. 寫入前先套用 LOSSLESS HB_READY hard gate；
+5. 先篩選 HB_READY 候選，再於寫入前套用 LOSSLESS HB_READY hard gate；
 6. 每輪最多建立 **1 個** candidate PR；
-7. 找不到合格候選時，0 筆就是成功；
-8. 不得為了 cadence 降低門檻。
+7. 自動 Scout PR 只有 `hb_ready_status: PASS` 才能 merge；`NOT_LOSSLESS` 候選會關閉；
+8. 找不到合格候選時，0 筆就是成功；
+9. 不得為了 cadence 降低門檻。
 
 ### PR-only 寫入規則
 
@@ -374,6 +376,8 @@ exact duplicate、paraphrase、trivial parameter variant 都不算新策略。
 
 只有當同一來源真的包含 materially distinct 的 mechanism、signal construction、market/universe、horizon/regime 或 material data dependency，才有理由形成另一筆獨立紀錄。
 
+同一策略家族的 survivor 變體通常應合併成一筆策略家族紀錄，並在一般 Evidence section 保留多筆歷史證據；除非證據證明 core mechanism 有實質差異。歷史 survivor/Qlib 證據放在一般 Provenance／Evidence sections，標示為歷史證據，不得稱為目前 Hummingbot 重現。不需要特殊 survivor 資料夾、類別或標籤。
+
 ## Strategy record schema
 
 目前使用：
@@ -382,11 +386,14 @@ exact duplicate、paraphrase、trivial parameter variant 都不算新策略。
 schema: strategy-research-record-v1
 ```
 
+Schema 維持 `strategy-research-record-v1`；`hb_ready_status` 是新增欄位，不是 schema version 變更。
+
 Required frontmatter：
 
 ```yaml
 ---
 schema: strategy-research-record-v1
+hb_ready_status: PASS | NOT_LOSSLESS | NOT_ASSESSED
 title: <strategy title>
 created: <YYYY-MM-DD>
 updated: <YYYY-MM-DD>
@@ -459,7 +466,7 @@ Not independently reproduced.
 
 ### 策略關鍵缺口
 
-研究紀錄可以保留非關鍵 provenance limitations，但正式准入策略不能留下 unresolved strategy-critical gap。
+若 `hb_ready_status` 是 `NOT_LOSSLESS` 或 `NOT_ASSESSED`，研究紀錄可以保留 strategy-critical gap；仍有此類缺口時不得標記為 `PASS`。自動 Scout 准入仍要求 PASS，並會關閉 NOT_LOSSLESS 候選。
 
 例如：
 
@@ -472,7 +479,7 @@ Not independently reproduced.
 - execution convention 會改變交易 timing；
 - 需要 unsupported data。
 
-這類候選必須先從 primary source 補齊，否則 close 為 `NOT_LOSSLESS`。
+對自動 Scout 准入，這類候選必須先從 primary source 補齊才可標記 PASS；否則該 Scout PR 會以 `NOT_LOSSLESS` 關閉。一般非 Scout 研究紀錄經獨立審查後可在 `main` 保留缺口，但必須使用非 PASS 狀態。
 
 ## File naming
 
@@ -490,14 +497,14 @@ Not independently reproduced.
 
 這個 repo 只負責：
 
-> **research normalization + HB_READY admission**
+> **research normalization + 明確的逐筆 HB_READY status**。自動 Scout lane 只准入 PASS；其他有來源依據的研究可經一般獨立審查後保留在 `main`。
 
 目前預期的 downstream：
 
 ```text
 alpha-strategy-research/main
         ↓
-HB_READY core strategy semantics
+篩選：hb_ready_status == PASS
         ↓
 標準化 research execution overlay
 (DCA: 6% + 6% + 6%、Isolated、3× / 5×)
@@ -519,7 +526,7 @@ Formal Survivor
 
 Hummingbot 是 canonical backtest / execution semantics benchmark。Qlib 只有在兩個 engine 已經針對相同的 source core strategy、data、house overlay 與 pinned assumptions 證明逐筆事件一致後，才作為大量海選引擎；不再要求 house sizing 等於 source-native sizing。
 
-HB_READY 保留來源策略的 core signal 與 causal trade-event semantics。所有策略都會在下游績效研究階段套上我們明確的 **DCA / capital / leverage research execution overlay**；這層可以取代 event-neutral 的 source sizing，但不得補創 signal、entry、exit、re-entry，不得在 contract identity materially 影響價格序列時偷換另一條 price series，也不能被誤寫成來源策略原生行為。
+對 PASS 紀錄而言，HB_READY 保留來源策略的 core signal 與 causal trade-event semantics。只有 PASS 策略會在下游績效研究階段套上我們明確的 **DCA / capital / leverage research execution overlay**；這層可以取代 event-neutral 的 source sizing，但不得補創 signal、entry、exit、re-entry，不得在 contract identity materially 影響價格序列時偷換另一條 price series，也不能被誤寫成來源策略原生行為。
 
 Parity 不是看最終 ROI 或 Sharpe 接近就算通過。Signal、entry / exit 時間、方向、價格、相同 house overlay 下的 position size、Safety Orders 與 close transition 都必須逐筆一致。
 
@@ -546,6 +553,6 @@ Parity 不是看最終 ROI 或 Sharpe 接近就算通過。Signal、entry / exit
 
 這個 repo 應保持簡單：
 
-> **只要 strategy record 在 `main`，downstream 就可以信任它已通過目前 LOSSLESS HB_READY source-semantics admission。**
+> **若 `hb_ready_status: PASS`，downstream 可信任它符合目前 LOSSLESS HB_READY 語意；單純存在於 `main` 只代表研究得以保存。**
 
 這就是本 repo 現在的用途。

@@ -2,24 +2,24 @@
 
 Effective: 2026-10-06 (UTC+8)
 
-This file defines the automated GitHub PR admission gate for new strategy records in `HCH725/alpha-strategy-research`.
+This file defines the automated GitHub PR admission gate for scheduled Scout strategy records in `HCH725/alpha-strategy-research`; it does not gate every strategy record preserved in the corpus.
 
 ## Scope
 
 This review answers one question only:
 
-> Can the source core strategy's signal and causal trade-event semantics be reconstructed without material approximation and evaluated by the pinned Hummingbot backtester under the same explicitly labeled house overlay?
+> For this automated Scout `research/*` PR, can the source core strategy's signal and causal trade-event semantics be reconstructed without material approximation and evaluated by the pinned Hummingbot backtester under the same explicitly labeled house overlay?
 
 Pinned baseline:
 
 - Hummingbot package: `20260920`
 - Hummingbot VERSION: `dev-2.17.0`
 
-A strategy merged to `main` is therefore already considered **LOSSLESS HB_READY**. This is semantic/backtest expressibility only; it is not profitability validation, survivor promotion, Paper/Testnet/Live approval, or trading authorization.
+`main` is the canonical strategy-research corpus, not a PASS-only pool. A root-level strategy record represents normalized, source-backed research; presence on `main` alone does not imply HB_READY. Each record's `hb_ready_status` is `PASS`, `NOT_LOSSLESS`, or `NOT_ASSESSED`; only `PASS` is eligible for current Hummingbot/Qlib performance-research downstream. PASS is semantic/backtest expressibility only, not profitability validation, survivor promotion, Paper/Testnet/Live approval, or trading authorization.
 
 ## Strategy PR shape
 
-Automated strategy PRs must:
+Automated Scout admission PRs must:
 
 - target `main`;
 - originate from the same repository;
@@ -27,11 +27,13 @@ Automated strategy PRs must:
 - add exactly one root-level strategy Markdown record;
 - contain no unrelated modifications.
 
-Maintenance/documentation/config PRs are ordinary review PRs and are never auto-merged or auto-closed by this strategy-admission policy.
+They must receive `hb_ready_status: PASS` to merge through this lane; a `NOT_LOSSLESS` candidate is closed.
+
+Non-Scout reconstructed/legacy research records use a non-`research/*` branch (for example `reconstruction/*` or `maintenance/*`) and receive independent provenance/research review. They may merge as `NOT_LOSSLESS` or `NOT_ASSESSED`, remain ordinary root-level strategy records, and must not be auto-consumed downstream. This branch distinction is process-only and creates no content class, folder, or tag. Maintenance/documentation/config PRs are also ordinary review PRs and are never auto-merged or auto-closed by the Scout admission policy.
 
 ## Hard admission requirements
 
-Every applicable item must be explicit and source-faithful:
+Every strategy record marked `hb_ready_status: PASS` must satisfy every applicable item explicitly and source-faithfully:
 
 1. **Market structure**
    - single trading pair per run;
@@ -85,7 +87,7 @@ Every applicable item must be explicit and source-faithful:
     - all lookbacks known so warmup can be derived;
     - no repainting, future reference, negative shift, future extrema, full-sample normalization, or look-ahead leakage.
 
-Any material approximation, unresolved source interpretation, or invented source-core signal or trade-event rule means **NOT_LOSSLESS**. The house overlay must never invent missing signal, entry, exit, or re-entry rules, or substitute a different price series when contract identity is material.
+Any material approximation, unresolved source interpretation, or invented source-core signal or trade-event rule means the record cannot be `PASS`. In this automated Scout lane that outcome is **NOT_LOSSLESS** and the PR is closed; ordinary non-Scout research may preserve the record on `main` with a non-PASS status after independent review. The house overlay must never invent missing signal, entry, exit, or re-entry rules, or substitute a different price series when contract identity is material.
 
 ## Auto-remediation
 
@@ -123,12 +125,12 @@ The reviewer must **not**:
 
 When the current immutable PR head satisfies every gate:
 
-1. submit a GitHub review comment beginning `HB_READY: PASS`;
+1. set the record's `hb_ready_status: PASS` and submit a GitHub review comment beginning `HB_READY: PASS`;
 2. summarize the source-backed evidence;
 3. squash-merge using the exact reviewed head SHA;
-4. after the merge succeeds, re-read current `main`, count root-level strategy Markdown records (exclude `README.md` and `README.zh-TW.md`), and update only the `<!-- HB_READY_POOL_COUNT -->` line in `README.md` to that exact count.
+4. after the merge succeeds, re-read current `main`, count root-level strategy records whose frontmatter says `hb_ready_status: PASS` (exclude `README.md` and `README.zh-TW.md`), and update only the `<!-- HB_READY_POOL_COUNT -->` line in `README.md` to that exact PASS count.
 
-The pool-count synchronization is post-merge bookkeeping only. It must never affect HB_READY admission, alter a strategy record, or create a second review/control path.
+The PASS-count synchronization is post-merge bookkeeping only. It must never affect HB_READY admission, alter a strategy record, or create a second review/control path.
 
 ### HB_READY: AUTO_REMEDIATED
 
@@ -141,19 +143,21 @@ When all missing facts are recoverable:
 
 ### HB_READY: NOT_LOSSLESS
 
-When the source is materially underspecified or incompatible:
+When the source is materially underspecified or incompatible in an automated Scout `research/*` admission PR:
 
 1. submit a review comment beginning `HB_READY: NOT_LOSSLESS`;
 2. identify exact blocker(s);
 3. close the PR.
 
-Automated strategy PRs must not remain indefinitely in REQUEST_CHANGES.
+This terminal auto-close applies only to automated Scout admission PRs. It does not discard or prohibit ordinary non-Scout `NOT_LOSSLESS` research records that pass independent provenance/research review.
+
+Automated Scout strategy PRs must not remain indefinitely in REQUEST_CHANGES.
 
 ## Downstream invariant
 
-HB_READY admission remains a source-semantics gate: the source strategy's core signal and causal trade-event semantics—including timing, direction, entries, exits, and any event-affecting position behavior—must be reconstructed without material approximation. Source sizing or fixed-vs-compounding behavior may be replaced only when event-neutral under the house overlay.
+HB_READY admission remains a source-semantics gate: only records with `hb_ready_status: PASS` may be executed or screened in the current Hummingbot/Qlib performance-research downstream. The source strategy's core signal and causal trade-event semantics—including timing, direction, entries, exits, and any event-affecting position behavior—must be reconstructed without material approximation. Source sizing or fixed-vs-compounding behavior may be replaced only when event-neutral under the house overlay. Records marked `NOT_LOSSLESS` or `NOT_ASSESSED` must not be auto-consumed downstream.
 
-After admission, the performance-research workflow applies one explicit **house execution overlay** to every strategy:
+After a record is marked PASS, the current performance-research workflow applies one explicit **house execution overlay** to each eligible strategy:
 
 - Base Order = 6% of initial capital;
 - Safety Order 1 = 6%;
@@ -166,4 +170,4 @@ This overlay is intentionally not source-native semantics and must never be pres
 
 Hummingbot is the canonical benchmark engine. Qlib may be used for large-scale screening only after the two engines demonstrate event-level parity on the same source core strategy, data, house overlay, and pinned assumptions—not source-native sizing. Matching only final performance metrics is insufficient: signal time, entry/exit time, direction, price, position size under the same overlay, Safety Orders and close transitions must match trade by trade.
 
-There is no second semantic suitability gate after merge. A future Survivor Repo is a performance-promotion output, not another HB_READY admission layer.
+There is no second semantic suitability gate after a record has been marked PASS and merged; downstream eligibility is read from `hb_ready_status`, not inferred from presence on `main`. A future Survivor Repo is a performance-promotion output, not another HB_READY admission layer.

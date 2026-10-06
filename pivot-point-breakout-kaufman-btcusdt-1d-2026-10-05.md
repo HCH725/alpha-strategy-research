@@ -1,5 +1,6 @@
 ---
 schema: strategy-research-record-v1
+hb_ready_status: PASS
 title: Perry Kaufman pivot point breakout system on BTCUSDT 1d bars
 created: 2026-10-05
 updated: 2026-10-05
