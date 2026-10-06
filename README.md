@@ -4,7 +4,7 @@
 
 ## 📊 HB_READY Strategy Pool
 
-**Admitted strategies on main: 9** <!-- HB_READY_POOL_COUNT -->
+**Admitted strategies on main: 10** <!-- HB_READY_POOL_COUNT -->
 
 ## 📌 Current Backtest Baseline
 
