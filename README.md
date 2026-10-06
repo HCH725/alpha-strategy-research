@@ -4,7 +4,7 @@
 
 ## 📊 HB_READY PASS Strategy Pool
 
-**Admitted strategies on main: 10** <!-- HB_READY_POOL_COUNT -->
+**Admitted strategies on main: 11** <!-- HB_READY_POOL_COUNT -->
 
 This count includes only root-level strategy records whose frontmatter has `hb_ready_status: PASS`; it is not a count of every Markdown file or every record on `main`.
 
