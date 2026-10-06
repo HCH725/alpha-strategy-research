@@ -1,5 +1,6 @@
 ---
 schema: strategy-research-record-v1
+hb_ready_status: PASS
 title: VIDYA CMO-adaptive average slope trend system on BTCUSDT 1h bars
 created: 2026-10-05
 updated: 2026-10-05

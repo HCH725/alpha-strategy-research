@@ -1,5 +1,6 @@
 ---
 schema: strategy-research-record-v1
+hb_ready_status: PASS
 title: QuantNomad DRM dynamic-length RSI momentum system on BTCUSDT 1d bars
 created: 2026-10-06
 updated: 2026-10-06

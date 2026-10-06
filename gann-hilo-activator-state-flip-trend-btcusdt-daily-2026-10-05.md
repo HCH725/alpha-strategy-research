@@ -1,5 +1,6 @@
 ---
 schema: strategy-research-record-v1
+hb_ready_status: PASS
 title: Gann HiLo Activator state-flip trend system on BTCUSDT daily bars
 created: 2026-10-05
 updated: 2026-10-05
