@@ -22,7 +22,8 @@ Every root-level strategy record on `main` MUST have `hb_ready_status: PASS`. Th
 - Costs: campaign target is pinned Binance non-VIP USDⓈ-M fees plus historical funding; the pinned generic simulator has not yet demonstrated historical funding accounting, so no campaign may claim complete realized-funding performance without a verified implementation
 - Engine rule: Hummingbot is canonical; Qlib is trusted for mass screening only after event-level parity
 - Promotion rule: only `PASS` records are eligible for current Qlib screening; survivor candidates are later re-run in Hummingbot for trade-by-trade validation
-- First-pass hard filters remain `ROI > 0` and `Sharpe ≥ 1.0`; metric semantics must align to the Hummingbot benchmark
+- Qlib Research Survivor → Hummingbot first-pass hard filters: `Annualized Net Return ≥ 10%` and `Sharpe ≥ 1.0` on the same run/sample; `Net Strategy ROI` is report-only, not an independent hard filter. These are downstream performance criteria, not HB_READY admission gates
+- Annualized net return uses the complete equity curve net of verified fees, slippage and funding costs under the same canonical Hummingbot model, over a fixed continuous tradable evaluation period from the first legally possible post-warmup signal to the predetermined end, including flat time—not from the first winning trade. See v1.0 for invalid-run exclusions, retained metrics and the planned/unverified metric implementation boundary
 - [Backtest Baseline v1.0 →](docs/hb-backtest-baseline-v1.0.md)
 - [Archived visual baseline v0.1 →](docs/hb-backtest-baseline-v0.1.html)
 
@@ -353,6 +354,8 @@ standardized research overlay
         ↓
 Qlib large-scale screening
         ↓
+Annualized Net Return ≥ 10% AND Sharpe ≥ 1.0
+        ↓
 survivor candidates
         ↓
 future Survivor Repo
@@ -373,6 +376,8 @@ For PASS records, HB_READY verifies the declared source-native or explicitly der
 For parity, matching final ROI or Sharpe is not sufficient. Signal time, entry/exit time, direction, price, position size under the same house overlay, Safety Orders and close transitions must agree trade by trade.
 
 The automatic repo-to-Hummingbot/Qlib execution bridge is **not defined by this repository README as already active**. The new Survivor Repo is also not created yet. Formal large-scale screening resumes only after Hummingbot ↔ Qlib parity is proven.
+
+The historical 20-family / 92-baseline HB_READY reassessment is closed, not a pending task or blocker for the current intended pipeline. Its scientific provenance, archive references and PR #58 non-merge warning remain in force; closure does not upgrade non-PASS records.
 
 The old Research Intake Review → Wiki ingestion → preparation backlog → n8n → Qlib-first automatic flow is deprecated and is not the current admission or execution contract.
 
