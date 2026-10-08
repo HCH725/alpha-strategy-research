@@ -22,7 +22,8 @@ Every root-level strategy record on `main` MUST have `hb_ready_status: PASS`. Th
 - Costs: campaign target is pinned Binance non-VIP USDⓈ-M fees plus historical funding; the pinned generic simulator has not yet demonstrated historical funding accounting, so no campaign may claim complete realized-funding performance without a verified implementation
 - Engine rule: Hummingbot is canonical; Qlib is trusted for mass screening only after event-level parity
 - Promotion rule: only `PASS` records are eligible for current Qlib screening; survivor candidates are later re-run in Hummingbot for trade-by-trade validation
-- First-pass hard filters remain `ROI > 0` and `Sharpe ≥ 1.0`; metric semantics must align to the Hummingbot benchmark
+- Qlib Research Survivor → Hummingbot first-pass hard filters: `Annualized Net Return ≥ 10%` and `Sharpe ≥ 1.0` on the same run/sample; `Net Strategy ROI` is report-only, not an independent hard filter. These are downstream performance criteria, not HB_READY admission gates
+- Annualized net return uses the complete equity curve net of verified fees, slippage and funding costs under the same canonical Hummingbot model, over a fixed continuous tradable evaluation period from the first legally possible post-warmup signal to the predetermined end, including flat time—not from the first winning trade. See v1.0 for invalid-run exclusions, retained metrics and the planned/unverified metric implementation boundary
 - [Backtest Baseline v1.0 →](docs/hb-backtest-baseline-v1.0.md)
 - [Archived visual baseline v0.1 →](docs/hb-backtest-baseline-v0.1.html)
 
@@ -352,6 +353,8 @@ standardized research overlay
 (DCA: 6% + 6% + 6%, Isolated, 3× / 5×)
         ↓
 Qlib large-scale screening
+        ↓
+Annualized Net Return ≥ 10% AND Sharpe ≥ 1.0
         ↓
 survivor candidates
         ↓

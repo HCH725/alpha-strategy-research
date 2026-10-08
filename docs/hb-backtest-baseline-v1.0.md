@@ -21,6 +21,8 @@ standardized research overlay
         ↓
 Qlib large-scale screening
         ↓
+Annualized Net Return ≥ 10% AND Sharpe ≥ 1.0
+        ↓
 survivor candidates
         ↓
 future Survivor Repo
@@ -34,7 +36,7 @@ Formal Survivor
 Testnet / later live workflow
 ```
 
-這個 repo 目前仍只負責 research normalization + HB_READY admission；上面的 execution flow 是下游 contract，不代表自動 bridge 已經啟用。
+這個 repo 的 `main` 只保存經獨立 HB_READY 六門審查的 PASS 策略；非 PASS 研究保留在既有非 main 分支、PR 或 Git 歷史。上面的 execution flow 是下游 contract，不代表自動 bridge 已經啟用。
 
 ## 1. House rule: every strategy uses DCA Safety Orders
 
@@ -196,13 +198,23 @@ Leverage：
 
 1. 先完成 Hummingbot ↔ Qlib engine parity。
 2. Qlib 負責大量參數 / DCA / symbol / timeframe / leverage 海選。
-3. 通過既定標準的少量 survivor candidates 進入未來的 Survivor Repo。
+3. 同一 run／樣本同時符合 `Annualized Net Return ≥ 10%` 與 `Sharpe ≥ 1.0` 的少量 survivor candidates 進入未來的 Survivor Repo；`Net Strategy ROI > 0` 不再是獨立硬門檻。
 4. 只有這些 survivor candidates 再交給 Hummingbot 獨立重跑。
 5. Hummingbot 與 Qlib 必須再次驗證逐筆 trade events 一致。
 6. 一致後才可標成 Formal Survivor。
 7. Formal Survivor 才能進後續 Testnet / live qualification workflow。
 
 目前尚未建立新的 Survivor Repo；在兩個 engine parity 完成前，不需要急著建立或恢復舊 survivor production flow。
+
+### 首輪績效門檻與統計口徑（2026-10-09 修訂）
+
+上述兩項門檻只用於 **Qlib Research Survivor → Hummingbot 首輪績效篩選**，不加入 HB_READY 六項入庫審查，不改既有 PASS 狀態或 review gate。最終 OOS 不得用來調參或事後改動評估期間。
+
+`Annualized Net Return` 必須基於同一 canonical Hummingbot 模型下，扣除可驗證手續費、滑價與資金成本後的**完整資金曲線**。使用固定、連續的可交易評估期間：從暖機完成後可產生第一個合法訊號的時點，到預先固定的 end；包括空倉／未交易時段，不得改從首次成交或第一筆贏利交易開始。與 Sharpe 必須是同一 run、樣本、成本模型及評估期間；run manifest 應鎖定指標公式、取樣頻率、年化慣例及 Sharpe 口徑，避免跨引擎同名異義。
+
+無交易、起始權益為零／負值、無法確定評估期間，或成本未驗證的 run，均不得宣稱通過上述 Survivor 績效門檻；不得用零成本假設或局部交易收益冒充可驗證的年化淨報酬。報表仍保留 `Net Strategy ROI`（總淨 ROI）、MDD、PF、Sortino，以及年化淨報酬與 Sharpe。
+
+這是**規劃中的統計 contract，不是已部署的指標實作**。年化淨報酬與 Sharpe 的公式／語意仍須在 pinned engine 上驗證；目前未驗證的歷史 Funding 等成本不得視為已納入。本次只有文件修訂，不啟動引擎、部署 pipeline 或新增執行 gate。
 
 ## 8. Run reproducibility
 

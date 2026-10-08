@@ -16,7 +16,8 @@
 - 成本：Campaign 目標採 Binance non-VIP 費率與歷史 Funding；目前通用模擬器尚未證明歷史 Funding 計價實作，未驗證前不能宣稱已納入真實 Funding
 - Engine：Hummingbot 是 canonical benchmark；Qlib 只有在逐筆事件對齊後才負責大量海選
 - Promotion：Qlib 大量海選後，只有 survivor candidates 才交給 Hummingbot 逐筆復驗
-- 第一層門檻維持 `ROI > 0`、`Sharpe ≥ 1.0`；績效統計語意以 Hummingbot benchmark 為準
+- Qlib Research Survivor → Hummingbot 首輪硬門檻：同一 run／樣本的 `Annualized Net Return ≥ 10%` 與 `Sharpe ≥ 1.0`；`Net Strategy ROI` 只保留報表，不再是獨立硬門檻。這是下游績效標準，不是 HB_READY 六門准入條件
+- 年化淨報酬採同一 canonical Hummingbot 模型下扣除可驗證手續費、滑價與資金成本的完整資金曲線；評估期間從暖機後可產生第一個合法訊號起，到預定 end，固定且連續、包括空倉時間，不得從第一筆贏利交易才算。無效 run 排除、保留指標與尚待驗證的統計實作邊界見 v1.0
 - [Backtest Baseline v1.0 →](docs/hb-backtest-baseline-v1.0.md)
 - [歷史視覺版 v0.1 →](docs/hb-backtest-baseline-v0.1.html)
 
@@ -341,9 +342,7 @@ Not independently reproduced.
 
 ## Downstream 邊界
 
-這個 repo 只負責：
-
-> **research normalization + 明確的逐筆 HB_READY status**。自動 Scout lane 只准入 PASS；其他有來源依據的研究可經一般獨立審查後保留在 `main`。
+這個 repo 的 `main` 只保存**經獨立 HB_READY 六門審查的 PASS 策略紀錄**。任何未完整審查／非 PASS 研究只能保留在非 main 分支、PR 或既有 Git 歷史，不得合併進 `main`。
 
 目前預期的 downstream：
 
@@ -356,6 +355,8 @@ alpha-strategy-research/main
 (DCA: 6% + 6% + 6%、Isolated、3× / 5×)
         ↓
 Qlib 大規模海選
+        ↓
+Annualized Net Return ≥ 10% 且 Sharpe ≥ 1.0
         ↓
 survivor candidates
         ↓
