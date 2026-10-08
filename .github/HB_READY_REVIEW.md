@@ -2,7 +2,7 @@
 
 Effective: 2026-10-08 (UTC+8)
 
-This file defines the automated GitHub PR admission gate for scheduled Scout strategy records in `HCH725/alpha-strategy-research`; it does not gate every strategy record preserved in the corpus.
+This file defines **the same six-gate HB_READY strategy admission requirement for EVERY branch and PR type** targeting `HCH725/alpha-strategy-research` `main`, including Scout, historical reconstruction, maintenance PRs that touch strategy records, and manual contributions. Only automation actions differ by PR type.
 
 ## Scope
 
@@ -15,7 +15,7 @@ Pinned baseline:
 - Hummingbot package: `20260920`
 - Hummingbot VERSION: `dev-2.17.0`
 
-`main` is the canonical strategy-research corpus, not a PASS-only pool. A root-level strategy record represents normalized, source-backed research; presence on `main` alone does not imply HB_READY. Each record's `hb_ready_status` is `PASS`, `NOT_LOSSLESS`, or `NOT_ASSESSED`; only `PASS` is eligible for current Hummingbot/Qlib performance-research downstream. PASS is semantic/backtest expressibility only, not profitability validation, survivor promotion, Paper/Testnet/Live approval, or trading authorization.
+**Effective 2026-10-08, `main` is PASS-only.** Every root-level strategy Markdown record on `main` (excluding the two READMEs) MUST carry independently verified `hb_ready_status: PASS`. `NOT_LOSSLESS`, `NOT_ASSESSED`, missing or invalid statuses may exist **only outside `main`**, including PR branches, `archive/non-pass-research-20261008`, and Git history. No legacy/reconstruction/manual review exception. PASS indicates bounded pinned-engine semantics, not profitable or live-tradable performance. Verify the post-change root strategy count equals the PASS count and the README pool count.
 
 ## Strategy PR shape
 
@@ -29,7 +29,7 @@ Automated Scout admission PRs must:
 
 They must receive `hb_ready_status: PASS` to merge through this lane; a `NOT_LOSSLESS` candidate is closed.
 
-Non-Scout reconstructed/legacy research records use a non-`research/*` branch (for example `reconstruction/*` or `maintenance/*`) and receive independent provenance/research review. They may merge as `NOT_LOSSLESS` or `NOT_ASSESSED`, remain ordinary root-level strategy records, and must not be auto-consumed downstream. This branch distinction is process-only and creates no content class, folder, or tag. Maintenance/documentation/config PRs are also ordinary review PRs and are never auto-merged or auto-closed by the Scout admission policy.
+Non-Scout, reconstructed, legacy and manual strategy PRs have **the exact same six-gate PASS requirement** before any root-level strategy record may merge into `main`. They may receive COMMENT-only review and manual merge **only after PASS**, never an automatic PASS exemption. Unqualified research stays in existing non-main branches/PRs/history. PR #58 (17 non-PASS reconstructed families) must not merge as-is. Maintenance/docs/config PRs remain COMMENT-only (never auto-merge/close), but changes touching strategy records or counts must preserve the PASS-only `main` invariant. Removing previously committed non-PASS records is permitted after they are verifiably preserved on an existing archive Git branch; never relabel them to PASS merely to meet the invariant.
 
 ## HB_READY admission: six enforceable requirements
 
@@ -48,7 +48,7 @@ Every `hb_ready_status: PASS` record must satisfy **all six** requirements for t
 
 **PASS means admissible to *model-consistent research*, not profitability, economic realism, guaranteed source-native equivalence, Qlib parity, survivor status or Paper/Testnet/Live permission.** Profitable net-of-fee returns are a later performance/OOS question, **not** an HB_READY admission threshold. For new execution/data paths, pin the evidence and verify representative event-level Qlib/Hummingbot parity **before Qlib mass screening**, not before preserving a strategy record.
 
-If any of the six requirements is materially incomplete, unverifiable or unsupported by the pinned engine, the automated Scout `research/*` PR is `NOT_LOSSLESS` and closed with the specific remaining blocker. Non-Scout research may still be preserved on `main` with `NOT_LOSSLESS` or `NOT_ASSESSED` after independent review. The existing status values and root-level `strategy-research-record-v1` format remain unchanged. Neither historical Survivor evidence nor removal of four bans retroactively upgrades a record to PASS.
+If any of the six requirements is materially incomplete, unverifiable or unsupported by the pinned engine, that strategy MUST NOT merge into `main`, irrespective of PR type. Automated Scout `research/*` PRs are `NOT_LOSSLESS` and closed with exact reasons; non-Scout PRs are left unmerged/commented or preserved on non-main branches. Three status values continue to exist for research **outside** `main`; on `main` every strategy record MUST be PASS. The root-level `strategy-research-record-v1` format is unchanged. No retroactive Survivor upgrade.
 
 ## Auto-remediation
 
@@ -110,14 +110,14 @@ When the declared strategy is materially incomplete, unverifiable, or unsupporte
 2. identify exact blocker(s);
 3. close the PR.
 
-This terminal auto-close applies only to automated Scout admission PRs. It does not discard or prohibit ordinary non-Scout `NOT_LOSSLESS` research records that pass independent provenance/research review.
+This terminal auto-close applies only to automated Scout admission PRs. For non-Scout PRs the reviewer comments on any non-PASS strategy and **MUST NOT approve its merge into `main`**; the record can remain on a PR/non-main branch. No exception based on provenance quality or historical Survivor claims.
 
 Automated Scout strategy PRs must not remain indefinitely in REQUEST_CHANGES.
 
 ## Downstream invariant
 
-Only `hb_ready_status: PASS` strategies may enter current Hummingbot/Qlib performance research; research preservation on `main` is independent. Pinned Hummingbot backtesting is the model benchmark. Qlib mass screening requires representative event-level parity on the exact activated strategy, data, execution assumptions and engine route, not a matching Sharpe/MDD alone. An admission PASS by itself does not prove such parity or live economics.
+Every root-level strategy record on `main` MUST have independent six-gate `hb_ready_status: PASS`. Historical/non-PASS research is preserved outside `main`; downstream consumers still require PASS.  Pinned Hummingbot backtesting is the model benchmark. Qlib mass screening requires representative event-level parity on the exact activated strategy, data, execution assumptions and engine route, not a matching Sharpe/MDD alone. An admission PASS by itself does not prove such parity or live economics.
 
 The current **research campaign** optionally applies the declared house BO=6%, SO1=6%, SO2=6%, isolated 3×/5× and research-defined DCA spacing. These are downstream experiment settings, **not HB_READY source requirements**. If DCA, sizing, direction, risk or event timing changes a source strategy, record the execution as a separate, explicitly derived strategy with its own evidence, not as an event-neutral or source-native overlay. Do not claim that a path with unverified funding, fills, margin or causality is model-compatible merely because the Hummingbot API accepts a config.
 
-The existing status field alone governs selection; do not add a second admission registry. Never upgrade old evidence automatically, change historical PR #58 status, deploy Qlib/Hummingbot or interpret PASS as trading authorization.
+The existing status field alone governs selection; do not add a second admission registry. No non-PASS record may be merged into `main`, by human, maintenance, non-Scout or bot. Keep old PR #58 unmerged unless its records are independently upgraded based on real evidence. Never automatically upgrade historical evidence, deploy Qlib/Hummingbot or interpret PASS as trading authorization.

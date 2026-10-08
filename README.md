@@ -4,9 +4,9 @@
 
 ## 📊 HB_READY PASS Strategy Pool
 
-**Admitted strategies on main: 39** <!-- HB_READY_POOL_COUNT -->
+**Admitted strategies on main: 36** <!-- HB_READY_POOL_COUNT -->
 
-This count includes only root-level strategy records whose frontmatter has `hb_ready_status: PASS`; it is not a count of every Markdown file or every record on `main`.
+Every root-level strategy record on `main` MUST have `hb_ready_status: PASS`. This count is the number of those records; it must match the number of root-level strategy records, excluding the two READMEs. Historical research with non-PASS statuses is preserved outside `main`.
 
 ## 📌 Current Backtest Baseline
 
@@ -26,22 +26,20 @@ This count includes only root-level strategy records whose frontmatter has `hb_r
 - [Backtest Baseline v1.0 →](docs/hb-backtest-baseline-v1.0.md)
 - [Archived visual baseline v0.1 →](docs/hb-backtest-baseline-v0.1.html)
 
-Public canonical strategy-research corpus for normalized, source-backed strategy records. **HB_READY six-gate engine expressibility** is a per-record status, not a condition for preserving research on `main`.
+**HB_READY PASS-only strategy pool:** Every strategy record on `main` must satisfy all six Hummingbot expressibility gates. Non-PASS research remains accessible on non-main Git branches or in existing PR/history; it is never promoted by relabeling.
 
 ## Current contract
 
-Effective **2026-10-08 (UTC+8)** for six-gate admission; historical research records and existing PASS labels are unchanged pending explicit re-review:
+**Effective 2026-10-08 (UTC+8): `main` is PASS-only, with no exceptions for historical reconstruction or manual review.**
 
-- `main` is the canonical strategy-research corpus, not a PASS-only pool.
-- A root-level strategy record means normalized, source-backed research; its presence on `main` does not imply HB_READY.
-- Every record carries `hb_ready_status: PASS | NOT_LOSSLESS | NOT_ASSESSED`. Read HB_READY from this field.
-- Only `PASS` records may enter the current Hummingbot/Qlib performance-research downstream. `NOT_LOSSLESS` and `NOT_ASSESSED` are valid records on `main` and must not be discarded solely because current Hummingbot cannot express them losslessly.
-- Scheduled Scouts pre-filter for HB_READY candidates and keep using same-repository `research/*` admission PRs. Automated Scout PRs require `PASS` to merge; a `NOT_LOSSLESS` Scout candidate is closed.
-- Reconstructed or legacy research records use a non-Scout branch such as `reconstruction/*` or `maintenance/*` and may merge after independent provenance/research review with `NOT_LOSSLESS` or `NOT_ASSESSED`. They remain ordinary root-level strategy records and are not auto-consumed downstream. The branch distinction is process-only, not a content class.
-- Historical survivor/Qlib evidence belongs in the normal Provenance and Evidence sections, labeled historical and not as current Hummingbot reproduction. Keep same-family variants in one strategy-family record with multiple historical evidence entries unless evidence establishes materially different core mechanisms. No special survivor folder, class, or tag is required.
-- Scheduled Scouts do **not** push strategy records directly to `main`.
-- For automated Scout admission, the Hermes Auditor GitHub webhook review applies the six-gate HB_READY contract. A source-verifiable missing fact may be repaired on the same PR branch and re-reviewed; a source that cannot support lossless semantics is not merged through this lane.
-- Passing Scout strategy PRs are squash-merged to `main`. There is no separate validated-strategy repository; downstream eligibility is determined by `hb_ready_status: PASS`, not by presence on `main` alone.
+- Every root-level strategy Markdown record on `main` (except `README.md` and `README.zh-TW.md`) MUST include frontmatter `hb_ready_status: PASS` supported by an independent review of the existing six gates. Non-PASS, absent, invalid, or unreviewed status is a merge blocker, **regardless of branch name, reviewer, or PR type**.
+- `NOT_LOSSLESS` and `NOT_ASSESSED` remain valid assessment labels **outside `main` only**: draft, rejected or archived research may live on PR branches, an existing archive branch or immutable Git history. Do not delete its scientific provenance; do not bypass by marking it PASS.
+- Automated Scouts may propose exactly one strategy via `research/*` PR; only source-verifiable remediation and a completed six-gate PASS permit an exact-head merge; failure closes the Scout PR.
+- Non-Scout `reconstruction/*` / legacy PRs have **no admission exemption**. If they add or modify strategy records, require the same six-gate PASS review before merge; otherwise keep the PR unmerged or retain the research on a non-main branch. For current batch PR #58, its `NOT_LOSSLESS` records MUST NOT be merged as-is.
+- Maintenance/docs PRs receive COMMENT-only review (never auto-merge), but their diffs must still preserve the PASS-only `main` invariant; removal/archiving of pre-existing non-PASS records is allowed **only without relabeling** and after verifying a recoverable branch/history reference.
+- Previously preserved non-PASS families (AEAP/SEADS, QuantaAlpha, Wasserstein) were snapshotted in `archive/non-pass-research-20261008` before their removal from `main`; the 17-family reconstruction PR #58 remains an unmerged source. No new repository, folder, status or data pipeline is introduced.
+- Current Hummingbot/Qlib performance research may trust `main` for HB_READY admission status **only**, not for profitability, Qlib parity or Testnet/Mainnet authorization. Historical Survivor metrics remain research evidence and never override the six gates.
+- The README HB_READY pool count must equal the count of root-level strategy records on `main`; any mismatch fails the admission integrity check.
 
 The detailed reviewer policy is [`.github/HB_READY_REVIEW.md`](.github/HB_READY_REVIEW.md).
 
@@ -54,53 +52,15 @@ Current automated Scout HB_READY admission is evaluated against:
 
 A newer Hummingbot build does **not** silently broaden eligibility. The admission contract must be explicitly reviewed and updated before new engine semantics are assumed.
 
-## Repository meaning
+## Repository meaning and workflow
 
-This repository is the canonical corpus of normalized, source-backed strategy research. A root-level record on `main` means the research is preserved in the ordinary strategy-record format; it does not by itself establish HB_READY.
+`main` is a canonical pool of six-gate HB_READY **PASS-only** strategies. A PASS means the precisely described source-native or disclosed derived strategy can be causally expressed under the pinned Hummingbot benchmark; it is **not** a profitability, Qlib parity or live-trading approval.
 
-The per-record `hb_ready_status` field defines current engine expressibility:
+Workflow: public source → `research/*` or `reconstruction/*` candidate branch → independent six-gate audit → only verified `hb_ready_status: PASS` may merge into `main`. `NOT_LOSSLESS` or `NOT_ASSESSED` may be preserved in the existing archive branch/PR/Git history but never on `main`. Maintenance/documentation changes remain COMMENT-only and may not create a bypass for non-PASS strategies.
 
-- `PASS`: this fully specified source-native or disclosed derived strategy passes all six causality/rule/pinned-engine expressibility requirements; eligible for current Hummingbot/Qlib performance-research downstream (not a guarantee of Qlib parity or profitability).
-- `NOT_LOSSLESS`: a material rule, data dependency, or execution model is incomplete, unverified, or incompatible with pinned Hummingbot; valid research on `main`, but not eligible for that downstream.
-- `NOT_ASSESSED`: current six-gate HB_READY review has not been completed; valid research on `main`, but not eligible for that downstream.
+Previously approved PASS records remain PASS subject to future explicit re-review if new evidence identifies a semantic error. Do not retroactively upgrade historical Survivor records.
 
-Non-PASS records must not be discarded merely because current Hummingbot cannot express them losslessly. A status of `PASS` does **not** mean:
-
-- the strategy is profitable;
-- the source-reported performance has been independently reproduced;
-- the strategy is a survivor;
-- it has passed Hummingbot or Qlib performance validation;
-- it is approved for Paper, Testnet, Mainnet, or live trading.
-
-All records remain research-only unless a later workflow explicitly changes that status.
-
-## Current flow
-
-```text
-public primary source
-        ↓
-scheduled Scout (pre-filter HB_READY)
-        ↓
-research/<scout>-<slug>-<YYYYMMDD-HHMM>
-        ↓
-automated Scout PR review
-        ↓
-PASS → exact-head squash merge; NOT_LOSSLESS → close Scout PR
-
-legacy / reconstructed research
-        ↓
-reconstruction/* or maintenance/* PR
-        ↓
-independent provenance + research review
-        ↓
-ordinary root-level record (PASS / NOT_LOSSLESS / NOT_ASSESSED)
-
-main = canonical strategy-research corpus
-        ↓
-current Hummingbot/Qlib performance research selects PASS only
-```
-
-Automated Scout strategy PRs must not be left indefinitely in `REQUEST_CHANGES`. The non-Scout legacy/reconstruction path is ordinary research review; it is not subject to Scout auto-close and does not create a separate record class.
+All records remain `status: research-only` and `adoption: not-approved` unless a separate downstream authorization changes them.
 
 ## HB_READY six-gate admission
 
@@ -119,7 +79,7 @@ Every `hb_ready_status: PASS` record must satisfy **all six** requirements for t
 
 **PASS means admissible to *model-consistent research*, not profitability, economic realism, guaranteed source-native equivalence, Qlib parity, survivor status or Paper/Testnet/Live permission.** Profitable net-of-fee returns are a later performance/OOS question, **not** an HB_READY admission threshold. For new execution/data paths, pin the evidence and verify representative event-level Qlib/Hummingbot parity **before Qlib mass screening**, not before preserving a strategy record.
 
-If any of the six requirements is materially incomplete, unverifiable or unsupported by the pinned engine, the automated Scout `research/*` PR is `NOT_LOSSLESS` and closed with the specific remaining blocker. Non-Scout research may still be preserved on `main` with `NOT_LOSSLESS` or `NOT_ASSESSED` after independent review. The existing status values and root-level `strategy-research-record-v1` format remain unchanged. Neither historical Survivor evidence nor removal of four bans retroactively upgrades a record to PASS.
+If any of the six requirements is materially incomplete, unverifiable or unsupported by the pinned engine, the strategy record MUST NOT merge into `main`, whether it is a Scout, reconstruction, historical or other PR. Scout `research/*` PRs are closed as `NOT_LOSSLESS` with precise reasons; other non-PASS research can remain on a non-main branch or PR for further work. Existing assessment labels and `strategy-research-record-v1` format remain unchanged; no archive bypass or automatic upgrade of historical survivors is permitted.
 
 ## GitHub review and auto-remediation
 
@@ -174,7 +134,7 @@ The reviewer must **not**:
 - reviewer records the exact blocker;
 - automated Scout `research/*` admission PR is closed.
 
-Non-Scout legacy/reconstruction strategy records use a non-`research/*` branch and ordinary independent provenance/research review; they may be merged as `NOT_LOSSLESS` or `NOT_ASSESSED` and must not be auto-consumed downstream. This branch distinction is not a content-class distinction. Maintenance/documentation/configuration PRs also receive ordinary review and are not automatically merged or closed by the Scout HB_READY policy.
+Non-Scout legacy/reconstruction strategy PRs MUST also pass the six HB_READY gates to merge into `main`; status `NOT_LOSSLESS` / `NOT_ASSESSED` means preserve outside `main`, never merge by exception. Maintenance/documentation/configuration PRs receive COMMENT-only review, with a required PASS-only integrity check if they touch root-level strategy records or pool counts.
 
 ## Scout contract
 
@@ -350,7 +310,7 @@ unless independent reproduction actually occurred.
 
 ### Strategy-critical source gaps
 
-A research record may preserve strategy-critical gaps when its `hb_ready_status` is `NOT_LOSSLESS` or `NOT_ASSESSED`; it must not be marked `PASS` while such a gap remains. Automated Scout admission still requires PASS and closes NOT_LOSSLESS candidates.
+A draft or archived research record outside `main` may preserve strategy-critical gaps under `NOT_LOSSLESS` or `NOT_ASSESSED`; `main` may not contain such gaps or non-PASS statuses. Automated Scout admission still requires PASS and closes NOT_LOSSLESS candidates.
 
 Examples of strategy-critical gaps:
 
@@ -363,7 +323,7 @@ Examples of strategy-critical gaps:
 - execution convention that changes trade timing;
 - required unsupported data.
 
-For automated Scout admission, such a candidate must be repaired from the primary source before it can receive PASS; otherwise that Scout PR is closed as `NOT_LOSSLESS`. An ordinary non-Scout research record may preserve the gap on `main` after independent review, with a non-PASS status.
+For all strategy PR types, such a candidate must be repaired from primary evidence or submitted as a fully disclosed derived strategy before it can receive PASS; otherwise it remains outside `main`. A Scout PR without a verifiable repair is closed as `NOT_LOSSLESS`.
 
 ## File naming
 
@@ -379,7 +339,7 @@ Do not use ambiguous suffixes such as `latest`, `final`, or `new`.
 
 ## Downstream boundary
 
-This repository owns **research normalization + explicit per-record HB_READY status**. The automated Scout lane admits only PASS strategies; other source-backed research may be preserved on `main` after ordinary independent review.
+This repository's `main` owns **only independently reviewed HB_READY PASS strategy records**. Any incomplete/non-PASS research is preserved on other branches, PRs or existing Git history, not merged into `main`.
 
 Current intended downstream model:
 
@@ -435,6 +395,6 @@ Normalize and cite source logic instead of copying large source passages.
 
 The repository should remain simple:
 
-> **If `hb_ready_status: PASS`, downstream systems may treat the declared strategy as having passed the six-gate pinned-engine expressibility review (not Qlib parity or live readiness); presence on `main` alone means research preservation only.**
+> **Every strategy record in `main` must be independently reviewed `hb_ready_status: PASS`. No historical/reconstruction/manual exemption; PASS is not Qlib parity, profitability or live trading approval.**
 
 That is the purpose of this repository.

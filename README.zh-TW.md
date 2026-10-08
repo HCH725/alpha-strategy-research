@@ -20,24 +20,21 @@
 - [Backtest Baseline v1.0 →](docs/hb-backtest-baseline-v1.0.md)
 - [歷史視覺版 v0.1 →](docs/hb-backtest-baseline-v0.1.html)
 
-這是一個公開的 canonical strategy-research corpus，保存標準化且有來源依據的策略研究紀錄。**HB_READY 六門引擎可表達資格**是每筆紀錄自己的狀態，不是保留在 `main` 的先決條件。
+**Alpha Research 的 `main` 是 HB_READY 六門 PASS-only 策略池。** 非 PASS 歷史研究保留在同 Repo 的非 main 分支、PR 或 Git 歷史，不以改標 PASS 方式湊數。
 
 ## 目前規則
 
-自 **2026-10-08（UTC+8）** 更新六項准入條件；舊研究紀錄與 PASS 標記不自動重新分類：
+**2026-10-08 起正式改為 `main` 100% HB_READY PASS，歷史重建與人工合併均無例外。**
 
-- `main` 是 canonical strategy-research corpus，不是只收 PASS 的策略池。
-- root-level strategy record 代表已正規化、具來源依據的研究；出現在 `main` 不會自動代表 HB_READY。
-- 每筆紀錄以 `hb_ready_status: PASS | NOT_LOSSLESS | NOT_ASSESSED` 標示 HB_READY 狀態，應讀取此欄位判斷。
-- 只有 `PASS` 紀錄可進入目前 Hummingbot/Qlib 績效研究下游。`NOT_LOSSLESS` 與 `NOT_ASSESSED` 仍是 `main` 上有效的研究紀錄，不得只因目前 Hummingbot 無法無損表達就丟棄。
-- 排程 Scout 先篩選 HB_READY 候選，並維持同 repo 的 `research/*` 自動准入 PR；自動 Scout PR 必須是 `PASS` 才能 merge，`NOT_LOSSLESS` 候選仍會關閉。
-- 重建或 legacy 研究紀錄走非 Scout branch，例如 `reconstruction/*` 或 `maintenance/*`，經獨立 provenance／研究審查後，即使狀態為 `NOT_LOSSLESS` 或 `NOT_ASSESSED` 也可 merge。它仍是一般 root-level strategy record，不會自動進入下游；branch 差異只區分流程，不區分內容類別。
-- 歷史 survivor/Qlib 證據自然放在一般 Provenance 與 Evidence sections，並標示為歷史證據，不得寫成目前 Hummingbot 重現。同一策略家族的 survivor 變體原則上合併為一筆策略家族紀錄，附多筆歷史證據；除非證據證明 core mechanism 有實質差異。不需要特殊 survivor 資料夾、類別或標籤。
-- 自動 Scout **不得直接把策略 push 到 `main`**。
-- 對自動 Scout 准入而言，Hermes Auditor 的 GitHub Webhook Review 執行 HB_READY 六項門檻。若缺漏事實可由 primary source 明確查證，可在同一 PR branch 補正並重新審查；source 無法支持無損語意時，不得由此流程以 PASS merge。
-- 通過的 Scout 策略 PR 才 squash merge 進 `main`。不另建 validated-strategy repo；下游 eligibility 由 `hb_ready_status: PASS` 決定，而非只看紀錄是否在 `main`。
+- `main` 每一筆根目錄策略 Markdown（不包含 `README.md`、`README.zh-TW.md`）的 frontmatter 必須是經獨立六門審核的 `hb_ready_status: PASS`；缺失、`NOT_LOSSLESS`、`NOT_ASSESSED` 或未完成審查者全部不得 Merge。
+- `NOT_LOSSLESS`／`NOT_ASSESSED` 仍是合法的**審查結果**，但只可留在 PR、非 `main` 分支或既有 Git 歷史；保留研究，不得為了達標假造 PASS。
+- 每小時 Scout 仍透過 `research/*` 提交單筆策略，只有六門 PASS 可 Merge；來源可驗證的缺漏可於同一 PR 修復再重審，無法補正則關閉該 Scout PR。
+- **撤銷歷史策略與非 Scout PR 的准入例外**：`reconstruction/*` 等凡新增／修改策略者，同樣必須通過六門 PASS；不合格的保留分支或 PR，不得合併 `main`。目前 PR #58 的非 PASS 策略不可原樣合併。
+- 文件、設定與維護 PR 仍採 COMMENT-only Review，不自動合併，但也不能藉維護 PR 偷渡非 PASS 紀錄。移出舊非 PASS 前須先確認可回溯的 Git Branch／歷史。
+- 已有三筆非 PASS（AEAP／SEADS、QuantaAlpha、Wasserstein）事先保存在同一 Repo 的 `archive/non-pass-research-20261008` 分支；PR #58 的 17 家族仍在未合併分支。不新增 Repo、資料夾、資格狀態或額外流程。
+- `main` 全數 PASS 只代表策略規則與指定 Hummingbot 模型經 HB_READY 准入審查，**不代表**已驗證獲利、Qlib parity、歷史 Survivor 績效或交易權限。README PASS 數量應等於 `main` 策略總數。
 
-完整 Reviewer 規則見 [`.github/HB_READY_REVIEW.md`](.github/HB_READY_REVIEW.md)。
+詳細規範：[.github/HB_READY_REVIEW.md](.github/HB_READY_REVIEW.md)。
 
 ### 目前鎖定的准入基準
 
@@ -48,53 +45,13 @@
 
 未來 Hummingbot 更新，不代表 eligibility 自動放寬。只有在准入 contract 明確重新審查並更新後，才能使用新的 engine semantics。
 
-## 這個 repo 代表什麼
+## 這個 Repo 與審核流程
 
-本 repo 是標準化、具來源依據的策略研究 canonical corpus。root-level record 存在於 `main`，代表研究已按一般策略紀錄格式保存；單憑此事不代表 HB_READY。
+`main` 只放具獨立六門審查證據的 `hb_ready_status: PASS` 策略。PASS 代表該筆原始或明示衍生策略可依指定版本 Hummingbot 模型因果地表達；不是獲利、Qlib parity 或實盤授權。
 
-每筆紀錄的 `hb_ready_status` 定義目前 engine expressibility：
+流程：公開來源 → `research/*` 或 `reconstruction/*` 候選 PR → 六門獨立 Audit → **只有 PASS 可合併 `main`**。其餘研究保留在既有 Archive Branch、PR 或歷史中，不進 `main`。文件／維護 PR 仍是 COMMENT-only，不得繞過 PASS-only 規則。已存在的 PASS 紀錄不因本次改動重新標記，但若有新的錯誤證據仍須另行重審。
 
-- `PASS`：明確宣告的原始或衍生策略符合六項完整性、因果性及指定 Hummingbot 引擎相容要求；可進入目前 Hummingbot/Qlib 績效研究下游，不代表已驗 Qlib parity 或必然獲利。
-- `NOT_LOSSLESS`：必要交易規則、資料或執行能力不完整、未驗證或與指定 Hummingbot 模型不相容；仍是 `main` 上有效研究，但不得進入該下游。
-- `NOT_ASSESSED`：尚未完成目前六項 HB_READY 審查；仍是 `main` 上有效研究，但不得進入該下游。
-
-不得只因目前 Hummingbot 無法無損表達，就丟棄非 PASS 紀錄。`PASS` **不代表**：
-
-- 策略一定獲利；
-- source-reported 績效已經被我們獨立重現；
-- 策略已成為 survivor；
-- 已通過 Hummingbot 或 Qlib 績效驗證；
-- 已核准 Paper、Testnet、Mainnet 或任何 live trading。
-
-除非後續流程明確改變狀態，所有紀錄仍維持 research-only。
-
-## 目前流程
-
-```text
-公開 primary source
-        ↓
-排程 Scout（先篩選 HB_READY）
-        ↓
-research/<scout>-<slug>-<YYYYMMDD-HHMM>
-        ↓
-自動 Scout PR review
-        ↓
-PASS → exact-head squash merge；NOT_LOSSLESS → 關閉 Scout PR
-
-legacy／重建研究
-        ↓
-reconstruction/* 或 maintenance/* PR
-        ↓
-獨立 provenance + 研究審查
-        ↓
-一般 root-level record（PASS / NOT_LOSSLESS / NOT_ASSESSED）
-
-main = canonical strategy-research corpus
-        ↓
-目前 Hummingbot/Qlib 績效研究只取 PASS
-```
-
-自動 Scout 策略 PR 不允許永久停在 `REQUEST_CHANGES` 無人處理。非 Scout legacy／重建路徑採一般研究審查，不適用 Scout 自動關閉，也不會形成另一種紀錄類別。
+所有策略仍維持 `status: research-only`、`adoption: not-approved`。
 
 ## HB_READY 准入：六項必要條件
 
@@ -124,7 +81,7 @@ Lookback、Warmup 必須可導出，禁止 Repainting、Future leak、未來極�
 
 **PASS 是可進入明確模型的績效研究，不是獲利、原論文績效重現、Qlib parity、Survivor 或 Paper／Testnet／Live 核准。** 淨收益與風險指標應在後續正式回測與 OOS 判斷，不能當 HB_READY 事前硬門檻。新執行路徑在啟用 Qlib 大量篩選前需要逐事件對齊，但不能強迫每份策略入庫前先做雙引擎回測。
 
-六項任何一項不完整、不具證據或引擎不支援，Scout `research/*` PR 仍為 `NOT_LOSSLESS` 並說明原因後關閉；非 Scout 一般研究經獨立審查可用非 PASS 狀態保留 `main`。沿用三狀態及 `strategy-research-record-v1`，不新增資料夾或資格系統；既有 20 家族／92 筆歷史證據不得因刪除四項限制就自動變 PASS。
+六門任何一項不完整、缺證據或引擎不支援，**無論 Scout、歷史重建、非 Scout 或人工 PR，策略都不得進入 `main`**。Scout 未通過者關閉 PR；其他研究可保留非 main 分支／PR。沿用三種審查結果與 `strategy-research-record-v1` 格式，不額外建立資格系統；20 家族／92 筆歷史研究不能自動升級 PASS。
 
 ## GitHub Review 與自動補正
 
@@ -179,7 +136,7 @@ Reviewer **不可以**：
 - Reviewer 留下明確 blocker；
 - 關閉自動 Scout `research/*` 准入 PR。
 
-非 Scout legacy／重建策略紀錄使用非 `research/*` branch，並經獨立 provenance／研究審查；可用 `NOT_LOSSLESS` 或 `NOT_ASSESSED` merge，且不得自動進入下游。branch 差異不代表內容類別不同。README、文件、設定等 maintenance PR 也採一般 review，不會被 Scout HB_READY policy 自動 merge 或 close。
+非 Scout／legacy／重建策略 PR 同樣需要獨立六門 HB_READY PASS 才能 merge 到 `main`。非 PASS 僅留非 main 分支或 PR；maintenance／文件 PR 維持 COMMENT-only，但仍須符合 main 100% PASS 的完整性檢查。
 
 ## Scout 規則
 
@@ -355,7 +312,7 @@ Not independently reproduced.
 
 ### 策略關鍵缺口
 
-若 `hb_ready_status` 是 `NOT_LOSSLESS` 或 `NOT_ASSESSED`，研究紀錄可以保留 strategy-critical gap；仍有此類缺口時不得標記為 `PASS`。自動 Scout 准入仍要求 PASS，並會關閉 NOT_LOSSLESS 候選。
+非 main 的草稿或歸檔研究可使用 `NOT_LOSSLESS`／`NOT_ASSESSED` 保留策略缺口；**main 不得保留這類未通過的紀錄**。Scout 不合格者仍關閉 PR。
 
 例如：
 
@@ -368,7 +325,7 @@ Not independently reproduced.
 - execution convention 會改變交易 timing；
 - 需要 unsupported data。
 
-對自動 Scout 准入，這類候選必須先從 primary source 補齊才可標記 PASS；否則該 Scout PR 會以 `NOT_LOSSLESS` 關閉。一般非 Scout 研究紀錄經獨立審查後可在 `main` 保留缺口，但必須使用非 PASS 狀態。
+所有策略 PR 都須先有可靠來源補證或獨立明示衍生策略的完整規則，達六門 PASS 才能進 `main`。Scout 不能補正者以 `NOT_LOSSLESS` 關閉；一般研究可留在非 main 分支。
 
 ## File naming
 
@@ -442,6 +399,6 @@ Parity 不是看最終 ROI 或 Sharpe 接近就算通過。Signal、entry / exit
 
 這個 repo 應保持簡單：
 
-> **若 `hb_ready_status: PASS`，代表策略通過六項指定引擎可表達性審查（非已完成 Qlib parity 或實盤驗證）；單純存在於 `main` 只代表研究得以保存。**
+> **main 上每個策略都必須經獨立 HB_READY 六門審查為 PASS。歷史重建／人工合併不再享有豁免；PASS 並非已證明獲利、Qlib parity 或實盤授權。**
 
 這就是本 repo 現在的用途。
