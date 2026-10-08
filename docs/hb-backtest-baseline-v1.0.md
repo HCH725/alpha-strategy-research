@@ -38,8 +38,6 @@ Testnet / later live workflow
 
 這個 repo 的 `main` 只保存經獨立 HB_READY 六門審查的 PASS 策略；非 PASS 研究保留在既有非 main 分支、PR 或 Git 歷史。上面的 execution flow 是下游 contract，不代表自動 bridge 已經啟用。
 
-歷史 20 家族／92 筆 baseline 的 HB_READY 複查已結案，不是目前 Pipeline 的待辦或阻塞事項；保留歷史 provenance、科學紀錄及既有 PR #58 非 PASS 不可原樣合併警示，不自動升級任何策略。
-
 ## 1. House rule: every strategy uses DCA Safety Orders
 
 本文件定義目前**選定 Campaign 的 DCA 研究實驗**；DCA 不是 HB_READY 准入條件。若加入 DCA 改變原來源策略交易事件，該執行方式須作為**獨立揭露的衍生策略／研究實驗**，不可稱 source-native 無損。

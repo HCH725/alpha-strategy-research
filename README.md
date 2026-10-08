@@ -377,8 +377,6 @@ For parity, matching final ROI or Sharpe is not sufficient. Signal time, entry/e
 
 The automatic repo-to-Hummingbot/Qlib execution bridge is **not defined by this repository README as already active**. The new Survivor Repo is also not created yet. Formal large-scale screening resumes only after Hummingbot ↔ Qlib parity is proven.
 
-The historical 20-family / 92-baseline HB_READY reassessment is closed, not a pending task or blocker for the current intended pipeline. Its scientific provenance, archive references and PR #58 non-merge warning remain in force; closure does not upgrade non-PASS records.
-
 The old Research Intake Review → Wiki ingestion → preparation backlog → n8n → Qlib-first automatic flow is deprecated and is not the current admission or execution contract.
 
 ## Public-repository hygiene

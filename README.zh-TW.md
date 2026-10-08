@@ -379,8 +379,6 @@ Parity 不是看最終 ROI 或 Sharpe 接近就算通過。Signal、entry / exit
 
 **目前 README 不宣稱 repo → Hummingbot/Qlib 的自動執行 bridge 已經啟用。** 新的 Survivor Repo 也尚未建立；正式大量海選需等 Hummingbot ↔ Qlib parity 完成後才恢復。
 
-歷史 20 家族／92 筆 baseline 的 HB_READY 複查已結案，不是目前預期 Pipeline 的待辦或阻塞事項。原科學紀錄、Archive 來源及 PR #58 不可合併警示均保留；結案不代表非 PASS 自動升級。
-
 舊的 Research Intake Review → Wiki ingestion → preparation backlog → n8n → Qlib-first 自動流程已 deprecated，不再是目前 admission 或 execution contract。
 
 ## Public repo hygiene
