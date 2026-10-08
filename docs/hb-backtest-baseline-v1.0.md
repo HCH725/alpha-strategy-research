@@ -2,7 +2,7 @@
 
 Effective: 2026-10-05 (UTC+8)
 
-這份文件是目前單策略量化回測的 frozen execution contract。它只鎖定已經討論完成的原則；沒有另外發明新的 pipeline、optimizer、manager 或額外治理層。
+這份文件是目前**單策略量化研究 Campaign** 的 v1.0 execution target，不是 HB_READY 准入的市場／週期／資料／成交方式硬門檻。2026-10-08 六項 HB_READY 規範見 [Review Contract](../.github/HB_READY_REVIEW.md)。文件描述的目標能力必須經 pinned simulator 實測，不能把規劃視為實作已完成；不新增 pipeline、optimizer、manager 或治理層。
 
 ## 0. Big picture
 
@@ -38,7 +38,7 @@ Testnet / later live workflow
 
 ## 1. House rule: every strategy uses DCA Safety Orders
 
-所有進入績效研究的策略，都套用統一的 DCA execution overlay，不論來源策略本身是否原生使用 DCA。
+本文件定義目前**選定 Campaign 的 DCA 研究實驗**；DCA 不是 HB_READY 准入條件。若加入 DCA 改變原來源策略交易事件，該執行方式須作為**獨立揭露的衍生策略／研究實驗**，不可稱 source-native 無損。
 
 固定結構：
 
@@ -115,9 +115,7 @@ Hermes 依下列條件提出研究空間：
 
 ### Funding
 
-Funding 使用對應 Binance USDT-M perpetual 的歷史實際 funding rate，依正負方向與實際時間點納入。
-
-不得用固定假設值，也不得把未知 funding 靜默當成 0。
+**Campaign 目標**是依正負方向、實際時間點使用 Binance USDT-M perpetual 歷史 Funding Rate；但目前 pinned Hummingbot V2 通用 backtesting simulator 尚未證明此項已實作。未經完整實作／測試前，不能宣稱正式績效已含歷史 Funding，也不得靜默以 0 取代。涉及 Funding 的策略須由六門中的引擎／成本相容門逐案判斷。
 
 ### Other execution semantics
 
@@ -159,7 +157,7 @@ Qlib 與 Hummingbot 必須逐筆比對：
 
 ## 6. Base research matrix = 42 cells before parameter expansion
 
-目前 universe：
+目前**Campaign** universe（非 HB_READY 准入白名單）：
 
 - BTCUSDT
 - ETHUSDT
@@ -169,7 +167,7 @@ Qlib 與 Hummingbot 必須逐筆比對：
 - DOGEUSDT
 - LINKUSDT
 
-Timeframes：
+目前**Campaign** timeframes（非 HB_READY 准入白名單）：
 
 - 1h
 - 4h
@@ -230,7 +228,7 @@ Leverage：
 
 ## 9. What remains intentionally out of scope
 
-v1.0 不處理：
+本次單策略 Campaign v1.0 不處理下列項目；但它們**不是 HB_READY 一律禁止研究的類型**，能否 PASS 以六項規則及 pinned Hummingbot 實際能力為準：
 
 - multi-strategy portfolio construction
 - correlation ranking

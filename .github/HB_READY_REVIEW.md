@@ -1,6 +1,6 @@
-# LOSSLESS HB_READY GitHub Review Contract
+# HB_READY GitHub Review Contract — Six-Gate Engine Capability
 
-Effective: 2026-10-06 (UTC+8)
+Effective: 2026-10-08 (UTC+8)
 
 This file defines the automated GitHub PR admission gate for scheduled Scout strategy records in `HCH725/alpha-strategy-research`; it does not gate every strategy record preserved in the corpus.
 
@@ -8,7 +8,7 @@ This file defines the automated GitHub PR admission gate for scheduled Scout str
 
 This review answers one question only:
 
-> For this automated Scout `research/*` PR, can the source core strategy's signal and causal trade-event semantics be reconstructed without material approximation and evaluated by the pinned Hummingbot backtester under the same explicitly labeled house overlay?
+> Is this specific, fully declared source-native or explicitly derived strategy causally reproducible and actually expressible by the pinned Hummingbot backtest model, with no hidden execution or data assumptions?
 
 Pinned baseline:
 
@@ -31,63 +31,24 @@ They must receive `hb_ready_status: PASS` to merge through this lane; a `NOT_LOS
 
 Non-Scout reconstructed/legacy research records use a non-`research/*` branch (for example `reconstruction/*` or `maintenance/*`) and receive independent provenance/research review. They may merge as `NOT_LOSSLESS` or `NOT_ASSESSED`, remain ordinary root-level strategy records, and must not be auto-consumed downstream. This branch distinction is process-only and creates no content class, folder, or tag. Maintenance/documentation/config PRs are also ordinary review PRs and are never auto-merged or auto-closed by the Scout admission policy.
 
-## Hard admission requirements
+## HB_READY admission: six enforceable requirements
 
-Every strategy record marked `hb_ready_status: PASS` must satisfy every applicable item explicitly and source-faithfully:
+**Removed as independent bans:** single trading pair, the `1h/4h/1d` decision-timeframe whitelist, OHLCV-only signals, and same-bar-close-only execution. No market, frequency, data category, or execution convention is disqualified *by its name alone*. Removal of a policy ban is **not** evidence that the pinned Hummingbot backtester can actually execute it. Gate 5 must demonstrate the required path, rather than assume support.
 
-1. **Market structure**
-   - single trading pair per run;
-   - preserve source market/contract identity when it changes signal data, bars, timing, direction, or source applicability; otherwise, the house overlay may choose an explicitly labeled research market;
-   - no cross-sectional ranking, pair spread, shared portfolio capital, portfolio rebalance, or multi-pair shared state;
-   - spot cannot require naked shorting.
+A candidate can be **source-native** (reproducing the primary-source rules) or an **explicitly derived executable strategy** (separately identified, with immutable primary-source lineage and all researcher-designed changes disclosed in existing `Provenance`, `Signal`, `Execution assumptions`, and `Limitations` sections). An adapted strategy is **never** evidence that the original source strategy itself passed. A reviewer may verify source facts but must not silently invent an adaptation to rescue a PR.
 
-2. **Timeframe**
-   - exactly one decision timeframe: `1h`, `4h`, or `1d`;
-   - multi-timeframe strategies are rejected unless exact causal alignment is demonstrably lossless under the pinned engine.
+Every `hb_ready_status: PASS` record must satisfy **all six** requirements for the *specific version declared in that record*:
 
-3. **Data**
-   - core signal uses OHLCV and deterministic causal candle-derived indicators only;
-   - reject required funding, OI, mark/index price, liquidation feed, trade/aggressor feed, L2/order book, on-chain, options/Greeks, sentiment/news, macro, cross-venue state, or other unsupported external state.
+1. **Deterministic, reproducible signals.** Explicit formula/model artifact, source data, indicator variant, lookbacks, smoothing, thresholds, comparisons, state transitions and priority. Fitted/ML signals require pinned model/preprocessing/training cutoff and point-in-time inference inputs. Missing decision-critical rules cannot be guessed.
+2. **Unambiguous trade direction.** Long/short intent is explicit or a side is explicitly disabled; market/contract permissions must be realistic.
+3. **Complete entry, exit and risk rules.** Entry, signal/opposite exits, SL/TP/trailing/time limits and any intentionally disabled behavior are explicit; no hidden Hummingbot defaults.
+4. **Complete position and re-entry state.** Pyramiding, simultaneous exposure, cooldown, size dependencies, safety orders and re-entry/state transitions are explicit or demonstrably irrelevant. Research-designed DCA may change entry/exit events; such an overlay is a **declared derivative/execution experiment**, not automatically event-neutral or source-native.
+5. **Demonstrated pinned-engine and data-model compatibility.** Identify the exact Hummingbot package/image/commit and applicable controller/executor, connector, market(s), data feed(s), decision/availability timestamps, fills, costs, leverage/margin and accounting. Demonstrate that **all materially required** multi-asset synchronization/shared capital, lower or multi-timeframe alignment, non-OHLCV point-in-time inputs, next-open/maker/intrabar execution, and real costs can actually be modeled on the *specified* engine path. Unsupported or unverified requirements cannot receive PASS; a documented feature, generic executor name, or one supported interval is insufficient. Missing trade prices must not silently default to fabricated values. The currently verified subset may be narrower than Hummingbot's advertised capabilities. Source-native equivalence is assessed against the source; a disclosed derivative is assessed against **its own fully specified strategy**, not falsely represented as lossless source reproduction. Pin fees/funding/precision and flag unsupported economic terms; do not report hypothetical zero funding as realized funding.
+6. **Warmup, point-in-time availability and causality.** Lookbacks/warmup are defined; no repainting, future bars/extrema, negative-shift leakage, full-sample leakage or use of incomplete higher-timeframe candles as completed signals. A signal's decision time must not precede the point when its inputs were available; fill order and same-bar ambiguities need explicit, supported semantics.
 
-4. **Signal determinism**
-   - exact formula/indicator variant;
-   - source price;
-   - lookback;
-   - smoothing method;
-   - thresholds;
-   - comparison/crossover semantics;
-   - AND/OR/state-transition logic;
-   - conflict priority.
+**PASS means admissible to *model-consistent research*, not profitability, economic realism, guaranteed source-native equivalence, Qlib parity, survivor status or Paper/Testnet/Live permission.** Profitable net-of-fee returns are a later performance/OOS question, **not** an HB_READY admission threshold. For new execution/data paths, pin the evidence and verify representative event-level Qlib/Hummingbot parity **before Qlib mass screening**, not before preserving a strategy record.
 
-5. **Direction**
-   - long and short rules explicit, or one side explicitly disabled.
-
-6. **Entry / exit / risk**
-   - exact entry;
-   - signal exit / opposite-signal exit;
-   - SL / TP / trailing / time limit / no-exit semantics;
-   - every applicable field explicit or explicitly none/disabled;
-   - no silent Hummingbot defaults.
-
-7. **Execution timing**
-   - compatible with completed-bar decision + same-bar-close execution;
-   - next-bar-open, maker-touch/queue, or intrabar-path-dependent strategies are NOT_LOSSLESS.
-
-8. **Position / re-entry / gating**
-   - pyramiding / repeated-entry, max same-side concurrency, cooldown, re-entry, and position-aware state must be explicit or provably irrelevant whenever they can change the trade-event sequence, timing, direction, or exits;
-   - source sizing and fixed-vs-compounding behavior may be replaced by the house overlay only when event-neutral;
-   - the overlay must not invent missing signal, entry, exit, or re-entry rules.
-
-9. **Cost / engine-model compatibility**
-   - maker/taker asymmetry, spread capture, queue position, partial fills, unsupported slippage/impact, funding, margin, liquidation, or leverage are hard gates when the strategy edge or event logic materially depends on behavior the pinned backtester cannot model losslessly;
-   - pure PnL/accounting costs may be normalized using pinned house assumptions when they do not materially affect the strategy edge or event logic;
-   - the overlay must not substitute a different price series when source contract identity is material.
-
-10. **Warmup / causality**
-    - all lookbacks known so warmup can be derived;
-    - no repainting, future reference, negative shift, future extrema, full-sample normalization, or look-ahead leakage.
-
-Any material approximation, unresolved source interpretation, or invented source-core signal or trade-event rule means the record cannot be `PASS`. In this automated Scout lane that outcome is **NOT_LOSSLESS** and the PR is closed; ordinary non-Scout research may preserve the record on `main` with a non-PASS status after independent review. The house overlay must never invent missing signal, entry, exit, or re-entry rules, or substitute a different price series when contract identity is material.
+If any of the six requirements is materially incomplete, unverifiable or unsupported by the pinned engine, the automated Scout `research/*` PR is `NOT_LOSSLESS` and closed with the specific remaining blocker. Non-Scout research may still be preserved on `main` with `NOT_LOSSLESS` or `NOT_ASSESSED` after independent review. The existing status values and root-level `strategy-research-record-v1` format remain unchanged. Neither historical Survivor evidence nor removal of four bans retroactively upgrades a record to PASS.
 
 ## Auto-remediation
 
@@ -115,9 +76,9 @@ The reviewer must **not**:
 - invent parameters;
 - choose among plausible strategy variants;
 - add a stop/target/cooldown;
-- convert next-bar-open into close;
-- remove a material data dependency;
-- alter the strategy to fit Hummingbot.
+- silently convert next-bar-open into close;
+- silently drop required data or market/portfolio dependencies;
+- secretly create an adapted strategy from a source-native PR. A deliberate derived strategy must have its own documented specification and provenance, not be made through reviewer auto-remediation.
 
 ## Terminal states
 
@@ -143,7 +104,7 @@ When all missing facts are recoverable:
 
 ### HB_READY: NOT_LOSSLESS
 
-When the source is materially underspecified or incompatible in an automated Scout `research/*` admission PR:
+When the declared strategy is materially incomplete, unverifiable, or unsupported by the pinned execution/data model in an automated Scout `research/*` admission PR:
 
 1. submit a review comment beginning `HB_READY: NOT_LOSSLESS`;
 2. identify exact blocker(s);
@@ -155,19 +116,8 @@ Automated Scout strategy PRs must not remain indefinitely in REQUEST_CHANGES.
 
 ## Downstream invariant
 
-HB_READY admission remains a source-semantics gate: only records with `hb_ready_status: PASS` may be executed or screened in the current Hummingbot/Qlib performance-research downstream. The source strategy's core signal and causal trade-event semantics—including timing, direction, entries, exits, and any event-affecting position behavior—must be reconstructed without material approximation. Source sizing or fixed-vs-compounding behavior may be replaced only when event-neutral under the house overlay. Records marked `NOT_LOSSLESS` or `NOT_ASSESSED` must not be auto-consumed downstream.
+Only `hb_ready_status: PASS` strategies may enter current Hummingbot/Qlib performance research; research preservation on `main` is independent. Pinned Hummingbot backtesting is the model benchmark. Qlib mass screening requires representative event-level parity on the exact activated strategy, data, execution assumptions and engine route, not a matching Sharpe/MDD alone. An admission PASS by itself does not prove such parity or live economics.
 
-After a record is marked PASS, the current performance-research workflow applies one explicit **house execution overlay** to each eligible strategy:
+The current **research campaign** optionally applies the declared house BO=6%, SO1=6%, SO2=6%, isolated 3×/5× and research-defined DCA spacing. These are downstream experiment settings, **not HB_READY source requirements**. If DCA, sizing, direction, risk or event timing changes a source strategy, record the execution as a separate, explicitly derived strategy with its own evidence, not as an event-neutral or source-native overlay. Do not claim that a path with unverified funding, fills, margin or causality is model-compatible merely because the Hummingbot API accepts a config.
 
-- Base Order = 6% of initial capital;
-- Safety Order 1 = 6%;
-- Safety Order 2 = 6%;
-- Isolated margin;
-- 3× and 5× leverage tested separately;
-- DCA spacing and strategy parameters are research-defined before final OOS evaluation.
-
-This overlay is intentionally not source-native semantics and must never be presented as such. It may replace event-neutral source sizing, capital, leverage, and pure accounting assumptions, but must not invent missing signal, entry, exit, or re-entry rules or substitute a different price series when source contract identity is material.
-
-Hummingbot is the canonical benchmark engine. Qlib may be used for large-scale screening only after the two engines demonstrate event-level parity on the same source core strategy, data, house overlay, and pinned assumptions—not source-native sizing. Matching only final performance metrics is insufficient: signal time, entry/exit time, direction, price, position size under the same overlay, Safety Orders and close transitions must match trade by trade.
-
-There is no second semantic suitability gate after a record has been marked PASS and merged; downstream eligibility is read from `hb_ready_status`, not inferred from presence on `main`. A future Survivor Repo is a performance-promotion output, not another HB_READY admission layer.
+The existing status field alone governs selection; do not add a second admission registry. Never upgrade old evidence automatically, change historical PR #58 status, deploy Qlib/Hummingbot or interpret PASS as trading authorization.
