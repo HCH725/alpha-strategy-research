@@ -4,7 +4,7 @@
 
 ## 📊 HB_READY PASS Strategy Pool
 
-**Admitted strategies on main: 53** <!-- HB_READY_POOL_COUNT -->
+**Admitted strategies on main: 54** <!-- HB_READY_POOL_COUNT -->
 
 Every root-level strategy record on `main` MUST have `hb_ready_status: PASS`. This count is the number of those records; it must match the number of root-level strategy records, excluding the two READMEs. Historical research with non-PASS statuses is preserved outside `main`.
 
