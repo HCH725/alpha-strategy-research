@@ -89,9 +89,9 @@ When the current immutable PR head satisfies every gate:
 1. set the record's `hb_ready_status: PASS` and submit a GitHub review comment beginning `HB_READY: PASS`;
 2. summarize the source-backed evidence;
 3. squash-merge using the exact reviewed head SHA;
-4. after the merge succeeds, re-read current `main`, count root-level strategy records whose frontmatter says `hb_ready_status: PASS` (exclude `README.md` and `README.zh-TW.md`), and update only the `<!-- HB_READY_POOL_COUNT -->` line in `README.md` to that exact PASS count.
+4. immediately after the merge succeeds and **before reporting completion**, re-read current `main`, count root-level strategy records whose frontmatter says `hb_ready_status: PASS` (exclude `README.md` and `README.zh-TW.md`), and update only the `<!-- HB_READY_POOL_COUNT -->` line in `README.md` to that exact PASS count. Re-read `main` and README afterward to verify the count. If another merge or README write races with this update, fetch the new `main` and current README file SHA, recompute, and retry once. Report any still-unresolved README mismatch explicitly as incomplete bookkeeping; do not claim the count was synchronized.
 
-The PASS-count synchronization is post-merge bookkeeping only. It must never affect HB_READY admission, alter a strategy record, or create a second review/control path.
+The PASS-count synchronization is post-merge bookkeeping only. Because the merge and README update are separate GitHub commits, a short-lived count lag does **not** by itself imply a non-PASS strategy on `main`. Independently verify strategy frontmatter before diagnosing an admission breach; preserve the existing README-count integrity check. Synchronization must never affect HB_READY admission, alter a strategy record, or create a second review/control path.
 
 ### HB_READY: AUTO_REMEDIATED
 
