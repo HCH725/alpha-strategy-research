@@ -377,7 +377,7 @@ For parity, matching final ROI or Sharpe is not sufficient. Signal time, entry/e
 
 The automatic repo-to-Hummingbot/Qlib execution bridge is **not defined by this repository README as already active**. The new Survivor Repo is also not created yet. Formal large-scale screening resumes only after Hummingbot ↔ Qlib parity is proven.
 
-The old Research Intake Review → Wiki ingestion → preparation backlog → n8n → Qlib-first automatic flow is deprecated and is not the current admission or execution contract.
+The current research and admission contracts are the HB_READY review policy and the Hummingbot-aligned backtest baseline; retired intake/review routines are not executable entrypoints.
 
 ## Public-repository hygiene
 
