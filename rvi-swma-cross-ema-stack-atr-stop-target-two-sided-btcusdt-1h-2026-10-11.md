@@ -1,0 +1,138 @@
+---
+schema: strategy-research-record-v1
+hb_ready_status: PASS
+title: RVI swma-cross EMA-stack-gated ATR stop-target two-sided on BTCUSDT 1h bars
+created: 2026-10-11
+updated: 2026-10-11
+type: strategy-research-record
+tags:
+  - quant
+  - strategy-research
+  - source-backed
+status: research-only
+confidence: medium
+source_as_of: 2024-02-22
+sources:
+  - https://www.fmz.com/strategy/442506
+  - https://github.com/fmzquant/strategies/blob/7853bb2bf262c4567ac238d3552d97f0e50cb801/基于RVI和EMA的比特币交易策略Bitcoin-Trading-Strategy-Based-on-RVI-and-EMA.md
+  - https://www.tradingview.com/pine-script-reference/v5/
+implementation_status: not-implemented
+adoption: not-approved
+approval_scope: research-only
+contested: false
+contradictions: []
+---
+
+# RVI swma-cross EMA-stack-gated ATR stop-target two-sided on BTCUSDT 1h bars
+
+## Provenance
+
+Primary source read end to end (immutable public mirror file plus its recorded FMZ canonical page, fetched 2026-10-11):
+
+- Canonical page: https://www.fmz.com/strategy/442506 (fetched live over HTTPS during this cycle with HTTP 200, 105746 bytes of landing HTML). Title `基于RVI和EMA的比特币交易策略` matches the mirror `> Name` verbatim; author token `ChaoZhang` × 2; prose carries the same rule (`RVI让利` present — RVI signal plus fast-EMA-above-slow-EMA long / slow-above-fast short, ATR-anchored stop/target from recent extremes). Word-boundary counts over the whole landing HTML: `Sharpe` 0, `Win Rate` 0, `Max Drawdown` 0, `Annualized` 0, `Profit Factor` 0, `Take profit` 0, `Stop Loss` 0 — the page ships no performance numbers of any kind for this strategy; the sole `return` token is site-chrome JavaScript (`window.__cdn=function(p){...return b?...}`), not a performance figure. The mirror's marketing line (`回测数据充足,参数经过优化,实盘表现良好`) is unquantified prose — no numbers transcribed, never a source fact here.
+- Immutable mirror actually executed against (primary code source): repository https://github.com/fmzquant/strategies, full commit SHA `7853bb2bf262c4567ac238d3552d97f0e50cb801` (verified as the repository head via `git ls-remote` during this cycle — the same head pin as the merged Support-Resistance-fractal, NRTR, Chande-Kroll, Heikin-Ashi, Bollinger, PVT-EMA, KDJ, STARC, T3-Tillson, WaveTrend, Qstick, Aroon, SQZMOM-LB, TRIX, Schaff, KST, OBV-EMA and further admissions), exact file path `基于RVI和EMA的比特币交易策略Bitcoin-Trading-Strategy-Based-on-RVI-and-EMA.md`. File 8930 bytes, blob SHA `70746b8b7075c23e09e704a9434ea06e384883e7` (verified with `git hash-object` reproducing the identical SHA on re-download, and matching the GitHub contents API `sha`/`size` at the pinned commit). The mirror prints `> Name`, `> Author` = `ChaoZhang`, the bilingual rule prose quoted above, one backtest screenshot image (performance content unread — no numbers transcribed, never a source fact here), the Strategy Arguments table (see derivation (7) for its two rendering quirks), `> Detail` = https://www.fmz.com/strategy/442506, `> Last Modified` = `2024-02-22 13:50:17` (date part adopted as `source_as_of`), and the FMZ backtest stanza (`start: 2024-01-22`, `end: 2024-02-21`, `period: 1h`, `basePeriod: 15m`, `Futures_Binance BTC_USDT`).
+- Full `//@version=5` block read in full (order-affecting lines: the `strategy(` declaration, the 7 inputs, the `rvi`/`sig` legs, the ATR/EMA legs, the `esalcista`/`bajista` gates, the `var TP`/`var SL` pair, the `crucepositivo`/`crucenegativo` legs, the four flat-gated `strategy.entry`/`strategy.close` blocks; the commented `strategy.entry`/`strategy.close`/`plot` lines, the `plot`/`plotshape` visuals, and the two `alert(` calls are non-order-affecting — see census and derivation (7)).
+- Text census over the pinned code block: 1 `strategy(` (`strategy(title="Relative Vigor Index", shorttitle="RVGI", overlay=true)` — no `pyramiding`, no `process_orders_on_close`, no `initial_capital`, no `commission`, no `calc_on_every_tick`, no `calc_on_order_fills`, pinned as written) / 0 `study(` / 0 `indicator(` (one commented `//indicator(` line, inert) / 2 active `strategy.entry` (`"BUY"`/`strategy.long` gated by flat + `crucepositivo and esalcista`, `"SELL"`/`strategy.short` gated by flat + `crucenegativo and bajista`, no `qty=`/`limit=`/`stop=` qualifiers; two further `strategy.entry` lines are commented out, inert) / 4 active `strategy.close` (SL/TP pair per side naming the exact entry ids `"BUY"`/`"SELL"` with `comment="SL"`/`comment="TP"`; one commented `strategy.close`, inert) / 0 `strategy.exit` / 0 `strategy.order` / 0 `strategy.cancel` / 1 `ta.crossover` / 1 `ta.crossunder` (both on the `rvi`/`sig` pair only) / 3 `ta.swma` (two inside `rvi`, one for `sig` — fixed 4-bar symmetric weights, no length parameter exists) / 4 `ta.ema` (two per gate leg) / 1 `ta.atr` / 2 `math.sum` (both window `len`) / 0 `request.security` / 7 `input.` (len 4 / offset 0 / atrlength 19 / ema1 95 / ema2 200 / atrSL 2.0 / atrTP 1.0 — the code defaults govern) / 0 `pyramiding` / 0 `process_orders_on_close` / 0 `commission` / 0 `nz(` / 0 `barstate` / 0 `lookahead` / 1 bare `open` (inside `close-open`, order-affecting — recorded, never hidden) / `close` in RVI numerator, both EMA legs / `high` in RVI denominator, `bajista` gate, long TP / short SL legs / `low` in RVI denominator, `esalcista` gate, long SL / short TP legs / 0 `volume` / 2 `alert(` (entry-side notifications only, gate no order — see derivation (7)) / 2 `var` (`TP`/`SL`, set once per entry, never trailed). No portable economics beyond the four order legs ships anywhere — recorded as an absent-economics stub, never as zero-cost evidence.
+- Licence and rights: the mirror file carries no licence header of its own; this record cites and normalizes the rule and reproduces no source block beyond single-line declarations quoted for gate evidence.
+
+**Derived-record declaration (read before review):** this file specifies a separately identified derived executable strategy, not a lossless reproduction of the source. Researcher-declared adaptations are exactly seven: (1) market pin `BTCUSDT` on Binance futures with the source-native `1h` frame kept (the source stanza pins `1h`/`15m` on `Futures_Binance BTC_USDT` — frame-faithful, venue transfer, symbol spelling and futures short permission disclosed here, never presented as source-native); (2) completed-bar decisions with same-bar-close fills (the source ships no `process_orders_on_close` argument — Pine default would fill later; this record's timing is a predeclared derivation, disclosed here); (3) an adopted 300-bar warmup with pre-warmup bars flat by record rule (covers the EMA-200 seed with margin plus the swma/sum/ATR seeds — see Required data); (4) house sizing/capital/costs replacing the absent source economics (see Execution assumptions); (5) default no-pyramiding single-unit construction carried explicitly (no `pyramiding` argument ships anywhere, and the code additionally gates both entries on flat — same-side re-assertion and in-position opposite crosses print nothing); (6) discrete-bar execution with no intrabar recalculation and SL-before-TP precedence on dual-breach bars (no `calc_on_every_tick`/`calc_on_order_fills` ships anywhere; the source checks SL before TP textually — disclosed here, never presented as source-native); (7) the two `alert(` notifications dropped as non-order side effects, the dead `offset` input (declared, never read by any active line) carried as inert, the two commented order legs left inert, and the Strategy Arguments table's `false` (Offset rvi) / `true` (Atr TP) cells read as mirror-rendering quirks overridden by the governing code defaults `0` / `1.0` — all disclosed here. The `len = 4` / `atrlength = 19` / `ema1 = 95` / `ema2 = 200` / `atrSL = 2.0` / `atrTP = 1.0` coefficients, the swma RVI/signal construction, the strict low/high EMA-stack gates, the flat-only entry gating, the entry-bar-anchored fixed SL/TP arithmetic, the SL/TP-only exit posture, and the no-reversal stance are source-verbatim.
+
+Pre-write dedup (2026-10-11): working-tree word-boundary search for `rvi`, `vigor`, `vigour`, `relative-vigor` returns no strategy record. Open `research/*` PRs are only #48 (Larry Williams 3-EMA channel streak long), #49 (Gaussian channel StochRSI-gated breakout long), #63 (SuperTrend ATR-flip trend long), #89 (Chandelier Exit dual-stop state-flip long), and #92 (SSL channel SMA-high/low Hlv state-following reversal two-sided) — different mechanisms, indicators, and sources. Closest pool relatives: `ema-20-50-cross` (plain dual-EMA cross entries with no oscillator trigger, no gates, no stops), `golden-cross-sma-regime-gated-long` (SMA-regime-gated long-only with close-based gate — single direction, no RVI trigger, no ATR stop/target), `alma-cross-volume-gate` (ALMA cross with volume gate — different trigger and gate), and `cmf-velocity-zero-cross-ema200-bracket` (volume-flow velocity zero-cross with EMA-200 bracket — different oscillator family, velocity-vs-level, bracket-vs-stack-gate). None computes an swma-smoothed open-close-vs-high-low vigor line with a signal-line cross trigger gated by a strict low/high-placed dual-EMA stack and exited only through entry-bar-anchored ATR stops/targets. Not a trivial parameter variant.
+
+## Economic mechanism
+
+### Source-reported
+
+Vigor-plus-stack trend alignment with fixed ATR-anchored risk (prose plus code): the RVI line (swma-smoothed close-minus-open vigor over swma-smoothed high-low range) crossing its swma signal line marks the timing trigger; the dual-EMA stack (`EMA95` above `EMA200`, with the bar's `low` still above the fast leg for longs, mirror with `high` for shorts) certifies the trend; entries print only when both agree from flat; risk is fixed at entry from the entry bar's own extremes (`low − 2×ATR(19)` stop / `high + 1×ATR(19)` target for longs, mirror for shorts). The design bets that vigor crosses are only tradable inside a certified stack, and that entry-bar extremes plus one ATR multiple bound the adverse excursion without any trailing. It ships no opposite-signal exit, no time exit, no re-entry while in position — the book holds one unit until a rail prints.
+
+### Research interpretation
+
+Trigger-gate-risk separation machine, edge-triggered, two-sided, flat-gated — the strictest admission policy among the pool's cross family: plain cross records (EMA-20-50, ALMA, golden-cross) let the cross itself trade; here the cross is necessary but never sufficient without the stack gate, and the gate itself is stricter than close-vs-stack (the bar's extreme must clear the fast leg, so a bar piercing the stack with its wick fails the gate even when its close passes). The RVI construction is the pool's first open-close vigor oscillator: unlike RSI/Fisher/Schaff/Qstick records it reads `open` (the conviction proxy is close-position inside the bar's own range, smoothed by fixed-weight swma rather than recursive EMA/RMA, so there is no smoothing-seed dispute beyond a 4-bar window). The risk legs are fixed, not trailed — unlike Chandelier/SuperTrend trailing records the rails never move after entry, so time in position is bounded only by extreme prints, disclosed as the coded cost. Unlike reversal machines (SSL #92, Support-Resistance-fractal) an opposite cross while holding prints nothing — the position waits for its rails, never flips.
+
+## Signal
+
+Exact rule as pinned (`len = 4`, `atrlength = 19`, `ema1 = 95`, `ema2 = 200`, `atrSL = 2.0`, `atrTP = 1.0` frozen — any other value is a different, unpinned rule; the `offset = 0` input is declared but read by no active line and is inert):
+
+- Declarations (derived): two-sided flat-gated machine over `BTCUSDT 1h` with same-bar-close execution and house sizing/costs (see Execution assumptions). State ∈ {flat, long, short}; at most one unit is ever held; entries print only from flat.
+- Vigor trigger, pinned verbatim: `rvi = math.sum(ta.swma(close-open), len)/math.sum(ta.swma(high-low), len)`; `sig = ta.swma(rvi)`; `crucepositivo = ta.crossover(rvi, sig)`; `crucenegativo = ta.crossunder(rvi, sig)` — the sole timing trigger on each side.
+- Stack gate, pinned verbatim: `esalcista = low > ta.ema(close,ema1) and ta.ema(close,ema1) > ta.ema(close,ema2)`; `bajista = high < ta.ema(close,ema1) and ta.ema(close,ema1) < ta.ema(close,ema2)` — strict inequalities on the bar's extreme (not its close), pinned as written.
+- Orders, pinned verbatim: from flat, `strategy.entry("BUY", strategy.long)` when `crucepositivo and esalcista` with `SL := low - (atr*atrSL)`, `TP := high + (atr*atrTP)`; `strategy.entry("SELL", strategy.short)` when `crucenegativo and bajista` with `SL := high + (atr*atrSL)`, `TP := low - (atr*atrTP)` (`atr = ta.atr(atrlength)`). While holding, `strategy.close("BUY", comment="SL")` when `low < SL`, `strategy.close("BUY", comment="TP")` when `high > TP`, mirror for `"SELL"` — each `strategy.close` names its exact entry id. On any bar the SL leg is evaluated before the TP leg (source textual order); a bar breaching both rails resolves as the SL close under this record's timing — disclosed, never hidden.
+- Exits and risk, pinned verbatim: SL/TP rails only — zero `strategy.exit` legs, zero `stop=`/`limit=`/`profit=`/`loss=` qualifiers, no opposite-cross exit, no time exit, no trailing (`TP`/`SL` are `var` set once at entry and never reassigned while holding). Fixed risk posture, explicitly complete, not invented.
+- Direction: two-sided with resting exposure to both sides across time, but never simultaneously and never by reversal — an opposite cross while holding prints nothing; the current unit must close through its rails first. A reversal reading would contradict the flat-gated entry blocks and is explicitly not this record. A long-only reading would contradict the `"SELL"`/`strategy.short` block and is explicitly not this record.
+
+## Required data
+
+- Completed `1h` bars of BTCUSDT: `open` (RVI numerator `close-open`), `high`/`low` (RVI denominator, stack gates, SL/TP rails and breach tests), `close` (RVI numerator, both EMA legs) — no `volume`, funding, OI, mark/index price, liquidation, trade, order-book, on-chain, options, sentiment, macro, session-template, calendar, or cross-venue state is read anywhere.
+- Single decision timeframe `1h` (source-native frame kept; zero `request.security` calls ship anywhere, so no second evaluated frame exists by construction).
+- Warmup: the binding seed stack is the `ta.ema(close,200)` recursion (dominant), the `ta.ema(close,95)` recursion, the `ta.atr(19)` RMA seed, the fixed 4-bar `ta.swma` windows, and the `math.sum(...,4)` windows. The adopted warmup is the first 300 completed `1h` bars flat by record rule (predeclared researcher choice — 1.5× the 200-bar dominant seed with margin; no traded bar reads a seeded value). Seed behavior is deterministic and fenced: swma/sum windows fill with available bars, EMA/ATR recursions seed on the first close, and a zero-range drought yields `rvi = 0/0 = na`, under which both `crossover`/`crossunder` are false and no order leg can fire — the warmup absorbs the entire seed stack structurally, disclosed, never a researcher tie-break. No repainting (fixed causal reads only, no negative shift, no `offset=` in any order leg), no future reference, no full-sample normalization, no `lookahead`, no `barstate`-gated order path; one evaluation per completed bar. The source stanza's `basePeriod: 15m` documents the author's own FMZ 1h backtest plumbing, not a second evaluated frame in the Pine logic — disclosed, not carried into this record.
+
+## Execution assumptions
+
+- Research market: BTCUSDT Binance futures under the house overlay (derived pin; the source stanza pins `1h`/`15m` on `Futures_Binance BTC_USDT` — frame kept, venue transfer, symbol spelling and futures short permission disclosed here, never presented as source-native). The short leg needs a venue with short permission; futures satisfies this — disclosed.
+- Order timing (predeclared derivation): completed-bar decision with same-bar-close execution, compatible 1:1 with the pinned Hummingbot backtester (package `20260920`, VERSION `dev-2.17.0`). The source ships no `process_orders_on_close` argument — Pine default would fill later; this record claims no source-native timing and no intrabar behavior. The SL/TP rails are conditional closes evaluated on completed-bar extremes and filled at that bar's close (a stop-market approximated at close under discrete-bar timing — disclosed; no maker-touch, queue, or intrabar-path-dependent fill). With at most one resolved order event per bar (flat-gated entries plus id-exact closes), same-bar ordering is trivially the written SL-before-TP order, disclosed.
+- Intrabar recalc (predeclared derivation): the source ships no `calc_on_every_tick`/`calc_on_order_fills`; this record evaluates one discrete decision per completed bar with no post-fill recalculation — disclosed, not hidden.
+- Sizing/capital/costs: the source ships no portable economics of any kind (no capital amount, no commission/slippage/funding/margin argument ships anywhere — recorded as an absent-economics stub, never as zero-cost evidence) — the explicit house overlay (Base 6% + Safety 6% + Safety 6%, Isolated, 3x/5x) and pinned house cost assumptions (fees plus historical funding; no hypothetical zero funding claimed) apply to the derived evaluation here, never presented as source-native behavior.
+- Concurrency: single-unit machine by flat-gated construction — at most one unit long or short; same-side re-assertion and in-position opposite crosses print nothing. No cooldown ships anywhere (explicitly none, not invented). No shared portfolio state, no cross-sectional ranking, no multi-pair logic. The two `alert(` calls are entry-side notifications gating no order and are dropped from the derived execution — disclosed.
+
+## Evidence
+
+### Source-reported
+
+The mirror ships the full construction (the `strategy(` declaration, all 7 inputs with code defaults, the swma RVI/signal legs, the ATR/EMA legs, both strict stack gates, the `var TP`/`var SL` pair, both cross legs, the flat-gated `"BUY"`/`"SELL"` entries with entry-bar-anchored SL/TP arithmetic, the four id-exact SL/TP closes, the bilingual rule prose, the arguments table, and the FMZ backtest stanza). It ships zero performance numbers: no return, no win rate, no profit factor, no trade count, no Strategy Tester table or figure — the one backtest screenshot image is untranscribed and this record claims no source-reported performance and no reproduced performance.
+
+### Independently reproduced
+
+Not independently reproduced.
+
+### Negative evidence
+
+1. No hidden risk layer: the body contains zero `strategy.exit` legs and zero `stop=`/`limit=`/`profit=`/`loss=` qualifiers; the SL/TP-rail-only posture is prescribed through `strategy.close` legs with `comment="SL"`/`comment="TP"`, explicitly complete, never hidden.
+2. No smoothing-seed dispute: the only smoothing is fixed-window `ta.swma` (no length parameter exists), `math.sum(...,4)` window arithmetic, one `ta.atr(19)` RMA, and two `ta.ema` recursions — no RSI/RMA/WMA variant choice anywhere; the adopted 300-bar warmup absorbs the deepest (EMA-200) seed with margin.
+3. No tie-semantics dispute: entries pass only through `ta.crossover`/`ta.crossunder` on the `rvi`/`sig` pair (strict edge semantics — a touch that merely equals never fires) plus strict `>`/`<` stack comparisons — an equal print neither triggers nor gates, pinned as written.
+4. Extreme-placed gate fenced: `esalcista` reads `low`, `bajista` reads `high` — a bar whose wick pierces the fast EMA fails the gate even when its close clears it. A close-based gate reading would contradict the code and is explicitly not this record.
+5. No-reversal fenced: both entry blocks require `not comprado and not vendido` — an opposite cross while holding prints nothing; the sole exit path is the position's own rails. A reversal reading would contradict the flat gates and is explicitly not this record.
+6. Fixed-risk fenced: `TP`/`SL` are `var` assigned only inside the entry blocks and never reassigned while holding — there is no trailing, no breakeven shift, no second-rail update. A trailing reading would contradict the code and is explicitly not this record.
+7. Single-frame fenced: zero `request.security` calls ship anywhere — no MTF pull, no cross-symbol pull, no `lookahead`. Every input is a causal function of completed `open`/`high`/`low`/`close` values inclusive of the decision bar, computable point-in-time with no future leakage — stated plainly.
+8. Dead-surface fenced: the `offset` input is read by no active line (only by commented plots), the two commented order legs and all `plot`/`plotshape` calls gate no order, and the two `alert(` calls notify without gating — none of them changes any order event under this record's timing, disclosed.
+9. Order-id completeness fenced: the sole long id is `"BUY"` and the sole short id is `"SELL"`, and each `strategy.close` names its exact entry id — with flat-gated single-unit construction there is at most one unit to close, so no partial-fill residue is reachable by code.
+10. Source-economics absence fenced: the stanza's date range and venue describe the author's FMZ backtest run, not portable cost facts — this record carries no commission/slippage/funding claim from the source and assigns all economics to the disclosed house overlay.
+11. Derivation boundary fenced: the only non-source-native behaviors in this record are the `BTCUSDT` market pin with the source-native `1h` frame kept, completed-bar same-bar-close fills with SL-before-TP precedence, the adopted 300-bar warmup with record-rule pre-warmup flat, default no-pyramiding single-unit construction, discrete-bar execution without intrabar recalculation, dropped alert side effects, and house sizing/costs — all predeclared above; the six frozen coefficients, the swma RVI/signal construction, the strict stack gates, the flat-only entries, the entry-bar-anchored SL/TP arithmetic, the SL/TP-only exits, the two-sided non-reversal stance, and the fixed-risk posture are source-verbatim. This record is therefore never evidence that any other market, frame, parameter set, or timing of the source passes.
+12. Network limitation disclosed: every formula line above was byte-verified in the pinned mirror file at commit `7853bb2` (8930 bytes, blob SHA recorded, `git hash-object` identical on re-download, contents-API `sha`/`size` matched); the FMZ canonical page verified live the title, the `ChaoZhang` token, the RVI/EMA/ATR prose, and the absence of any performance numbers — the division of evidence is disclosed here, not hidden.
+
+## Falsification plan
+
+Research-defined thresholds only (never substitutes for missing rules); global no-retuning rule: `len = 4` / `atrlength = 19` / `ema1 = 95` / `ema2 = 200` / `atrSL = 2.0` / `atrTP = 1.0` / swma RVI-signal cross / strict stack gates / flat-only entries / entry-bar-anchored fixed SL/TP / SL/TP-only exits / two-sided non-reversal / `1h` BTCUSDT / same-bar-close fills are frozen.
+
+- F1 — Vigor-trigger relevance: replacing the RVI/signal cross trigger with always-armed entries (every flat bar passing the stack gate enters in the gate's direction, same rails, same risk posture) must not improve net expectancy; fail ⇒ the vigor cross adds nothing over the stack gate alone.
+- F2 — Stack-gate relevance: replacing the strict extreme-placed stack gate with gate-always-true (every RVI/signal cross enters from flat, same rails, same risk posture) must not improve net expectancy; fail ⇒ the EMA-stack gate adds nothing over the raw vigor cross.
+- F3 — Two-sided relevance: running the long leg only with the short leg disabled (same trigger, same gate, same rails, same risk posture) must not improve net expectancy; fail ⇒ the two-sided stance adds nothing over its long half.
+
+## Crypto portability
+
+Pinned to BTCUSDT Binance futures under the house overlay (derived pin; the source stanza pins `1h`/`15m` on `Futures_Binance BTC_USDT`, and the code comment notes h4 BTC-or-ETH suitability — this record adopts only the stanza's `1h` BTC pin). The open/high/low/close arithmetic ports across perpetual venues without structural change — no volume read means venue volume-reporting differences touch nothing, disclosed as a robustness property, not a portability proof. The two-sided stance requires a short-capable venue (futures satisfies this); a spot deployment would express only the long half and is a different, unpinned claim. No funding-dependent leg, no stablecoin-specific assumption, no session-template, no cross-venue state. The 24/7 crypto market has no opens/gaps/sessions for the rule to read (no session gating anywhere); decision boundaries are venue-feed 1h bars, disclosed. Extension to other house-universe assets or timeframes would be a different, unpinned claim.
+
+## Limitations
+
+- Derived market pin: the source stanza pins `Futures_Binance BTC_USDT`; this record pins `BTCUSDT` Binance futures with the source-native `1h` frame kept. Cross-market behavior differences are real — the adaptation is disclosed, and this record makes no claim about any other market.
+- Derived timing: the source ships no `process_orders_on_close`; this record executes completed-bar same-bar-close discrete decisions with SL-before-TP precedence. Stop/target economics under discrete-bar timing differ from intrabar stop fills by construction — the adaptation is disclosed, not hidden, and this record makes no claim about any other timing's performance.
+- Fixed-risk holding: there is no trailing, no breakeven, no time exit, and no opposite-cross exit — adverse drift inside the rails holds indefinitely, chop alternating crosses while holding prints nothing, and whipsaw across successive round trips is the coded cost of the design, disclosed, not smoothed, not supplemented.
+- No source economics: the source ships no capital amount, commission, slippage, funding, or margin assumption — derived evaluation must carry the full house cost load, and this record reports no net performance of any kind.
+- Seed coverage: the EMA-200/95 recursions, the ATR-19 seed, and the swma/sum windows settle across early history; the first 300 `1h` bars are flat by record rule, so early-history signals never enter any evaluation.
+
+## Implementation status
+
+Not implemented. No Hummingbot controller, no Qlib screen, no Paper/Testnet/Live run exists for this record. Any future implementation must demonstrate the pinned-engine path (package `20260920`, VERSION `dev-2.17.0`) and representative event-level Qlib/HB parity before mass screening.
+
+## Adoption boundary
+
+Research-only. Not approved for any adoption, sizing, or live-trading use. Downstream house overlays (DCA matrix, leverage, capital) are separately declared experiments, never source-native behavior. Promotion requires the standard downstream evidence chain, never this record alone.
+
+## Related Wiki records
+
+None.
+
+## Sources
+
+- FMZ canonical strategy page (title/author/prose verified live via HTTP-200 page record): https://www.fmz.com/strategy/442506
+- Immutable mirror file at pinned commit `7853bb2bf262c4567ac238d3552d97f0e50cb801` (blob `70746b8b7075c23e09e704a9434ea06e384883e7`, 8930 bytes): https://github.com/fmzquant/strategies/blob/7853bb2bf262c4567ac238d3552d97f0e50cb801/基于RVI和EMA的比特币交易策略Bitcoin-Trading-Strategy-Based-on-RVI-and-EMA.md
+- Pine strategy semantics (v5 `strategy.entry`/`strategy.close` order legs, `ta.crossover`/`ta.crossunder` edge semantics, `ta.swma` fixed-weight smoothing, `[]`-free causal reads, default no-pyramiding construction): https://www.tradingview.com/pine-script-reference/v5/
