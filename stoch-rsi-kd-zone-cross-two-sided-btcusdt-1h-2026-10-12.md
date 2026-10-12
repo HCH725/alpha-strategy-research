@@ -1,0 +1,142 @@
+---
+schema: strategy-research-record-v1
+hb_ready_status: PASS
+title: StochRSI K/D zone-gated cross reversal two-sided on BTCUSDT 1h bars
+created: 2026-10-12
+updated: 2026-10-12
+type: strategy-research-record
+tags:
+  - quant
+  - strategy-research
+  - source-backed
+status: research-only
+confidence: medium
+source_as_of: 2026-03-12
+sources:
+  - https://github.com/EternaHybridExchange/tradingview-strategies/blob/01e4346df876f6fd124332e40a2cd62286174894/strategies/momentum/stoch_rsi_crossover.pine
+  - https://www.tradingview.com/pine-script-reference/v5/
+implementation_status: not-implemented
+adoption: not-approved
+approval_scope: research-only
+contested: false
+contradictions: []
+---
+
+# StochRSI K/D zone-gated cross reversal two-sided on BTCUSDT 1h bars
+
+## Provenance
+
+Primary source read end to end (raw file fetched live over HTTPS twice this cycle — floating `master` and pinned commit — byte-identical, 3,116 bytes, 73 lines, SHA-256 `71f000b054e504ca8428ab6805ffd0f501df5dfed3d10e17bc553e75fe13ce8e`):
+
+- Repository: https://github.com/EternaHybridExchange/tradingview-strategies (`master` default branch; repo created 2026-03-12; open-source collection of executable Pine Script strategies with alert-JSON handoff for automated execution).
+- Immutable pin: commit `01e4346df876f6fd124332e40a2cd62286174894` (2026-03-12T18:38:03Z, `Initial commit: 20 Pine Script strategies with Eterna MCP in`), path `strategies/momentum/stoch_rsi_crossover.pine` (73 lines, `//@version=5`). Adopted `source_as_of` 2026-03-12 is that commit's date, disclosed here, never an authorship date.
+- Strategy declaration (source-verbatim): `strategy("Stochastic RSI Crossover - Eterna MCP", shorttitle="Stoch RSI", overlay=false, default_qty_type=strategy.percent_of_equity, default_qty_value=100, initial_capital=1000)`. No `pyramiding`, no `process_orders_on_close`, no `calc_on_every_tick`, no `commission` argument ships — Pine language defaults govern the unfrozen timing, fenced below.
+- Text census over the pinned 73-line file (comments stripped before counting): 1 `strategy("` declaration / 2 `strategy.entry` (`"Long"` with `strategy.long`, `"Short"` with `strategy.short`, each gated by `strategy.position_size == 0`, alert JSON attached, no price/qty/when order argument) / 2 `strategy.close` (`"Long"` closed when the bearish cross prints while long; `"Short"` closed when the bullish cross prints while short) / 0 `strategy.exit` / 0 `strategy.order` / 0 `stop=`/`limit=`/`profit=`/`loss=` / 1 `crossover(` plus 1 `crossunder(` (the sole trading cross pair, fenced below) — no further `crossover`/`crossunder`/`ta.cross(` tokens anywhere / 0 `request.*` / 0 `security(` / 0 `timeframe(` / 0 `time(` / 8 `input.` (6 live trading inputs frozen below plus `leverageSize`/`positionSize` alert-payload parameters, fenced below) / 4 `position_size` reads (2 entry gates, 2 exit guards) / 1 `ta.rsi(` / 1 `ta.stoch(` / 2 `ta.sma(` / 0 `ta.ema/dema/tema/hma/rma/wma/vwma/mfi/cci(` / 0 bare-v4 `ema(/rsi(/rma(/wma(/vwma(` / 0 `ta.highest(`/`ta.lowest(` / 0 `volume` / 0 bare `open`/`high`/`low`/`hlc3` series reads in any live line (the only `high`/`low` argument slots are fed the `rsi` series itself inside `ta.stoch(rsi, rsi, rsi, ...)`, census-verified) / 2 `alert(` (JSON execution-handoff strings only — no order-leg effect, disclosed) / 2 `syminfo` (inside alert strings only — the code names no market) / `plot(` plus 2 `plotshape` plus `hline`/`bgcolor` (render only, cannot change any order).
+- Six live trading inputs frozen (any other value is a different, unpinned rule): `rsiLength = 14`, `stochLength = 14`, `smoothK = 3`, `smoothD = 3`, `upperLevel = 80`, `lowerLevel = 20`. The remaining two inputs (`leverageSize = 5.0`, `positionSize = 0.01`) parameterize only the alert-JSON handoff strings, never an order leg — house sizing/capital/costs replace the absent source economics (see Execution assumptions).
+- No risk layer ships anywhere in the source: zero stop/target/trailing/time-exit order legs — the no-stop/no-target posture below is the coded posture pinned as written (declared explicitly, never hidden), not a researcher invention.
+- Strategy README (`strategies/momentum/README_stoch_rsi.md`, same repo, same pin): `Recommended Timeframes — Primary: 15m, 1H; Secondary: 5m, 4H`; parameters table restates the frozen `14 / 14 / 3 / 3 / 80 / 20` defaults; prose claims `BUY: %K crosses above %D while in oversold zone (< 20)`, `SELL: %K crosses below %D while in overbought zone (> 80)`, `Win rate: ~50-60% with proper filtering`, `Best during range-bound conditions`, `Best combined with trend filters`, `Consider wider stop-losses due to sensitivity`, and an `Optimal Settings by Market` menu (`Crypto (volatile): Overbought 85, Oversold 15`; `Crypto (stable): 80/20`; `Forex: 75/25`). Four disclosures follow. First, the `~50-60%` figure ships with no table, figure, section, sample, or cost provenance anywhere in the repository — per the exact-numbers rule this record omits it entirely and claims no source-reported performance. Second, the `Best combined with trend filters` phrase overclaims against the code: the script computes `bullishMomentum = k > k[1] and d > d[1]` and `bearishMomentum = k < k[1] and d < d[1]` but neither series is read by any order leg, gate, plot, or any other line anywhere — pure dead code. Code governs: this record's signals carry no momentum confirmation, and the dead pair is fenced as negative evidence, not silently adopted. Third, `Consider wider stop-losses` notwithstanding, the code ships zero stop legs — substituting any stop would be a different, unpinned rule. Fourth, the `Optimal Settings` section is a variant menu the code does not take — this record freezes the coded `14/14/3/3/80/20` defaults and adopts no variant, disclosed.
+- Page performance language is otherwise absent — this record claims no source-reported performance and no reproduced performance.
+
+Licence and rights: the repository carries an MIT licence badge; this record cites and normalizes the rule and reproduces no source block beyond single-line declarations quoted for gate evidence.
+
+**Derived-record declaration (read before review):** this file specifies a separately identified derived executable strategy, not a lossless reproduction of the source. Researcher-declared adaptations are exactly five: (1) market pin `BTCUSDT` Binance futures (the source is market-agnostic via `syminfo.ticker` inside alert strings only — the code names no symbol); (2) decision timeframe `1h` taken from the strategy README's Primary pair `15m, 1H` (the code takes no timeframe input and makes no `request.*`/`security(` call, so it is single-frame by construction; the `1h` choice is README-Primary-faithful, campaign-aligned, and disclosed here, not code-derived); (3) same-bar-close fills on completed-bar decisions (the source ships no `process_orders_on_close`/`calc_on_every_tick` argument, so its backtest fills next-bar by language default; this record freezes completed-bar evaluation with same-bar-close execution and scopes any live intrabar behavior out, see Limitations); (4) an adopted 100-bar warmup with pre-warmup bars flat by record rule (covers the RSI-plus-stochastic-plus-double-SMA seed plus margin; see Required data); (5) house sizing/capital/costs replacing the absent source economics (see Execution assumptions). The `14/14/3/3/80/20` inputs, the Pine `ta.rsi`/`ta.stoch`/`ta.sma` arithmetic, the zone-gated K/D cross entry pair, the fixed `Long`/`Short` order IDs, the opposite-signal exits, and the no-stop/no-target risk posture are source-native and unmodified.
+
+Pre-write dedup (2026-10-12): working-tree searches for `stoch_rsi_crossover`, `README_stoch_rsi`, and the zone-gated `k < lowerLevel` construction return zero records using this source file, indicator chain, or rule; the six sibling Eterna records (Chaikin, AO, VWAP, RSI-divergence, MFI, CCI — same repository, never this file) are different indicators and rules. Open `research/*` PRs are only #48 (Larry Williams 3-EMA channel streak long), #49 (Gaussian channel StochRSI-gated breakout long), #63 (SuperTrend ATR-flip trend long), #89 (Chandelier Exit dual-stop state-flip long), and #92 (SSL channel state-following reversal two-sided) — different mechanisms, indicators, and sources. Closest pool records are different mechanism classes: `stochastic-ott-dual-trend` (dual-OTT trailing-stop flips where the Stochastic leg is OFF by default, `1d`; this record fires only zone-gated StochRSI K/D crosses with no OTT/trailing leg anywhere); `kdj-golden-cross-long-flat` (long-only KDJ golden cross with a J>100 exit rail — different oscillator family, different sides, different exits); `dss-bressert-double-smoothed-stochastic-trigger-latch` (double-smoothed stochastic trigger latch, `2h`); PR #49 (long-only EMA-channel breakout where StochRSI k>d is a permission gate, never a cross trigger, BNB `1d`). Five-axis distinction: source identity differs (Eterna immutable commit plus `stoch_rsi_crossover.pine` path), mechanism differs (zone-gated oscillator-cross reversal, not a channel breakout, trailing system, or latch), signal construction differs (no pool record computes Pine `ta.stoch(ta.rsi(close,14),14)` with SMA(3)/SMA(3) K/D lines gated at 20/80), exits differ (opposite-cross closes only, no rail/target/trailing leg), horizon differs (`1h` versus the pool Stoch-family records' `1d`/`2h`). No closed NOT_LOSSLESS PR touches StochRSI.
+
+## Economic mechanism
+
+### Source-reported
+
+Zone-gated double-smoothed StochRSI reversal (strategy README: StochRSI `combines the Stochastic Oscillator with the RSI to identify overbought and oversold conditions with greater sensitivity`; `trades crossovers of the %K and %D lines in extreme zones`; no performance section ships): %K crossing up through %D while %K sits under 20 opens a long; %K crossing down through %D while %K sits over 80 opens a short; the opposite cross closes the position. There is deliberately no stop, no target, no trend filter, and no flat state beyond pre-signal bars — the order block ends with the two `strategy.close` guards and no risk leg ships anywhere, by design gap rather than by hidden leg.
+
+### Research interpretation
+
+Zone-gated K/D cross mean reversion on a twice-smoothed RSI stochastic, two-sided with reversal exits — the first StochRSI-cross record in the pool. Unlike the pool's stochastic-OTT system, entries here need no trailing-stop flip, no trend rail, and no confirmation stack — a bare K/D cross inside the 20/80 extremes suffices, so the system fires earlier and more often at the cost of holding every leg with no guardrail; unlike the KDJ record, the input chain is RSI-then-stochastic with fixed 20/80 zone gates on both sides (not a golden-cross-plus-rail long-only machine); unlike PR #49's Gaussian breakout, StochRSI is the trigger itself rather than a permission gate on a price breakout, and both sides trade symmetrically. Note the two pinned asymmetries, stated plainly: first, entries need a fresh cross inside the zone — a %K that merely sits under 20 or over 80 without crossing its %D line fires nothing, so flat congestion inside extremes is ignored by construction; second, the zone test reads the crossing bar's own %K (`k < 20` long / `k > 80` short, strict inequalities), so a cross that prints with %K already back at 20–80 fires nothing — the setup is extreme-only, disclosed. The bet is on exhaustion turns of double-smoothed RSI momentum at frozen `14/14/3/3/80/20` geometry, not on any price level, volume print, trend-rail position, or calendar effect.
+
+## Signal
+
+Exact rule as pinned (`rsiLength 14 / stochLength 14 / smoothK 3 / smoothD 3 / upperLevel 80 / lowerLevel 20` frozen — any other value is a different, unpinned rule):
+
+- Declaration (source-faithful): `strategy("Stochastic RSI Crossover - Eterna MCP", shorttitle="Stoch RSI", overlay=false, default_qty_type=strategy.percent_of_equity, default_qty_value=100, initial_capital=1000)` semantics preserved with the derived `BTCUSDT 1h` market/frame pin and same-bar-close execution adopted (see derived declaration) and house sizing/costs replacing the source economics (see Execution assumptions). Pine-default no-pyramiding semantics hold (no `pyramiding` argument ships): at most one open position, same-direction refires while positioned are blocked by the `position_size == 0` entry gates, opposite entries arrive only via the close-then-enter path below.
+- Indicator (pinned arithmetic — evaluated from the frozen inputs, not tuned): `rsi = ta.rsi(close, 14)` — Pine built-in Wilder RMA-smoothed RSI on `close`; `stochRSI = ta.stoch(rsi, rsi, rsi, 14)` — Pine built-in stochastic of the RSI series (the RSI series feeds all three of high/low/source slots, so no price high/low is read); `k = ta.sma(stochRSI, 3)`; `d = ta.sma(k, 3)` — causal recursions on completed bars. No bare `open`/`high`/`low`/`hlc3`/`volume` series is read by any live line (census-verified zero).
+- Entry legs: `bullishCross = ta.crossover(k, d) and k < lowerLevel` (K crosses up through D with K strictly under 20); `bearishCross = ta.crossunder(k, d) and k > upperLevel` (K crosses down through D with K strictly over 80).
+- Entry long: `strategy.entry("Long", strategy.long)` under `if bullishCross and strategy.position_size == 0` — fires on completed bars with same-bar-close execution under the derived declaration.
+- Entry short: `strategy.entry("Short", strategy.short)` under `if bearishCross and strategy.position_size == 0` — mirrored.
+- Exits (coded, the sole position-closing path): `strategy.close("Long")` under `if bearishCross and strategy.position_size > 0`; `strategy.close("Short")` under `if bullishCross and strategy.position_size < 0`. No stop, no target, no trailing exit leg, no time exit — pinned as written, explicitly none, not invented.
+- Direction: two-sided with no coded flat state past seeding (after the first signal the system is always in market — disclosed, not enabled). `na` seed bars (Pine comparisons against `na` are false) fire no leg and the inherited position simply persists by language semantics, disclosed, not invented.
+- Display isolation: the `plot`/`plotshape`/`hline`/`bgcolor` calls render only and cannot change any order; the two `alert(` JSON strings are execution-handoff payloads with no order-leg effect. The `bullishMomentum`/`bearishMomentum` pair computes but is read zero times by any order leg, gate, plot, or other line — pure dead code, never silently adopted as confirmation.
+
+## Required data
+
+- Completed `1h` bars of BTCUSDT: `close` only. No `open`/`high`/`low`/`hlc3` read ships in any live line (the stochastic's high/low slots take the RSI series, not price); no volume, funding, OI, mark/index price, liquidation, trade, order-book, on-chain, options, sentiment, macro, session-template, calendar, or cross-venue state is read anywhere.
+- Single decision timeframe `1h` (README-Primary-faithful; the script takes no timeframe input and makes no live `request.*`/`security(` call, so it is single-frame by construction).
+- Warmup: the construction carries a compounded seed (14-bar RSI, 14-bar stochastic window over RSI, two 3-bar SMA smoothings — structural lag ≈ 31 bars). The adopted warmup is the first 100 completed `1h` bars flat by record rule (predeclared researcher choice — roughly three times the structural lag with margin; ≈4 days of `1h` history). No negative shift, no future reference, no full-sample normalization; one evaluation per completed bar under the derived freeze. Each bar's print enters the rule only at that bar's close, at which point the bar is complete — causal under same-bar-close fills.
+
+## Execution assumptions
+
+- Research market: BTCUSDT Binance futures under the house overlay (the source names no market — `syminfo.ticker` appears inside alert-payload strings only — so the venue/symbol pin is a researcher market choice, disclosed, never presented as source-native; the `1h` frame comes from the strategy README's Primary pair).
+- Order timing (predeclared derivation): completed-bar decision with same-bar-close execution, compatible 1:1 with the pinned Hummingbot backtester (package `20260920`, VERSION `dev-2.17.0`). The source ships no `process_orders_on_close`/`calc_on_every_tick` argument (quoted verbatim in census) — its backtest fills next-bar by language default; this record does not claim that source behavior. No maker-touch, queue, or intrabar-path-dependent fill: with no stop/limit legs anywhere, there is no same-bar TP/SL ordering ambiguity. Entry legs are evaluated in source order (long `if` before short `if`): `bullishCross` and `bearishCross` cannot both print on one bar by construction (every buy leg requires K strictly under 20 on the crossing bar; every sell leg requires K strictly over 80 on the crossing bar — the zone requirements are mutually exclusive on every bar, and a single bar cannot both cross K up through D and down through D), so at most one entry leg can fire on any bar; an exit guard and its opposite entry can co-print (e.g. `bearishCross` while long closes Long, and the short entry gate `position_size == 0` reads the pre-close position intrabar — under Pine semantics the close executes first and the flat-gated entry fills the same bar, i.e. a full reversal; this record pins that reversal as the close-then-enter same-bar path, disclosed).
+- Engine path for `1h` (gate 5, stated plainly): `1h` is a Binance-documented USDT-M kline interval; the derived rule needs only completed `1h` candles (`close`) on a single frame — no second timeframe, no unfinished-bar read, no intrabar path, no funding/OI/mark-price leg. That is the same single-frame completed-bar path as the admitted `1d`/`4h`/`2h`/`30m`/`15m` records (the `1h/4h/1d` whitelist stands removed as an independent ban, and no ban is reinstated here by another name). Anything beyond that single-frame completed-bar path would be a different, unverified claim — none is admitted here.
+- Sizing/capital/costs: the source ships only Pine-default economics (`percent_of_equity 100 / initial_capital 1000`, no commission/slippage/funding/margin assumption — quoted verbatim in census; the absence is disclosed, never read as zero cost) plus alert-payload-only `leverageSize`/`positionSize` parameters with no order-leg effect — the explicit house overlay (Base 6% + Safety 6% + Safety 6%, Isolated, 3x/5x) and pinned house cost assumptions (fees plus historical funding; no hypothetical zero funding claimed) apply to the derived evaluation here, never presented as source-native behavior.
+- Concurrency: Pine-default single-position semantics hold — at most one open position under the order IDs `Long`/`Short`; entries are flat-gated, exits are opposite-signal closes with a same-bar close-then-enter reversal path (above), and re-placement is allowed immediately on the next qualifying bar after any close (no cooldown specified — explicitly none, not invented). `na` bars hold the inherited position by language semantics, disclosed. Single engine position; no shared portfolio state, no cross-sectional ranking, no multi-pair logic.
+
+## Evidence
+
+### Source-reported
+
+The source ships the full construction (frozen `14/14/3/3/80/20` inputs, Pine `ta.rsi(close, 14)` → `ta.stoch(rsi, rsi, rsi, 14)` → SMA(3) K → SMA(3) D chain, zone-gated K/D cross entry pair, fixed `Long`/`Short` order IDs with flat-gated entries and opposite-signal closes), the active `strategy("Stochastic RSI Crossover - Eterna MCP", ...)` declaration, and the strategy README (`Primary: 15m, 1H` frame guidance adopted as disclosed; `14/14/3/3/80/20` parameter table restated). It ships zero traceable performance numbers: the `~50-60%` README phrase carries no sample, window, trade count, or cost basis — this record claims no source-reported performance and no reproduced performance.
+
+### Independently reproduced
+
+Not independently reproduced.
+
+### Negative evidence
+
+1. No hidden exits or risk layer: 0 `strategy.exit`, 0 `strategy.order`, 0 `stop=`/`limit=`/`profit=`/`loss=` — the sole position-closing path is the coded opposite-signal `strategy.close` pair. The absence is coded (the order block ends with the two close guards and only plotting follows) and the prose carries no coded risk leg anywhere.
+2. Momentum-confirmation prose disproven against the code, stated plainly: the script must be read as computing a `bullishMomentum`/`bearishMomentum` pair (K and D both rising/falling), yet the census shows each defined once and read zero times by any order leg, gate, plot, or other line — substituting a momentum-confirmed entry (or the README's `Best combined with trend filters` suggestion) would be a different, unpinned rule. This record freezes the ungated zone-cross signals as written.
+3. Bare in-zone levels fire nothing, stated plainly: entries require a fresh `crossover`/`crossunder` of K through D with the zone test on the crossing bar — a %K that merely sits under 20 or over 80 without crossing fires nothing. Relaxing to level-holding entries would be a different, unpinned rule.
+4. Zone test fenced: the gate reads the crossing bar's own K strictly (`k < 20` long / `k > 80` short) — a cross that prints with K already normalized into 20–80 fires nothing, disclosed.
+5. `Optimal Settings` variant menu fenced: the README's `85/15` and `75/25` suggestions are not taken — the frozen rule is the coded `80/20` defaults, and any 85/15 evaluation would be a different, unpinned rule, disclosed.
+6. No future leakage in the stack, stated plainly: at decision bar `t`, the RSI accumulation reads completed-bar `close` prints through `t` and seeded priors only, the stochastic window reads RSI prints through `t` only, and the cross legs read one prior bar (`k[1]`, `d[1]`). No `security()`, no `request.*`, no negative index, no price `open`/`high`/`low`/`volume` read, no `barstate.islast`-gated path; seed bars degrade to `na`-hold, never to a forward read.
+7. Same-bar ordering fenced: at most one entry leg can fire per bar (the `K < 20` versus `K > 80` zone requirements are mutually exclusive on every bar, and a single bar cannot cross K both up and down through D); the co-printing exit-plus-opposite-entry path is pinned as a same-bar close-then-enter reversal, disclosed under Execution assumptions. Deterministic under the declared fill convention.
+8. Two-sided posture provably complete: both `strategy.long` and `strategy.short` appear exactly once each, each under its own flat-gated `if`; both `strategy.close` guards cover the opposite-signal exits; no third direction exists. No flat state is coded after the first signal — always-in-market past seeding, disclosed.
+9. Derivation boundary fenced: the only non-source-native behaviors in this record are the BTCUSDT market pin, the README-Primary `1h` frame adoption, same-bar-close fills (with live intrabar behavior scoped out), the adopted 100-bar warmup with record-rule pre-warmup flat, and house sizing/costs — all predeclared above; the inputs, RSI/stochastic/SMA arithmetic, zone-gated cross legs, order IDs, gating, exits, and risk posture are source-verbatim. This record is therefore never evidence that any other market, frame, timing, input set, or the alert-JSON execution handoff of the source passes.
+
+## Falsification plan
+
+Research-defined thresholds only (never substitutes for missing rules); global no-retuning rule: `14/14/3/3` chain / `80/20` zones / zone-gated K/D-cross entries / opposite-signal exits / two-sided / `1h` BTCUSDT / same-bar-close fills are frozen.
+
+- F1 — Zone-gate relevance: removing both zone gates (every K/D cross trades, same exits) must not improve net expectancy; fail ⇒ the coded 20/80 gating adds nothing over its ungated twin.
+- F2 — Zone-choice relevance: widening both zones to 30/70 at the frozen chain (same exits) must not improve net expectancy; fail ⇒ the coded 20/80 choice adds nothing over its wider twin.
+- F3 — Stochastic-of-RSI relevance: replacing the `ta.stoch(rsi, ...)` chain with a price-only Wilder RSI(14) through the same cross-against-own-SMA(3) geometry and exits must not improve net expectancy; fail ⇒ the stochastic-of-RSI construction adds nothing over its price-only twin.
+
+## Crypto portability
+
+Pinned to BTCUSDT Binance futures `1h` under the house overlay (market pin is a researcher choice on a market-agnostic source; the `1h` frame is README-Primary-faithful). The StochRSI arithmetic ports across perpetual venues without structural change — it reads `close` only, so venue volume-definition differences cannot move the oscillator at all, disclosed. The rule is two-sided with no stop leg, so a spot-only deployment expresses the long state and reversal-to-flat/short mechanics only to the extent the venue permits shorting — full two-sided expression assumes a futures venue, disclosed. No funding-dependent leg, no stablecoin-specific assumption, no session-template, no cross-venue state. The 24/7 crypto market has no opens/gaps/sessions for the rule to read (no `time(` gating anywhere), so session-gap behavior needs no approximation. The strategy README names volatile crypto pairs as a fit venue — adopted as venue rationale, not as performance evidence. Extension to other house-universe assets or timeframes would be a different, unpinned claim.
+
+## Limitations
+
+- Derived fill timing: the source ships no `process_orders_on_close`/`calc_on_every_tick` argument (backtest fills next-bar by language default); this record evaluates completed bars only and executes same-bar-close on `1h` BTCUSDT. Backtest economics of the timings differ by construction — the adaptation is disclosed, not hidden, and this record makes no claim about the source timing's performance. Any live intrabar behavior is out of scope.
+- Derived market pin: the code names no symbol (`syminfo.ticker` appears inside alert-payload strings only) — BTCUSDT is a researcher market choice for the house universe, never a source claim.
+- No source economics: beyond Pine defaults the source ships no capital, commission, slippage, funding, or margin assumption — derived evaluation must carry the full house cost load, and this record reports no net performance of any kind. The `~50-60%` README phrase is omitted for want of traceable provenance.
+- No price stop, no time stop, no flat state: adverse excursion after placement has no guardrail beyond the opposite-signal close; a position whose pair never prints the opposite cross is held indefinitely. This is the coded posture, disclosed as the record's principal risk.
+- Congestion inside extremes is untraded: a %K parked under 20 or over 80 without a fresh K/D cross fires nothing — long flat stretches between events are the coded posture, disclosed.
+- Seed bars: the compounded RSI-plus-stochastic-plus-double-SMA seed dominates early bars; the first 100 `1h` bars are flat by record rule, so early-history signals never enter any evaluation.
+- Alert-handoff quarantine: the two `alert(` JSON strings (`Eterna MCP` execution handoff with `leverageSize`/`positionSize` parameters) are payload text with no order-leg effect — treating them as order semantics would be a different, unpinned rule, disclosed here.
+
+## Implementation status
+
+Not implemented. No Hummingbot controller, no Qlib screen, no Paper/Testnet/Live run exists for this record; the six-gate claim is pinned-engine expressibility of the declared rule, never a profitability, parity, or trading authorization.
+
+## Adoption boundary
+
+Research-only, not approved. No live, Paper, or Testnet authorization follows from this record. Any downstream standardized overlay (house DCA/capital/leverage), Qlib screening, or Hummingbot re-validation is a separate, explicitly authorized step outside this record.
+
+## Related Wiki records
+
+None.
+
+## Sources
+
+- https://github.com/EternaHybridExchange/tradingview-strategies/blob/01e4346df876f6fd124332e40a2cd62286174894/strategies/momentum/stoch_rsi_crossover.pine (primary source — executable `//@version=5` strategy, 73 lines, fetched live 2026-10-12 at pinned commit byte-identical to `master`, 3,116 bytes, SHA-256 `71f000b0…e`; strategy README `Primary: 15m, 1H` — `1h` adopted as disclosed, `~50-60%` phrase omitted)
+- https://www.tradingview.com/pine-script-reference/v5/ (Pine semantics reference for census terms — defaults only, never a source of strategy facts)
