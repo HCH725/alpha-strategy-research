@@ -68,7 +68,7 @@ Exact rule as pinned (weekly sampling; Sunday-close decision; Monday-open fills;
 
 - Completed `1d` bars of BTCUSDT only: `close` (weekly `P`), base-asset `volume` (weekly `Vol`), `open` as fill price (no `high`, no `low`, no funding, OI, mark/index price, liquidation, trade, order-book, on-chain, supply-feed, sentiment, macro, session-template, or cross-venue state gates any order). No multi-symbol, multi-timeframe, or external-feed dependency of any kind — the 21M denominator is a record constant, not a feed.
 - Single decision grid: one evaluation per week at the Sunday bar's close; fills land on the next Monday bar's open. All inputs are completed-bar values — no provisional intrabar value is ever used; the one-week skip means the freshest touched data is always a full week old.
-- Warmup: flat until the Sunday close completing week 261 of venue history (the first computable `g`, needing 260 reference weeks plus the one-week skip) — structural, not conventional: on this venue that is the Sunday of 2022-08-07, so the first position week is 2022-08-08..14. No repainting, no negative shift, no future reference, no full-sample normalization (`M`-style rolling maxima are not used; every `V` is a same-week constant-denominator ratio).
+- Warmup: flat until the Sunday close at which the first computable `g` exists (the first computable `g`, needing 260 reference weeks plus the one-week skip) — structural, not conventional: on this venue that is the Sunday close of 2022-08-21, so the first position week is 2022-08-22..28. No repainting, no negative shift, no future reference, no full-sample normalization (`M`-style rolling maxima are not used; every `V` is a same-week constant-denominator ratio).
 
 ## Execution assumptions
 
@@ -118,7 +118,7 @@ Pinned to BTCUSDT Binance perpetual under the house overlay (decision grid Sunda
 - Mechanism mismatch: whatever disposition-selling clientele sits behind the equity result has no established crypto analogue (24/7 global holder base, no certificates, different turnover rhythms) — the port bets on regime persistence, not on a verified crypto mechanism.
 - Denominator rigidity: 21M understates early-tape turnover versus then-circulating supply and overstates nothing later — a fixed, disclosed approximation, not the paper's outstanding-shares normalization.
 - Week-definition rigidity: drift arriving across a Sunday boundary is attributed to whole weeks; a Monday-open gap against the fresh regime is taken at the post-move open, never at the edge.
-- Warmup cost: everything before the week-261 Sunday close is flat by record rule, so the 2017–2022 tape is deliberately untraded — pinned, not recovered.
+- Warmup cost: everything before the first computable-`g` Sunday close (2022-08-21) is flat by record rule, so the 2017–2022 tape is deliberately untraded — pinned, not recovered.
 - Ceiling void: a future week printing `V ≥ 1` voids this pin's weight validity (see Signal) — monitored, not modeled.
 
 ## Implementation status
