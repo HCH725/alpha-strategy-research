@@ -14,17 +14,17 @@ Every root-level strategy record on `main` MUST have `hb_ready_status: PASS`. Th
 
 - Current research campaign universe (not a PASS whitelist): `BTCUSDT`, `ETHUSDT`, `BNBUSDT`, `SOLUSDT`, `XRPUSDT`, `DOGEUSDT`, `LINKUSDT`
 - Current campaign timeframes (not a PASS whitelist): `1h` / `4h` / `1d`
-- Base matrix: `7 symbols × 3 timeframes × 2 leverage settings = 42 cells` before parameter expansion
+- Full coverage per frozen version: `7 symbols × 3 timeframes × 2 leverage settings = 42 cells`; no baseline parameter-domain sweep
 - Backtest scope: full available historical Kline range for each symbol × timeframe; no cherry-picked window
 - Current campaign DCA experiment: Base Order `6%` + Safety Order `6%` + Safety Order `6%` = max `18%`; this is not an HB_READY admission prerequisite and is a separately declared derivative if it changes source trade events
-- DCA spacing and strategy parameters are research-defined by Hermes; final OOS data must not be used to retune them
+- Baseline round 0 freezes source/config plus the declared house overlay. Only after 05→06→07→08/09 may Hermes propose one falsifiable change set per round; a YES runs all 42 cells for that frozen revision, at most three revisions. Select the best version using IS only at the end of 09; freeze identity/config/data/window snapshots for Node10's one-time OOS, with no return to 06–09
 - Futures setup: Binance USDT-M perpetual, Isolated, `3×` and `5×`, single-strategy stage does not compound
-- Costs: campaign target is pinned Binance non-VIP USDⓈ-M fees plus historical funding; the pinned generic simulator has not yet demonstrated historical funding accounting, so no campaign may claim complete realized-funding performance without a verified implementation
-- Engine rule: Hummingbot is canonical; Qlib is trusted for mass screening only after event-level parity
+- Costs: Node04/05 uses an explicit, fixed, reproducible research cost model (declared fee/slippage/funding assumptions, including limitations). Modeled funding is not realized/canonical funding. Missing settlement mark_price alone does not block research; an undefined research cost model does. Node13 verifies canonical Hummingbot futures fills/equity/funding/slippage and final HB economics
+- Engine rule: Hummingbot remains the canonical execution benchmark. Qlib reuses verified execution primitives, data paths and timing semantics; only a new, unverified capability requires one representative validation before its use in mass screening, not exact strategy parity for every candidate
 - Promotion rule: only `PASS` records are eligible for current Qlib screening; survivor candidates are later re-run in Hummingbot for trade-by-trade validation
 - Qlib Research Survivor → Hummingbot first-pass hard filters: `Annualized Net Return ≥ 10%` and `Sharpe ≥ 1.0` on the same run/sample; `Net Strategy ROI` is report-only, not an independent hard filter. These are downstream performance criteria, not HB_READY admission gates
-- Annualized net return uses the complete equity curve net of verified fees, slippage and funding costs under the same canonical Hummingbot model, over a fixed continuous tradable evaluation period from the first legally possible post-warmup signal to the predetermined end, including flat time—not from the first winning trade. See v1.0 for invalid-run exclusions, retained metrics and the planned/unverified metric implementation boundary
-- [Backtest Baseline v1.0 →](docs/hb-backtest-baseline-v1.0.md)
+- Node11 applies those thresholds using the same declared Qlib research cost model and complete modeled equity curve, over a fixed continuous tradable evaluation period from the first legally possible post-warmup signal to the predetermined end, including flat time—not from the first winning trade. Node13 separately checks canonical HB economics; disagreement cannot be Certified
+- [Historical Backtest Baseline v1.0 →](docs/hb-backtest-baseline-v1.0.md) — the current downstream contract below governs admission, coverage and research/canonical cost separation where older baseline wording differs
 - [Archived visual baseline v0.1 →](docs/hb-backtest-baseline-v0.1.html)
 
 **HB_READY PASS-only strategy pool:** Every strategy record on `main` must satisfy all six Hummingbot expressibility gates. Non-PASS research remains accessible on non-main Git branches or in existing PR/history; it is never promoted by relabeling.
@@ -78,7 +78,7 @@ Every `hb_ready_status: PASS` record must satisfy **all six** requirements for t
 5. **Demonstrated pinned-engine and data-model compatibility.** Identify the exact Hummingbot package/image/commit and applicable controller/executor, connector, market(s), data feed(s), decision/availability timestamps, fills, costs, leverage/margin and accounting. Demonstrate that **all materially required** multi-asset synchronization/shared capital, lower or multi-timeframe alignment, non-OHLCV point-in-time inputs, next-open/maker/intrabar execution, and real costs can actually be modeled on the *specified* engine path. Unsupported or unverified requirements cannot receive PASS; a documented feature, generic executor name, or one supported interval is insufficient. Missing trade prices must not silently default to fabricated values. The currently verified subset may be narrower than Hummingbot's advertised capabilities. Source-native equivalence is assessed against the source; a disclosed derivative is assessed against **its own fully specified strategy**, not falsely represented as lossless source reproduction. Pin fees/funding/precision and flag unsupported economic terms; do not report hypothetical zero funding as realized funding.
 6. **Warmup, point-in-time availability and causality.** Lookbacks/warmup are defined; no repainting, future bars/extrema, negative-shift leakage, full-sample leakage or use of incomplete higher-timeframe candles as completed signals. A signal's decision time must not precede the point when its inputs were available; fill order and same-bar ambiguities need explicit, supported semantics.
 
-**PASS means admissible to *model-consistent research*, not profitability, economic realism, guaranteed source-native equivalence, Qlib parity, survivor status or Paper/Testnet/Live permission.** Profitable net-of-fee returns are a later performance/OOS question, **not** an HB_READY admission threshold. For new execution/data paths, pin the evidence and verify representative event-level Qlib/Hummingbot parity **before Qlib mass screening**, not before preserving a strategy record.
+**PASS means downstream admission to *model-consistent research*, not profitability, economic realism, guaranteed source-native equivalence, Qlib parity, survivor status or Paper/Testnet/Live permission.** Profitable net-of-fee returns are a later performance/OOS question, **not** an HB_READY admission threshold. Reuse verified engine capabilities; validate a new execution primitive/data requirement once with representative evidence before screening that requires it. This is an engineering capability check, not another strategy admission.
 
 If any of the six requirements is materially incomplete, unverifiable or unsupported by the pinned engine, the strategy record MUST NOT merge into `main`, whether it is a Scout, reconstruction, historical or other PR. Scout `research/*` PRs are closed as `NOT_LOSSLESS` with precise reasons; other non-PASS research can remain on a non-main branch or PR for further work. Existing assessment labels and `strategy-research-record-v1` format remain unchanged; no archive bypass or automatic upgrade of historical survivors is permitted.
 
@@ -262,6 +262,8 @@ contradictions: []
 
 `confidence` describes confidence in the research interpretation, not expected profitability.
 
+`implementation_status` describes dedicated implementation/deployment artifacts only. `not-implemented` does not revoke HB_READY PASS or permit Node02/03 to refuse downstream research admission. Do not add `QLIB_READY`, implementation admission, another status flag or a second admission registry.
+
 ### Required document structure
 
 ```markdown
@@ -369,13 +371,15 @@ Formal Survivor
 later Testnet / live qualification
 ```
 
-Hummingbot is the canonical backtest/execution semantic benchmark. Before Qlib mass screening, the two engines must demonstrate event-level parity for the **specific declared source-native or derived executable strategy**, data, actual execution model, costs and pinned assumptions—not merely matching metrics.
+HB_READY PASS on Alpha `main` is the downstream research admission. Qlib executability is an **engine capability** question: an admitted strategy using only verified execution primitives, data paths and timing semantics may enter research directly. A new, unverified execution primitive/data requirement is held as an engineering capability gap until one representative validation is complete, not rejected as a strategy or sent through candidate-specific implementation/parity admission. Admission does not assert that every pool record already has an executable artifact.
 
 For PASS records, HB_READY verifies the declared source-native or explicitly derived executable rules against the pinned Hummingbot model, without asserting profitability or source-native equivalence for adaptations. Standardized DCA/capital/leverage is a **downstream research experiment**, not a prerequisite for admission. Materially changed trade events require an independently specified derived strategy, full cost/causality checks and new evidence; source-native provenance must not be overwritten.
 
-For parity, matching final ROI or Sharpe is not sufficient. Signal time, entry/exit time, direction, price, position size under the same house overlay, Safety Orders and close transitions must agree trade by trade.
+Node04/05 owns Qlib mass screening and MLflow evidence: frozen source/config/data/window/cost assumptions, native outputs and a retrievable Replay recipe. Existing `performance_claimable=true` means that run's coverage, evidence and explicit research cost assumptions are complete enough for 06–09 research interpretation; it is not HB Certified or live economics. Do not add another flag or relabel historical engineering proofs. Full means all 42 cells per frozen version, not 42 cells multiplied by a Signal/Structure/DCA parameter search; missing/failed cells cannot be hidden as coverage. Parameter changes belong to the 06–09 loop, followed by frozen one-time OOS, never OOS retuning.
 
-The automatic repo-to-Hummingbot/Qlib execution bridge is **not defined by this repository README as already active**. The new Survivor Repo is also not created yet. Formal large-scale screening resumes only after Hummingbot ↔ Qlib parity is proven.
+Node11 uses the same declared research cost model, the existing performance thresholds and Qlib IS/OOS Replay evidence. Node13 Hummingbot certification retains canonical futures fills/account equity/funding/slippage accounting, HB Replay and strategy-specific event-level parity. Matching final ROI or Sharpe is insufficient: signal/entry/exit times, direction, prices, sizing, Safety Orders and close transitions must agree under pinned comparable assumptions; unexplained execution or HB economic disagreement cannot be Certified. HB-grade fills, settlement mark_price and account equity are not Node04/05 prerequisites.
+
+The automatic repo-to-Hummingbot/Qlib execution bridge is **not defined by this repository README as already active**. The new Survivor Repo is also not created yet. Current n8n 01–05 exact-candidate/Donchian hardcoding is representative engineering proof, not the final admission contract. Separate code work must remove the exact-candidate allowlist and Donchian hardcode while reusing verified capabilities; do not build a generic strategy compiler, Manager/Registry/Factory/Adapter framework, new control plane, runner, database or queue. This documentation change deploys nothing.
 
 The current research and admission contracts are the HB_READY review policy and the Hummingbot-aligned backtest baseline; retired intake/review routines are not executable entrypoints.
 
