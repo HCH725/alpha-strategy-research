@@ -8,17 +8,17 @@
 
 - 目前 Campaign 幣種（不是 PASS 白名單）：`BTCUSDT`、`ETHUSDT`、`BNBUSDT`、`SOLUSDT`、`XRPUSDT`、`DOGEUSDT`、`LINKUSDT`
 - 目前 Campaign 週期（不是 PASS 白名單）：`1h` / `4h` / `1d`
-- 基礎矩陣：`7 幣 × 3 timeframe × 2 槓桿 = 42 cells`，尚未計入策略與 DCA 參數擴張
+- 每個凍結版本的完整覆蓋：`7 幣 × 3 timeframe × 2 槓桿 = 42 cells`；Baseline 不先掃參數域
 - 全量回測：每個 symbol × timeframe 使用當次 campaign 可取得的完整歷史 Kline，不 cherry-pick 行情
 - 目前 Campaign DCA 實驗：Base Order `6%` + Safety Order `6%` + Safety Order `6%`，最大 `18%`；不是 HB_READY 前置條件。若改變來源交易事件，需建立明示衍生策略
-- DCA 間距與策略參數由 Hermes 研究決定；最終 OOS 不得拿來回頭調參數
+- Baseline round 0 凍結 source/config＋當期明示 house overlay。05→06→07→08/09 後，Hermes 每輪只提出一組可證偽修改；YES 才以該凍結修改版重跑完整 42 cells，最多修改 3 次。09 結束時僅依 IS 選最佳版，一併凍結 identity/config/data/window snapshots 交 Node10 單次 OOS；OOS 不回 06–09
 - Futures：Binance USDT-M perpetual、Isolated、分別測 `3×` / `5×`，單策略階段不複利
-- 成本：Campaign 目標採 Binance non-VIP 費率與歷史 Funding；目前通用模擬器尚未證明歷史 Funding 計價實作，未驗證前不能宣稱已納入真實 Funding
-- Engine：Hummingbot 是 canonical benchmark；Qlib 只有在逐筆事件對齊後才負責大量海選
+- 成本：Node04/05 使用明示、固定、可重現的 research cost model（手續費／滑價／Funding 假設及限制）。模型化 Funding 不是真實／canonical Funding；缺 settlement mark_price 本身不阻擋研究，research cost model 未定義才 HOLD。Node13 才驗 Hummingbot canonical futures fills/equity/funding/slippage 與最終 HB economics
+- Engine：Hummingbot 仍是 canonical execution benchmark；Qlib 重用已驗 execution primitive／data path／timing semantics。只有新的未驗能力才在使用前做一次代表性驗證，不要求每個 candidate 先做 exact strategy parity
 - Promotion：Qlib 大量海選後，只有 survivor candidates 才交給 Hummingbot 逐筆復驗
 - Qlib Research Survivor → Hummingbot 首輪硬門檻：同一 run／樣本的 `Annualized Net Return ≥ 10%` 與 `Sharpe ≥ 1.0`；`Net Strategy ROI` 只保留報表，不再是獨立硬門檻。這是下游績效標準，不是 HB_READY 六門准入條件
-- 年化淨報酬採同一 canonical Hummingbot 模型下扣除可驗證手續費、滑價與資金成本的完整資金曲線；評估期間從暖機後可產生第一個合法訊號起，到預定 end，固定且連續、包括空倉時間，不得從第一筆贏利交易才算。無效 run 排除、保留指標與尚待驗證的統計實作邊界見 v1.0
-- [Backtest Baseline v1.0 →](docs/hb-backtest-baseline-v1.0.md)
+- Node11 以同一明示 Qlib research cost model 與完整模型化權益曲線套用上述門檻；評估期間從暖機後可產生第一個合法訊號起，到預定 end，固定且連續、包括空倉時間，不得從第一筆贏利交易才算。Node13 另驗 canonical HB economics；不一致不能 Certified
+- [歷史 Backtest Baseline v1.0 →](docs/hb-backtest-baseline-v1.0.md) — 舊基準若有不同表述，准入、覆蓋及研究／canonical 成本分層以本文現行 downstream contract 為準
 - [歷史視覺版 v0.1 →](docs/hb-backtest-baseline-v0.1.html)
 
 **Alpha Research 的 `main` 是 HB_READY 六門 PASS-only 策略池。** 非 PASS 歷史研究保留在同 Repo 的非 main 分支、PR 或 Git 歷史，不以改標 PASS 方式湊數。
@@ -80,7 +80,7 @@ Pyramiding、同向持倉數量、Cooldown、再進場、DCA、資金及其他�
 ### 6. 預熱、資訊可用時間及因果性
 Lookback、Warmup 必須可導出，禁止 Repainting、Future leak、未來極值、全樣本洩漏，以及在高週期 K 線結束前讀取其完整收盤訊號；成交順序與同根歧義需有明確且可模擬的定義。
 
-**PASS 是可進入明確模型的績效研究，不是獲利、原論文績效重現、Qlib parity、Survivor 或 Paper／Testnet／Live 核准。** 淨收益與風險指標應在後續正式回測與 OOS 判斷，不能當 HB_READY 事前硬門檻。新執行路徑在啟用 Qlib 大量篩選前需要逐事件對齊，但不能強迫每份策略入庫前先做雙引擎回測。
+**PASS 即下游明確模型研究的准入，不是獲利、原論文績效重現、Qlib parity、Survivor 或 Paper／Testnet／Live 核准。** 淨收益與風險指標應在後續正式回測與 OOS 判斷，不能當 HB_READY 事前硬門檻。已驗引擎能力可重用；新的 execution primitive／data requirement 才在使用前做一次代表性驗證。這是工程能力檢查，不是第二次策略准入。
 
 六門任何一項不完整、缺證據或引擎不支援，**無論 Scout、歷史重建、非 Scout 或人工 PR，策略都不得進入 `main`**。Scout 未通過者關閉 PR；其他研究可保留非 main 分支／PR。沿用三種審查結果與 `strategy-research-record-v1` 格式，不額外建立資格系統；20 家族／92 筆歷史研究不能自動升級 PASS。
 
@@ -264,6 +264,8 @@ contradictions: []
 
 `confidence` 代表我們對 research interpretation 的信心，不代表預期獲利能力。
 
+`implementation_status` 只描述專用實作／部署 artifact 是否存在。`not-implemented` 不撤銷 HB_READY PASS，Node02/03 不得因此拒絕下游研究准入；不新增 `QLIB_READY`、implementation admission、第二個資格旗標或 admission registry。
+
 ### Required document structure
 
 ```markdown
@@ -371,13 +373,15 @@ Formal Survivor
 後續 Testnet / live qualification
 ```
 
-Hummingbot 是 canonical backtest / execution semantics benchmark。Qlib 大量海選前，必須針對**明確宣告的原始或衍生策略**、資料、執行成本與鎖定假設完成逐筆事件一致驗證；不要求每筆策略入庫前都先做 Qlib 回測。
+Alpha `main` 的 HB_READY PASS 即下游研究准入。Qlib 可執行性是 **engine capability** 問題：admitted strategy 只使用已驗 execution primitive／data path／timing semantics 時可直接研究；首次遇到新且未驗的 execution primitive／data requirement 才 HOLD 為工程能力缺口，做一次代表性驗證，不是策略 REJECT，也不是每筆先補 implementation／parity 的第二次准入。准入不等於全策略池已有可執行 artifact。
 
 對 PASS 紀錄而言，HB_READY 審查的是該筆**原生或明示衍生的可執行規則**與鎖定版 Hummingbot 的相容性，而非獲利或來源忠實性一律成立。DCA／capital／leverage 是下游研究 Campaign 的獨立實驗，**不是 HB_READY 准入必要條件**；若加入 DCA 改變原始 trade events，就必須另列完整衍生策略及證據，不可把新交易行為冒充原文。
 
-Parity 不是看最終 ROI 或 Sharpe 接近就算通過。Signal、entry / exit 時間、方向、價格、相同 house overlay 下的 position size、Safety Orders 與 close transition 都必須逐筆一致。
+Node04/05 負責 Qlib 大量海選與 MLflow evidence：凍結 source/config/data/window/cost assumptions、原生輸出與可取回的 Replay 配方。既有 `performance_claimable=true` 只表示該 run 的 coverage/evidence/明示研究成本假設完整，可供 06–09 研究判讀，不是 HB Certified／live economics；不加第二旗標，不改標歷史工程 proof。Full 是每個凍結版本的完整 42 cells，不是再乘 Signal／Structure／DCA 參數搜尋；不可隱藏缺跑／失敗格當成完整覆蓋。參數修改歸 06–09 研究閉環，之後凍結單次 OOS，禁止 OOS 回調。
 
-**目前 README 不宣稱 repo → Hummingbot/Qlib 的自動執行 bridge 已經啟用。** 新的 Survivor Repo 也尚未建立；正式大量海選需等 Hummingbot ↔ Qlib parity 完成後才恢復。
+Node11 用同一明示研究成本模型、既有績效門檻與 Qlib IS/OOS Replay 證據。Node13 Hummingbot certification 才驗 canonical futures fills/account equity/funding/slippage、HB Replay 與逐策略 event-level parity。不是 ROI／Sharpe 接近就算通過：鎖定可比假設下，signal／entry／exit 時間、方向、價格、sizing、Safety Orders、close transition 須逐筆一致；未解釋的執行或 HB economics 不一致不能 Certified。HB-grade fills、settlement mark_price、account equity 不是 Node04/05 前置條件。
+
+**目前 README 不宣稱 repo → Hummingbot/Qlib 的自動執行 bridge 已經啟用。** 新的 Survivor Repo 也尚未建立。現行 n8n 01–05 exact-candidate／Donchian hardcode 只屬代表性工程 proof，不是正式准入契約；後續另卡移除 exact-candidate allowlist／Donchian hardcode 並重用已驗能力，不建立 generic strategy compiler、Manager／Registry／Factory／Adapter framework、新 control plane、runner、database 或 queue。本次文件修正不部署任何程式。
 
 目前研究與准入僅依現行 HB_READY 審查規則及 Hummingbot 對齊回測基準；退役的 Intake／Review 流程不得再作為執行入口。
 
