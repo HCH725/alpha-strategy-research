@@ -264,7 +264,7 @@ contradictions: []
 
 `confidence` 代表我們對 research interpretation 的信心，不代表預期獲利能力。
 
-`implementation_status` 只描述專用實作／部署 artifact 是否存在。`not-implemented` 不撤銷 HB_READY PASS，Node02/03 不得因此拒絕下游研究准入；不新增 `QLIB_READY`、implementation admission、第二個資格旗標或 admission registry。
+`implementation_status` 只描述專用實作／部署 artifact 是否存在。`not-implemented` 不撤銷 HB_READY PASS，Node02/03 不得因此拒絕下游研究准入；不新增 `QLIB_READY`、implementation admission、第二個資格旗標或 admission registry。已被准入策略被正式選中執行、卻尚缺可重現 Qlib 可執行 recipe/artifact 時，工程路由為 `IMPLEMENTATION_NEEDED`：補最小 strategy/family-specific 實作後回到同一個 01–05，不重做 HB_READY。這是物理實作待補，不是策略 REJECT、不是新 Gate，也絕不寫回 Alpha 成為第二資格欄位。
 
 ### Required document structure
 
@@ -373,7 +373,7 @@ Formal Survivor
 後續 Testnet / live qualification
 ```
 
-Alpha `main` 的 HB_READY PASS 即下游研究准入。Qlib 可執行性是 **engine capability** 問題：admitted strategy 只使用已驗 execution primitive／data path／timing semantics 時可直接研究；首次遇到新且未驗的 execution primitive／data requirement 才 HOLD 為工程能力缺口，做一次代表性驗證，不是策略 REJECT，也不是每筆先補 implementation／parity 的第二次准入。准入不等於全策略池已有可執行 artifact。
+Alpha `main` 的 HB_READY PASS 即下游研究准入。研究准入不等於可執行物化：PASS 紀錄本身不攜帶 executable recipe、Qlib entrypoint 或 execution binding，PASS 永不保證此類 artifact 已存在。Qlib 可執行性是 **engine capability** 問題：已被准入且已有可重現 Qlib 可執行 recipe/artifact、並只使用已驗 execution primitive／data path／timing semantics 的策略可直接進 01–05；被正式選中卻尚缺者，走 `IMPLEMENTATION_NEEDED` 補最小 strategy/family-specific 實作後回到同一個 01–05，不重做 HB_READY；這不是策略 REJECT、不是 `QLIB_READY`、也不是新 Gate。已驗能力重用不要求逐筆 HB↔Qlib parity；只有真正新的 execution capability 才做一次代表性 capability validation。最小可執行交接是 run artifact、不是准入 registry：frozen candidate/source identity＋executable entrypoint/ref＋effective_config/ref＋hashes＋declared research cost/run inputs＋evidence refs。既有 candidate-execution-link 僅為已存在 proof 的例子，不是全系統正式標準；不得批量回填既有策略。禁止為消滅物化步驟而設計 generic Markdown→Qlib compiler、DSL、Manager、Registry、Factory、Adapter、runner、database、queue 或 second control plane。
 
 對 PASS 紀錄而言，HB_READY 審查的是該筆**原生或明示衍生的可執行規則**與鎖定版 Hummingbot 的相容性，而非獲利或來源忠實性一律成立。DCA／capital／leverage 是下游研究 Campaign 的獨立實驗，**不是 HB_READY 准入必要條件**；若加入 DCA 改變原始 trade events，就必須另列完整衍生策略及證據，不可把新交易行為冒充原文。
 
