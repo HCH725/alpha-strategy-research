@@ -1,7 +1,7 @@
 ---
 schema: strategy-research-record-v1
 hb_ready_status: PASS
-title: "Alorse DMI Winner Three-Bar DI Persistence and EMA55 Filter"
+title: "Alorse DMI Winner triple DI dominance / ADX13 / EMA55 long-flat spot derivative"
 created: 2026-10-16
 updated: 2026-10-16
 type: strategy-research-record
@@ -21,70 +21,91 @@ contested: false
 contradictions: []
 ---
 
-# Alorse DMI Winner Three-Bar DI Persistence and EMA55 Filter
+# Alorse DMI Winner triple DI dominance / ADX13 / EMA55 long-flat spot derivative
 
 ## Provenance
 
-- Source repository: https://github.com/Alorse/pinescript-strategies
-- Immutable source commit: 8fb3837ddcd137f1450c3e82d654ff3df24d54d5
-- Exact source path: strategies/momentum/DMI Winner.pine
-- Primary source file: https://github.com/Alorse/pinescript-strategies/blob/8fb3837ddcd137f1450c3e82d654ff3df24d54d5/strategies/momentum/DMI%20Winner.pine
-- The source signal is preserved. Research execution derivatives are clearly disclosed below; no change is silently represented as lossless.
+- Original program read in full, Pine v5: https://github.com/Alorse/pinescript-strategies/blob/8fb3837ddcd137f1450c3e82d654ff3df24d54d5/strategies/momentum/DMI%20Winner.pine; source pinned to `Alorse/pinescript-strategies` `8fb3837ddcd137f1450c3e82d654ff3df24d54d5`, path `strategies/momentum/DMI Winner.pine`.
+- Source declaration: `pyramiding=0`, initial_capital 1000 USD, `percent_of_equity=20`, commission 0.01% per side, no process_orders_on_close, default market execution next bar's **OPEN**. Author date gate Feb 2021 to Feb 2099 is a backtest-window setting, not strategy timeframe.
+- This is explicitly a **DERIVED EXECUTION strategy** using EXACT original signals/default long direction but spot BTC-USDT Binance 1h, one-bar-lag next-candle-CLOSE fills, fixed initial capital stake 200 USDT and 0.01% modeled research fee per side. Next-close differs materially from source next-open, fixed-stake differs from source 20% of *current* equity. These choices are researcher-declared, never disguised as original Pine trade fills.
+- Current main `dmi-swings-contrarian-adx` and `adx-di-cross-strength-gated` trade different DMI rules. Neither has this source's **three consecutive DI dominance and ADX>23 + EMA55 + candle-color** entry with inverse full short condition exit. Earlier PR #239 rejected missing engine evidence, not signal formula; this fresh head pins the existing supported capability.
 
 ## Economic mechanism
 
-Momentum continuation requires directional movement dominance on three consecutive closed candles, persistent trend intensity and a 55-period moving average regime filter. Unlike a simple DI cross or the existing DMI Swings contrarian record, the code uses three consecutive DI-level comparisons plus ADX and candle color.
+Trend-continuation confirmation: three bars of consistent upward DI dominance and ADX trend intensity above 23, price above EMA55 and a bullish candle. Long remains open until a complete reverse-direction three-bar DI and EMA/candle filter event, not until any simple DI line crossing.
 
-## Signal — exact source rules
+## Signal
 
-Pine v5 strategy, pyramiding=0, percent_of_equity default sizing 20%, source commission 0.01% per side. DMI: len=14, ADX smoothing lensig=13, keyLevel=23, [DIplus, DIminus, ADX] = ta.dmi(14,13).
+Source defaults as-coded:
 
-- hasMa=true; maType=EMA; maLen=55; MA=EMA(close,55). Source supports optional SMA or disabled filter, but this record pins default EMA.
-- longCond = DIplus > DIminus on current AND previous AND two-bars-back candles.
-- shortCond = DIplus < DIminus on current AND previous AND two-bars-back candles.
-- longEntry = longCond AND ADX > 23 AND close > MA AND close > open.
-- shortEntry = shortCond AND ADX > 23 AND close < MA AND close < open.
-- showLong=true and showShort=false: enter Long when longEntry is true, close Long when shortEntry is true; no short orders in default mode.
-- Both direction flags enabled: Pine submits corresponding Long/Short entries on their signals, with opposite-direction reversal according to pyramiding=0. Short-only mode is another explicit input variant.
-- Source entry/exit blocks are gated by time between startTime=2021-02-01 23:59:59 and endTime=2099-02-01 23:59:59. These are backtest settings, NOT an optimal chart interval.
-- useSL=false default; no price stop is submitted. If the user enables useSL, the code submits only a Long stop at avg-entry-price * (1 - 0.10), with no corresponding Short stop. There is no source take-profit, trailing, cooldown or safety-order rule.
-- Persistent true predicates can persist across bars, but pyramiding=0 prevents same-side accumulation. The first qualifying long after becoming flat is a possible re-entry.
+- DMI `[diplus,diminus,adx] = ta.dmi(len=14,lensig=13)`; `keyLevel=23`, check **strict** `adx>23` at completed candle t.
+- `src=close`; `hasMa=true`, `maType='EMA'`, `maLen=55`, thus `ma=EMA(close,55)`; if `hasMa` were false, filters would become unconditional, but default true is pinned. Optional SMA instead of EMA is not included.
+- `longCond[t] = (DI+[t]>DI−[t]) AND (DI+[t−1]>DI−[t−1]) AND (DI+[t−2]>DI−[t−2])`.
+- `shortCond[t] = (DI+[t]<DI−[t]) AND (DI+[t−1]<DI−[t−1]) AND (DI+[t−2]<DI−[t−2])`.
+- `longEntry[t] = longCond[t] AND adx[t]>23 AND close[t]>EMA55[t] AND close[t]>open[t]`.
+- `shortEntry[t] = shortCond[t] AND adx[t]>23 AND close[t]<EMA55[t] AND close[t]<open[t]`.
+- `showLong=true`, `showShort=false`; source's default branch is `if showLong and not showShort and inDateRange: strategy.entry('Long',strategy.long,when=longEntry); strategy.close('Long',when=shortEntry)`. Thus inverse `shortEntry` is solely the **long EXIT condition**, not a short order. The record represents exactly the source default long-flat version, without inventing shorts.
+- Source `startTime=timestamp("Feb 01 2021 23:59:59")`, `endTime=timestamp("Feb 01 2099 23:59:59")`: inDateRange gates BOTH source order calls. Record keeps this date eligibility; full-history research may independently declare a different test window but must label the variant, not pretend the source didn't gate it.
+- `useSL=false` default, so Long 10% price stop `strategy.exit('Stop Loss','Long',stop=avg_price*0.9)` is NOT active; this code's stop exists *only* if toggled on. Short-side stop not in source. No active source TP, trailing, separate time exit, safety order, cooldown or pyramiding. Repeated qualifying long entries while long = ignored via `pyramiding=0`; reentry after flat on a later longEntry allowed.
+- Entry and exit on the same bar are impossible: DI+[t]>DI−[t] contradicts DI+[t]<DI−[t]. Hold state therefore has only one event per source signal candle.
 
-## Required data and causality
+## Required data / causality
 
-One symbol's completed OHLC. DMI requires high/low/close, EMA requires close, bullish/bearish candle requires open. All indexes are current or previous candles, with no request.security, repaint, lookahead or future extrema. Research-declared conservative warmup: 100 completed bars to stabilize EMA55 and Wilder's DMI/ADX; 100 is not an author-specified indicator length.
+- One `binance` spot `BTC-USDT 1h` historical OHLC series: DI/ADX uses high,low,close (Wilder RMA smoothing), EMA55 uses close, candle direction uses open. No multiple assets, multi-timeframe request, future-extrema or security/lookahead.
+- Conservative declared **100 fully completed candles** warmup for EMA55 and RMA14/ADX13 smoothing and t−2 access; no decision before then. Source code itself defines calculations as soon as built-ins are non-na; 100-bar flat warmup is an explicit researcher specification, not a claimed author default. Signals only after completed t; stored t signal evaluated on simulator row t+1, filled t+1 close. End-of-data unfilled events are not invented.
+- On each engine row, if flat and previous completed source candle longEntry, buy once; if held and previous source candle shortEntry, sell all; otherwise hold. A signal while flat that would close is a no-op; duplicate entries suppressed. No co-firing and no ambiguity.
 
-## Execution assumptions — disclosed research derivative
+## Execution assumptions — reused pinned Hummingbot native path
 
-Original Pine omits process_orders_on_close, therefore source decisions from closed bars normally enter/close on NEXT bar open. Our proposed HB lane derives same-bar-close fills for the identical closed-bar predicates. This modifies execution timing/prices (NOT indicator logic); it is not claimed as a source-native execution reproduction. Before PASS the independent reviewer must check the actual Hummingbot controller/executor, bar-availability and isolated Binance USDT-M fill/cost path under pinned package 20260920, VERSION dev-2.17.0.
-
-Author's 2021–2099 optional date window must be treated as declared source configuration, not cherry-picked for performance. Downstream 7-pair, 1h/4h/1d and 3x/5x experiments choose their own evaluation windows explicitly. House BO/SO DCA sizing is a separate declared derivative that may alter order events, not part of this original signal record.
-
-## Deduplication
-
-The main pool has DMI Swings contrarian ADX and ADX/DI cross families. Neither is the same as three consecutive DI dominance bars plus ADX>23, EMA55 and bullish candle with *mirrored full condition* exit. Direct Alorse source URL absent from searched main. Reviewer must re-check open PRs before merge.
+- The same **existing** audited source-aligned Hummingbot benchmark path accepted for another source-specific spot derivative, not a new service: `HCH725/hummingbot@8b0e067e80ab62f10846d518dcb5a8218527ddb3`, committed September 20 2026 at 12:10:22 UTC, and its `hummingbot/VERSION=dev-2.17.0`, consistent with mandated pinned package `20260920` / VERSION `dev-2.17.0`. Static source evidence, not claim of image digest or test execution.
+- `hummingbot/strategy_v2/backtesting/backtesting_engine_base.py`: `BacktestingEngineBase.run_backtesting(...,backtesting_resolution="1h",trade_cost=0.0001)` over completed OHLCV, `simulate_execution()` iterating timestamp rows with `controller.determine_executor_actions()`; `CreateExecutorAction(OrderExecutorConfig)` routed to native `OrderExecutorSimulator`.
+- `hummingbot/strategy_v2/backtesting/executors_simulator/order_executor_simulator.py`: `ExecutionStrategy.MARKET` fills at the first current simulation df row CLOSE with cost `trade_cost×filled_amount_quote` and `POSITION_HOLD` ledger.
+- `BacktestPositionHold._process_order` nets buy/sell, tracks quantity, realized PnL, average cost and fees. SELL of precisely held BTC closes exposure without naked short, no stop/limit intrabar fills required.
+- `BacktestingDataProvider` keyed `binance_BTC-USDT_1h`; `initialize_trading_rules('binance')`, `quantize_order_amount` for spot quantity. Reject missing actual candle/quantity below min-notional instead of imagining fills. The existing native market OrderExecutorConfig+CreateExecutorAction construction is illustrated by `controllers/generic/pmm_mister.py`; **the DMI calculation implementation itself has not been written** and is not asserted to exist.
+- Pre-existing test source at pinned commit: `test/hummingbot/strategy_v2/backtesting/test_backtest_position_hold.py` has `test_buy_sell_netting`, `test_full_netting_closes_position`, `test_netted_position_realized_pnl_in_summary`; `test_backtesting_final_tick_ledger.py` tests spot Binance OrderExecutor POSITION_HOLD and end-row ledger, and `test_backtesting_engine_directional.py` validates representative perpetual signal->action->executor and adjustable trade_cost. They were inspected, **not newly run**.
+- Account: 1000 initial USDT, one **fixed** 200 USDT BUY per position quantized to BTC base increment; exact filled quantity is sold at exit, flat between positions, no compounding. Source originally has 20% of varying equity, admitted derivation chooses fixed 20%-of-*initial*, openly different economic behavior. Mode is **spot**, thus no 3x/5x isolated perpetual margin, mark funding or liquidation to mock. Spot test model charges `trade_cost=0.0001` per filled side (0.01%, same nominal source commission, **not** a claim of live fee tier); spread/slippage unmodeled, never claim realized futures funding.
+- Future house BO/SO DCA, leverage or different pair/timeframe research is separately declared experiment; not an unstated component of this source-native signal or bounded spot derivative.
 
 ## Evidence
 
-Primary source was read end-to-end at this pinned commit. No independent empirical reproduction or success claim.
+### Source-reported
+
+Original complete Pine program provides default long-only DI dominance, ADX/EMA/candle gates, optional long stop off and inverse condition exit. No source profit or simulated current performance claimed.
+
+### Independently reproduced
+
+No actual strategy trades or Hummingbot/Qlib parity generated by this admission. Real first-party engine sources and preexisting test files inspected at the exact version-matching commit cited; modeled execution expressibility is narrower than live/perpetual execution realism.
+
+### Negative evidence
+
+- DMI Winner does **not** enter on a single DI cross; it requires three contemporaneous/past bar signs and a full combination.
+- `showShort=false` makes the mirrored shortEntry a long close, not a SHORT. Optional `useSL=false` leaves no active stop; stop is **not** implicitly on.
+- Source next-open and 20%-equity sizing differ from explicitly defined execution-only spot derivative. DCA is not source-native.
 
 ## Falsification plan
 
-Recompute DMI14/ADX13 and EMA55 on closed bars and verify exact three-bar DI persistence, ADX strict >23 and candle-side gate. For default long-only compare closes against *shortEntry*, not mere DI sign crossover. Assert no Short executions, no SL when useSL=false and no pyramiding. Separately audit when an optional short or SL configuration is explicitly selected.
+Compare DMI14/ADX13/EMA55 on complete bars to Pine; assert entry exactly 3 consecutive DI+ wins AND ADX>23 AND close>EMA55 AND bullish candle in source date range; exit mirrors full bearish predicate, not DI-only. Derived market action strictly on next candle t+1 CLOSE, cost 0.0001/leg, sell actual BTC balance; no short orders, no duplicate long, no pre-warmup or after source date window entry; measure Pine next-OPEN to HB next-CLOSE execution differences separately.
 
-## Crypto portability and limitations
+## Crypto portability
 
-No symbol binding; uses only single-timeframe OHLC. Default no hard stop may leave open downside exposure. Use default long-only rule for source identification, not inferred chart-timeframe preference.
+Original indicator has no BTC or author's daily backtest hardcoding. Chosen spot BTC-USDT 1h only pins a reviewable concrete model. Tests at other assets/times are separate settings; perpetual house campaign costs/funding must be assessed independently.
+
+## Limitations
+
+No default protective stop; adverse hold risk until a fully qualified mirror shortEntry. Source can stay long for long time if EMA/candle filter blocks exit. Spot fee/slippage model is bounded and is not proof of live futures economics. No implemented strategy controller or actual backtest replay.
 
 ## Implementation status
 
-not-implemented. This is an admission record only; no actual Hummingbot or Qlib execution is claimed.
+`not-implemented`. GitHub research record only, no changes to Qlib/Hummingbot/n8n/strategy runner.
 
 ## Adoption boundary
 
-Research-only, not approved for Testnet/Mainnet. Proposed PASS is subject to independent reviewer validation of all existing six HB_READY gates and exact-head merge; it is not self-certified.
+`research-only`, `not-approved`; independent six-gate PASS required for this derived model, not a survivor, Testnet or Mainnet authorization.
 
 ## Sources
 
-- Primary source: https://github.com/Alorse/pinescript-strategies/blob/8fb3837ddcd137f1450c3e82d654ff3df24d54d5/strategies/momentum/DMI%20Winner.pine
-- Independent review contract: https://github.com/HCH725/alpha-strategy-research/blob/main/.github/HB_READY_REVIEW.md
+- Primary https://github.com/Alorse/pinescript-strategies/blob/8fb3837ddcd137f1450c3e82d654ff3df24d54d5/strategies/momentum/DMI%20Winner.pine
+- Engine code https://github.com/HCH725/hummingbot/tree/8b0e067e80ab62f10846d518dcb5a8218527ddb3
+- Engine version https://github.com/HCH725/hummingbot/blob/8b0e067e80ab62f10846d518dcb5a8218527ddb3/hummingbot/VERSION
+- Engine tests https://github.com/HCH725/hummingbot/tree/8b0e067e80ab62f10846d518dcb5a8218527ddb3/test/hummingbot/strategy_v2/backtesting
+- Admission contract https://github.com/HCH725/alpha-strategy-research/blob/main/.github/HB_READY_REVIEW.md
