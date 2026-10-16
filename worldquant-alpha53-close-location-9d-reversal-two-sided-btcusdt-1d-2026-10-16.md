@@ -1,0 +1,137 @@
+---
+schema: strategy-research-record-v1
+hb_ready_status: PASS
+title: WorldQuant Alpha53 close-location 9-day reversal two-sided on BTCUSDT 1d bars
+created: 2026-10-16
+updated: 2026-10-16
+type: strategy-research-record
+tags:
+  - quant
+  - strategy-research
+  - source-backed
+status: research-only
+confidence: medium
+source_as_of: 2015-12-09
+sources:
+  - https://arxiv.org/abs/1601.00991
+  - https://arxiv.org/pdf/1601.00991
+  - https://github.com/OctopusTakopi/toraniko-alpha101
+implementation_status: not-implemented
+adoption: not-approved
+approval_scope: research-only
+contested: false
+contradictions: []
+---
+
+# WorldQuant Alpha53 close-location 9-day reversal two-sided on BTCUSDT 1d bars
+
+## Provenance
+
+Primary sources read and re-verified end to end during this cycle (2026-10-16), pinned:
+
+- Paper (local text extraction of the arXiv PDF held this cycle, `/Users/hong/.hermes/cache/scratch/a101/wq101.pdf` 239 KB / `wq101.txt` 44 KB, key passages re-verified this cycle): `Zura Kakushadze`, `101 Formulaic Alphas`, arXiv `1601.00991` (manuscript dated `December 9, 2015` — record `source_as_of` is that manuscript date, never a fetch date; the paper states the formulas `are also computer code` once the operators are defined). Alpha#53 prints in Appendix A.1 as `(-1 * delta((((close - low) - (high - close)) / (close - low)), 9))`. Operator pins from the paper's own §A.1 Functions and Operators: `delay(x, d) = value of x d days ago`; `delta(x, d) = today's value of x minus the value of x d days ago`; inputs `open, close, high, low, volume = standard definitions for daily price and volume data`. Timing pin from §2: `delay-0 means that the time of some data used in the alpha coincides with the time during which the alpha is intended to be traded`, e.g. `traded at or, more realistically, as close as possible to today's open`, and `more broadly, this can be some other time, e.g., the close`; footnote 11 names exactly four delay-0 alphas (`42, 48, 53 and 54`, `assumed to be traded at or as close as possible to the close of the trading day for which they are computed`) — Alpha#53 is among them, so it is source-native delay-0 same-computed-bar-close by the paper's own list. Direction pin from the §2 worked example: `Alpha#101 ... is a delay-1 momentum alpha: if the stock runs up intraday (i.e., close > open and high > low), the next day one takes a long position` — a positive score maps to long, a negative score to short (see Negative evidence 1 for the exact strength of this pin).
+- Audited pinned implementation (verified byte-identical to the pinned audit bytes this cycle, sha256 `b54a820ca35fc06359f023cb590015ff4d4cd818c077322d587dc4e9cbf70316`): repository `https://github.com/OctopusTakopi/toraniko-alpha101`, head commit `4fc0627d2a720fd8d583708ef051b9d48d98aacd` (2026-07-17, `Fix Alpha101 report correctness`, confirmed still the repository head via the GitHub commits API this cycle; arXiv abs page live `200` this cycle), exact file `toraniko/alpha101.py`: `def alpha053` returns `-delta(_safe_div((self.close - self.low) - (self.high - self.close), self.close - self.low), 9)` (lines 461–462, matching the printed formula with the `(close - low)` denominator); `def delay` is the d-bar-ago value with NaN before the d-th bar (lines 74–79); `def delta` is `x - delay(x, period)` (lines 81–82); `_safe_div` maps every non-finite quotient to NaN rather than guessing a value (lines 185–189). The pinned neutralization manifest covers other alphas — never #53, so Alpha#53 needs no sector/industry/subindustry class. Alpha#53 needs no rank, no scale, no adv, no vwap, no returns, no market-cap, and no threshold of any kind: the only division is the printed `(close - low)` divisor, and every undefined input propagates to NaN (flat by record rule, never a fabricated score).
+
+Licence and rights: the paper is a public arXiv preprint; the implementation is public research software. This record cites and normalizes the rule (single-line formula and operator definitions only for gate evidence) and reproduces no source block beyond single-line facts.
+
+**Derived-record declaration (read before review):** this file specifies a separately identified derived executable strategy, not a lossless reproduction of the paper. The paper prints the Alpha#53 formula, the operator definitions, the delay-0 close-trade class, and the positive-score→long convention, but ships no venue, no symbol, no single-asset side mapping (its own evaluation is cross-sectional), no order/fill semantics beyond the delay-0 close class, no warmup seed, and no risk leg. Researcher-declared adaptations are exactly four: (1) research market/timeframe `BTCUSDT` Binance USDT-M perpetual `1d` (the paper is daily U.S. equities with no venue — frame/venue pin disclosed, never a source claim; perpetual is the minimal realistic venue because the short leg needs margin); (2) completed-bar decisions with same-bar-close market fills (the paper's delay-0 class is `traded at or as close as possible to the close of the trading day for which they are computed` — source-grounded timing carried over 1:1, disclosed, never an advantage claim; deviation class identical to the admitted same-bar-close records' `process_orders_on_close=true` primitive, disclosed); (3) an adopted 15-completed-bar warmup with pre-warmup bars flat by record rule (structural minimum is the 10th completed bar — `delta(., 9)` needs the value at `t` and at `t-9` per the `delay`/`delta` code, each inner value needing 1 bar — pinned by the operator code above — plus margin; see Required data); (4) house sizing/costs with modeled funding while held (the paper ships no sizing, capital, fee, or slippage concept — never presented as source-native behavior). The close-location ratio, the 9-bar change, the negation, the delay-0 same-close execution, the positive→long / negative→short mapping, the reversal-or-flatten exits, and the no-stop/no-target risk posture are source-grounded and unmodified.
+
+Pre-write dedup (2026-10-16): working-tree case-insensitive searches for `alpha53`, the `(close - low) - (high - close)) / (close - low)` location object with its 9-bar delta, and the delay-0 `53` pin return zero strategy records embodying this rule; the closest pool neighbours merely share vocabulary, never the signal — `cmf-velocity` and `chaikin-oscillator` build `((close - low) - (high - close)) / (high - low)` (a `(high - low)`-denominator money-flow multiplier, then SMA/EMA/volume-weighted into velocity/oscillator objects — never a `(close - low)`-denominator raw location with a 9-bar change); pool `alpha100` builds `((close - low) - (high - close)) / (high - low)` times volume with double industry neutralization (a neutralized volume-weighted object — never this unweighted raw-location change); the six WorldQuant-101 siblings are `worldquant-alpha6` (negated 10-day open-volume correlation), `worldquant-alpha9` (5-bar delta-sign streak ternary), `worldquant-alpha12` (volume-change-signed 1-day close product), `worldquant-alpha23` (20-bar high-mean level gate), `worldquant-alpha24` (100-day SMA momentum-ratio splice), and `worldquant-alpha46` (20/10-day acceleration gate with fixed legs) — all different signal objects (see Negative evidence 6). Open `research/*` PRs are only #48 (Larry Williams 3-EMA channel streak long), #49 (Gaussian channel StochRSI-gated breakout long), #63 (SuperTrend ATR-flip trend long), #89 (Chandelier Exit dual-stop state-flip long), #92 (SSL channel state reversal), and #251 (Swift 2-year MA multiplier zone-state long-flat) — different mechanisms, indicators, and sources. This is the seventh WorldQuant-101 record in the pool family, not a parameter variant of any admitted rule.
+
+## Economic mechanism
+
+### Source-reported
+
+Coarse mean-reversion/momentum building blocks. The paper frames its universe coarsely: `one can think of alpha signals as based on mean-reversion or momentum`, where `a mean-reversion alpha has a sign opposite to the return on which it is based`. Alpha#53 is a delay-0 location-change block: the inner ratio measures where the close sits inside the bar's lower leg, and the negated 9-day change fades that location's 9-bar drift. The paper's delay-0 Alpha#42 discussion gives the flavour (`rank(vwap - close)` lower when the stock runs up, `contrarian position taken close to the close`) without printing any behavioural mechanism for #53 itself. The paper ships no stop, target, or risk leg of any kind.
+
+### Research interpretation
+
+Single-bar location reversal book, two-sided overall. The inner value (`k[t] = ((close[t] - low[t]) - (high[t] - close[t])) / (close[t] - low[t]) = (2·close[t] - low[t] - high[t]) / (close[t] - low[t])`) is a close-location object on the same single bar — it prints `0` when the close sits mid-bar (`close - low == high - close`), positive when the close leans toward the high, negative when it leans toward the low, and is undefined exactly when `close == low` (zero divisor → NaN → flat by record rule). The outer score (`score[t] = -(k[t] - k[t-9]) = k[t-9] - k[t]`) fades the 9-bar drift of that location: a location that drifted up over 9 bars fires short, one that drifted down fires long. Unlike sibling worldquant-alpha46 (a 20/10-day second-difference acceleration gate on closes with two fixed legs), this rule has no gate and no fixed legs — every defined bar's sign trades. Unlike sibling worldquant-alpha12 (a volume-signed 1-day close product), this rule never reads volume. Unlike pool `cmf-velocity`/`chaikin` (which divide by `(high - low)` and then smooth/weight by volume into oscillator objects), this rule divides by `(close - low)` and takes a raw 9-bar change with no smoothing. The failure mode is plain: a steadily upward-drifting close location pins the book short with no scaling and no guardrail, while single-print wicks swing `k[t]` bar to bar with no smoothing — disclosed, not upgraded. The `(close - low)` denominator makes the object hypersensitive when the close prints near the low (small divisor amplifies the ratio) — disclosed as a structural property, not re-scaled.
+
+## Signal
+
+Exact rule as pinned (any other series, divisor, lookback, negation, fill, frame, book, or tie treatment is a different, unpinned rule):
+
+- Inputs (paper A.2): `close[t]`, `high[t]`, `low[t]` on completed `1d` bars only. No `open`, no `volume`, no vwap/adv/returns/market-cap/sector, no cross-sectional rank, no second asset or timeframe is read by any order-gating line.
+- Location value (paper Appendix A.1, pinned impl line 462): `k[t] = ((close[t] - low[t]) - (high[t] - close[t])) / (close[t] - low[t])` — same-bar construction, undefined exactly when `close[t] == low[t]` per the `_safe_div` code (non-finite → NaN), never seeded or backfilled.
+- 9-bar reversal score (paper A.1, pinned impl lines 81–82, 462): `score[t] = -(k[t] - k[t-9]) = k[t-9] - k[t]`. Undefined before the 10th completed bar per the `delay` code (`delay(k, 9)` needs 10 values), and undefined whenever either endpoint `k[t]` or `k[t-9]` is NaN (e.g. either bar printed `close == low`) — flat by record rule, never interpolated.
+- Direction mapping (source-grounded, fenced in Negative evidence 1): `score[t] > 0` → long signal; `score[t] < 0` → short signal; `score[t] == 0` → flat signal (fires when the 9-bar location change prints exactly zero). The entry fills at the same bar's close, one single unit, only if the book does not already carry that side (see position rule).
+- Exit: the first opposite signal reverses the full unit in one step (close plus opposite entry at the same-bar-close fill); a zero print flattens the full unit at the bar close — reversal-or-flatten is the sole exit path by construction. No stop-loss, no take-profit, no trailing, no time exit (the paper ships no risk leg — carried over exactly, disclosed in Provenance adaptation (4), never upgraded into a source claim).
+- Direction: two-sided overall (location-drift-up shorts; location-drift-down longs).
+- Position rule (predeclared researcher pin): single-unit; an already-long book treats further long-signal bars as no-ops (no pyramiding, no averaging), and symmetrically for shorts; flat-regime bars while already flat are no-ops. Re-entry re-arms on the next opposite or flat-exit signal only (no cooldown specified — explicitly none, not invented). Pre-first-signal and any NaN-score bars are flat by record rule.
+
+## Required data
+
+- Completed `1d` bars of BTCUSDT: `close`, `high`, `low` only (the sole series the formula reads). No `open`/`volume`, no funding-signal, OI, mark/index price, liquidation, trade, order-book, on-chain, options, sentiment, macro, session-template, calendar-table, or cross-venue state is read by any order-gating line.
+- Single decision timeframe `1d` (no multi-timeframe call, no cross-sectional ranking — one asset, one frame; the location and its 9-bar change read the same single series set, never a second feed).
+- Warmup: 15 completed `1d` bars flat by record rule — structural minimum is the 10th completed bar (`delta(k, 9)` needs `k[t]` and `k[t-9]` per the full-window `delay` code, each `k` needing 1 completed bar — pinned by operator code, not by a test sentence), plus margin per the admitted worldquant-alpha23 precedent (20→25) and worldquant-alpha46 precedent (21→30). Pre-warmup and any NaN-score bars are flat by record rule; missing bars are skipped on available completed bars only — prices are never fabricated. No repainting (location and change read completed bars only), no negative shift, no future reference, no full-sample normalization; exactly one evaluation per completed bar.
+
+## Execution assumptions
+
+- Research market: BTCUSDT Binance USDT-M perpetual under the house overlay (researcher choice — the paper names no venue and evaluates U.S. equities; no source-market equivalence is claimed; perpetual is the minimal realistic venue because the short leg needs margin).
+- Order timing (paper-grounded source-native): completed-bar decision with same-bar-close market fills for entries, reversals, and flat-exits — the paper's delay-0 class is `traded at or as close as possible to the close of the trading day for which they are computed`, compatible 1:1 with the pinned Hummingbot backtester (package `20260920`, VERSION `dev-2.17.0`) on the same verified primitive as the admitted same-bar-close records' entries (e.g. `alphatrend-mfi-atr-trailing`, `aroon-oscillator-midline`, `bookstaber-atr-momentum`, `cumulative-rsi-dual-threshold` records' `process_orders_on_close=true` path, verified this cycle's base). This record claims no other fill convention: no next-bar-open print, no maker-touch, no intrabar-path-dependent fill.
+- Stop/limit modeling: none — the derived spec carries zero stop/limit/trailing orders by record rule. No hidden Hummingbot stop-order defaults are relied upon, and with no stop/limit legs there is no same-bar TP/SL ordering ambiguity; each bar's outcome is a single deterministic event (hold, open, or atomic close-then-reverse at one close price).
+- Sizing/capital/costs: the paper ships no sizing, capital, fee, or slippage concept. The explicit house overlay (single-unit frame, pinned house taker fees both legs, modeled funding while held) applies to the derived evaluation here, never presented as source-native behavior. Funding is never zero-claimed: two-sided holds span the `00:00`/`08:00`/`16:00 UTC` funding stamps, so every held bar carries modeled funding.
+- Concurrency: at most one single-asset engine position at any time; an opposite signal closes-and-reverses in one step and a zero signal closes-to-flat. Single engine position; no shared portfolio state, no cross-sectional ranking, no multi-pair logic, no hedge-mode requirement by construction.
+
+## Evidence
+
+### Source-reported
+
+With exact provenance (arXiv 1601.00991 text extracted from the PDF held this cycle, key passages re-verified this cycle): the `are also computer code` formula status; the Alpha#53 line `(-1 * delta((((close - low) - (high - close)) / (close - low)), 9))`; the §A.1 operator definitions (`delay(x, d)`, `delta(x, d)`); the A.2 input definitions (`open, close, high, low, volume = standard definitions for daily price and volume data`); the §2 delay-0 definition and the footnote-11 delay-0 list (`42, 48, 53 and 54` — Alpha#53 present, hence source-native delay-0 same-close class); the §2 mixed building-block framing; the §2 Alpha#101 worked example pinning positive-score→long and the Alpha#42 delay-0 contrarian-close flavour. With exact implementation provenance (pinned commit `4fc0627d`, file `toraniko/alpha101.py` lines 74–82, 185–189, and 461–462, plus the neutralization manifest covering other alphas but never #53): the executable location-ratio / 9-bar-change / negation semantics, the full-window-undefined convention, the non-finite→NaN division convention, and the 10th-bar first-signal convention. This record claims no source-reported performance number of any kind — no return, no win rate, no trade count, no per-alpha table figure is carried into the derived specification — and no reproduced performance exists.
+
+### Independently reproduced
+
+Not independently reproduced.
+
+### Negative evidence
+
+1. Direction words fenced, admitted plainly: the paper never prints `buy`, `sell`, `long`, or `short` for Alpha#53. The positive→long / negative→short mapping rests on the §2 Alpha#101 worked example (a positive intraday score takes `a long position` the next day) together with the long-plus-short dollar-investment construction — not on any order verb attached to Alpha#53 itself. A reviewer must not graft any other direction convention onto this record.
+2. Timeframe and venue fenced: the paper is daily U.S. equities and names no venue. `1d` BTCUSDT-perpetual is the disclosed researcher pin (Provenance adaptation (1)); a reviewer must not cite the paper as evidence for any frame or venue.
+3. Risk silence fenced: the paper contains no stop, target, trailing, time exit, or risk paragraph for Alpha#53 — the no-guardrail posture is carried over exactly, never upgraded, never presented as a tested safety choice.
+4. Cross-sectional machinery fenced: the paper's own evaluation ranks scores across thousands of stocks and industry-neutralizes many alphas. Alpha#53's formula contains no `rank(`, no `IndNeutralize`, no `scale(`, no `vwap`, no `adv`, no `returns`, no market-cap, and no sector/industry term (verified by programmatic filter over all 101 implementations this cycle; the pinned neutralization manifest covers other alphas, never #53) — the single-asset sign map drops the cross-sectional portfolio layer entirely, disclosed as adaptation, never presented as the paper's traded portfolio.
+5. Exact-zero and NaN determinism fenced: `score[t] == 0` fires only when the 9-bar location change prints exactly zero; any `close == low` bar makes `k` NaN via `_safe_div` and hence the score NaN; any pre-10th-bar or NaN-score bar is flat by record rule. All are predeclared record-rule flats, not paper sentences — without them the zero/undefined prints would be ambiguous, so they are pinned here rather than left to the reviewer.
+6. Overlap fences, admitted plainly: pool `cmf-velocity` builds `((close - low) - (high - close)) / (high - low)` times volume into an 11-bar SMA ratio with 7-bar velocity and EMA200 bracket (a volume-weighted smoothed velocity object — this record divides by `(close - low)` and takes a raw 9-bar change with no volume and no smoothing); pool `chaikin-oscillator` builds the same `(high - low)`-denominator multiplier into a cumulative AD line with EMA3−EMA10 (a cumulative oscillator object — never a 9-bar location change); pool `alpha100` builds `((close - low) - (high - close)) / (high - low)` times volume with double subindustry neutralization (a neutralized object — never this raw unweighted change); sibling `worldquant-alpha46` gates on a 20/10-day second-difference acceleration with fixed ±1 legs (an acceleration object — never a location change); sibling `worldquant-alpha24` gates on a 100-day SMA momentum ratio (a slow-ratio object — never a 9-bar location change); sibling `worldquant-alpha23` gates on a 20-bar high-vs-mean level (a level object on highs — never a location change); sibling `worldquant-alpha9` gates on 5-bar delta-sign purity (a history-purity object — never a location level); sibling `worldquant-alpha12` trades a volume-signed 1-day close product (a companion-series gate — never a location change); sibling `worldquant-alpha6` trades a negated 10-day open-volume correlation (a two-series statistic — never a location change). Shared `close`/`low`/`high`/`reversal` vocabulary is not shared signal.
+7. Twins and neighbours fenced: the paper's Alpha#54 (`(-1 * ((low - close) * open^5) / ((low - high) * close^5)`) is a single-print power-scaled level (always non-positive on valid bars — a short-or-flat object, never a 9-bar change — not substituted here); Alpha#49/Alpha#51 are single-threshold 20/10-day acceleration objects (different signal family — never substituted); Alpha#48 is industry-neutralized (a different data dependency — never substituted); Alpha#42 is a vwap-based delay-0 rank object (needs vwap rank — never substituted); Alpha#101 is the body-to-range ratio already embodied by the pool balance-of-power record (not repeated here). A reviewer must not swap any other alpha's window, series, divisor, or branch into this record.
+8. No hidden variants admitted: any other divisor, any other lookback, any other series, any stop/target/filter/cooldown, any other frame, fill, venue, or book is a different, unpinned rule. A reviewer must not pick among these to rescue or reshape the record.
+
+## Falsification plan
+
+Research-defined thresholds only (never substitutes for missing rules); global no-retuning rule: close-location ratio / `(close - low)` divisor / 9-bar change / negation / two-sided-overall book / delay-0 same-close fills / no-stop posture / `1d` BTCUSDT perpetual are frozen.
+
+- F1 — Location-change relevance: an always-on twin (score `= -(k[t] - k[t-1])`, i.e. 1-bar location change — same ratio, grid, fills, 9→1 horizon only) must not improve net expectancy; fail ⇒ the 9-bar horizon adds nothing over a 1-bar location fade.
+- F2 — Divisor relevance: a high-low-divisor twin (score `= -(m[t] - m[t-9])` with `m = ((close - low) - (high - close)) / (high - low)` — same 9-bar change, grid, fills, `(close - low)` → `(high - low)` divisor only) must not improve net expectancy; fail ⇒ the `(close - low)` divisor adds nothing over the standard money-flow-multiplier scaling, and the record is a divisor label rather than a divisor edge.
+- F3 — Negation relevance: an unnegated twin (score `= k[t] - k[t-9]` — same ratio, horizon, grid, fills, negation removed) must not improve net expectancy; fail ⇒ the contrarian sign adds nothing over location-trend continuation.
+
+## Crypto portability
+
+Pinned to BTCUSDT Binance USDT-M perpetual under the house overlay (declared port of a venue-free daily-equity formula). The rule reads completed daily bars only, so no pit-session, gap, roll, split/dividend-adjustment, or corporate-action logic ports (the paper's split/dividend close adjustment is a non-issue on crypto — disclosed, not modeled). The `(close - low)` divisor is scale-free as a ratio (both legs in the same quote currency cancel), so unlike absolute-dollar thresholds it ports across venues without re-scaling — yet its near-low hypersensitivity differs across venues' wick microstructure (thin-book wicks vs equity bars), disclosed without re-tuning, and any other divisor normalization would be a different, unpinned claim. The score sign alone is scale-free in direction (side alone trades), yet the `close == low` exact-print frequency differs across venues' tick precision — disclosed. The rule is two-sided overall, so a spot-only deployment expresses only long-firing bars while every short-firing bar stays venue-gated (never silently converted) — a spot-only variant would be a different, unpinned claim. No warmup history beyond 15 `1d` bars is consumed. Extension to other house-universe assets or timeframes would be a different, unpinned claim.
+
+## Limitations
+
+- No price stop, no time stop: a steadily upward-drifting close location pins the book short, and a steadily downward-drifting location pins it long, while every 9-bar drift prints with no guardrail before the next location print, by the carried-over paper design — the record's principal risk.
+- Near-low hypersensitivity: bars closing near (but not at) the low divide by a tiny `(close - low)`, amplifying `k[t]` and hence the 9-bar change on wick noise — the paper provides no cap and this record invents none.
+- Exact-low flat gap: bars printing `close == low` exactly go NaN→flat by record rule, sitting out a potentially trending bar — disclosed, not interpolated.
+- 9-bar staleness: the change compares today's location against 9 bars ago — a flat old anchor shapes today's score with no lookback decay, disclosed.
+- Single-venue port residual: paper-regime U.S. equities vs Binance perpetual execution (prints, fees, funding, close-definition, margin mechanics beyond the house model) is unclaimed, disclosed.
+- Same-close latency idealization: source-native delay-0 assumes trading `at or as close as possible to the close`; any live slippage between the closing print and the realized fill differs by construction — disclosed, research-only.
+- Performance evidence is absent: nothing here is calibrated, fitted, or tuned to any backtest.
+- Author scope: the paper presents production formulaic alphas as research objects, not a vetted retail trading system — this record is research-only and claims no live suitability.
+
+## Implementation status
+
+Not implemented. No Hummingbot controller, no Qlib screen, no Paper/Testnet/Live run exists for this record. Any future implementation must demonstrate the pinned-engine path (package `20260920`, VERSION `dev-2.17.0`) and representative event-level Qlib/HB parity before mass screening.
+
+## Adoption boundary
+
+Research-only. Not approved for any adoption, sizing, or live-trading use. Downstream house overlays (DCA matrix, leverage, capital) are separately declared experiments, never source-native behavior and never part of this admission — no Safety-Order/DCA event is admitted in this record's version. Promotion requires the standard downstream evidence chain, never this record alone.
+
+## Related Wiki records
+
+None.
+
+## Sources
+
+- Kakushadze, Z., `101 Formulaic Alphas`, arXiv:1601.00991 (manuscript December 9, 2015 — Alpha#53 formula, §A.1 operator definitions, A.2 daily price/volume inputs, §2 delay-0 definition with footnote-11 delay-0 list, §2 Alpha#101 direction worked example — key passages re-verified via PDF text extraction 2026-10-16): https://arxiv.org/abs/1601.00991
+- Same paper, PDF (formula appendix, operator/input definitions, empirical sections — read 2026-10-16): https://arxiv.org/pdf/1601.00991
+- OctopusTakopi `toraniko-alpha101` (independent audited implementation — `alpha053` at `toraniko/alpha101.py` lines 461–462, `delay` at lines 74–79, `delta` at lines 81–82, `_safe_div` at lines 185–189, neutralization manifest covering other alphas but never #53 — pinned to commit `4fc0627d2a720fd8d583708ef051b9d48d98aacd`, verified live 2026-10-16): https://github.com/OctopusTakopi/toraniko-alpha101
