@@ -55,14 +55,14 @@ Version assessed: spot BTC-USDT, connector `binance`, candle feed `binance/BTC-U
 
 Decision/fill clock: compute source signal on fully completed t; on simulation row t+1 use ONLY the source signal from t (one-candle shifted features). The simulator's MARKET order enters or exits at row t+1 CLOSE, not t+1 OPEN. Last signal without a following completed candle remains pending/not filled. No same-row close-signal/close-fill shortcut or lookahead. One long and one flat transition maximum; no other action when already long or flat.
 
-Real code-path evidence read at `HCH725/hummingbot` fork commit `2dbc844fadb9d863b3ab0af1b8ab100472102e42`:
+Real code-path evidence read at `HCH725/hummingbot` fork commit `8b0e067e80ab62f10846d518dcb5a8218527ddb3`:
 
 - `hummingbot/strategy_v2/backtesting/backtesting_engine_base.py`: `BacktestingEngineBase.run_backtesting`, `prepare_market_data` provide timestamped completed OHLCV, loop `simulate_execution` calls controller `determine_executor_actions()` per row, routes `OrderExecutorConfig` to `OrderExecutorSimulator`; `BacktestPositionHold` nets BUY versus SELL, reports realized PnL and cum fees.
 - `hummingbot/strategy_v2/backtesting/executors_simulator/order_executor_simulator.py`: MARKET fills at first simulation row timestamp **at its close price**; quote fees `trade_cost * filled_amount_quote`, returns `POSITION_HOLD` executor.
 - `hummingbot/strategy_v2/backtesting/backtesting_data_provider.py`: connector/pair/interval feed keys, `initialize_trading_rules`, base-quantity/price quantization.
 - Actual MARKET `CreateExecutorAction` plus `OrderExecutorConfig` construction already exists in `controllers/generic/pmm_mister.py` and the existing backtesting engine. Minimal strategy-specific `ControllerBase` signal logic is **not yet implemented** (implementation_status reflects this), but no adapter/compiler/new system is introduced.
 - `run_backtesting(...backtesting_resolution="1h", trade_cost=0.0001)`: fixed simulated **0.01% per filled side** matching the source's numerical commission input. This is a frozen *research approximation*, NOT an assertion about actual Binance fee tier, maker queue, spread, slippage or realized fills; no missing futures funding is silently zeroed since the adopted spot venue has no perpetual funding contract.
-- Required Hummingbot pinned admission baseline is package `20260920`, VERSION `dev-2.17.0`. Fork commit evidence is code-level; reviewer MUST independently confirm these exact primitives exist in the mandated pinned package. Do NOT treat more recent master alone as successful Gate 5 validation.
+- Required Hummingbot pinned admission baseline is package `20260920`, VERSION `dev-2.17.0`. Source-aligned pinned temporal snapshot: GitHub commit `8b0e067e80ab62f10846d518dcb5a8218527ddb3` is dated 2026-09-20 12:10:22 UTC and its own `hummingbot/VERSION` reads `dev-2.17.0`, matching the mandatory version and September-20 vintage, unlike the previously cited October master. The exact `OrderExecutorSimulator`, `BacktestingEngineBase`, `BacktestingDataProvider` and `BacktestPositionHold` primitives were re-read in THIS version-pinned September snapshot, not inferred from latest master. Historical setup.py carries a separate packaging number; no claim of binary digest identity is made. Independent reviewer may inspect these source-specific proofs plus existing source-pinned tests; there is no new framework.
 
 ## Evidence
 
@@ -91,5 +91,7 @@ No source stop; gap and crash risk. Position may remain open indefinitely before
 ## Sources
 
 - Original: https://github.com/Alorse/pinescript-strategies/blob/8fb3837ddcd137f1450c3e82d654ff3df24d54d5/strategies/mean-reversion/Exceeded%20candle.pine
-- Engine code: https://github.com/HCH725/hummingbot/tree/2dbc844fadb9d863b3ab0af1b8ab100472102e42
+- Engine code and version: https://github.com/HCH725/hummingbot/tree/8b0e067e80ab62f10846d518dcb5a8218527ddb3
+- Engine version file: https://github.com/HCH725/hummingbot/blob/8b0e067e80ab62f10846d518dcb5a8218527ddb3/hummingbot/VERSION
+- Existing engine tests: https://github.com/HCH725/hummingbot/tree/8b0e067e80ab62f10846d518dcb5a8218527ddb3/test/hummingbot/strategy_v2/backtesting
 - Policy: https://github.com/HCH725/alpha-strategy-research/blob/main/.github/HB_READY_REVIEW.md
