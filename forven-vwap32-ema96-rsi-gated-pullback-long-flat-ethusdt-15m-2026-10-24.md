@@ -58,14 +58,20 @@ Uptrend-pullback timer, long-only, state-gated, no veto beyond its own four legs
 Exact rule as pinned (any other VWAP length, distance, regime length, slope window, RSI length, threshold, frame, fill, book, or risk posture is a different, unpinned rule). `vwap_t` is the trailing 32-bar typical-price/volume mean; `ema_t` the 96-bar close EMA; `rsi_t` Wilder RSI(14):
 
 ```text
-vwap_t   = sum(typ_p * vol)_{t-32..t-1...t} / sum(vol)   // trailing 32, causal
+typ_p    = (high_p + low_p + close_p) / 3
+vwap_t   = sum(typ_p * vol)_{p=t-31..t} / sum(vol)_{p=t-31..t} // exactly 32 bars
 ema_t    = ewm(span=96, adjust=False) of close           // causal
 rsi_t    = Wilder RMA RSI(14) of close                   // causal, min_periods=14
 ready    = positional index >= 97                        // source guard: len(df) >= 98
 entry_t  = ((vwap_t - close_t)/vwap_t >= 0.015) AND (close_t > ema_t)
            AND (ema_t > ema_{t-8}) AND (rsi_t < 35) AND ready AND band-defined
-exit_t   = (close_t >= vwap_t) OR (rsi_t > 60) OR (close_t < ema_t)   // no ready gate in twin
+exit_raw = (close_t >= vwap_t) OR (rsi_t > 60) OR (close_t < ema_t)
+valid_t  = ready AND nonmissing(vwap_t, ema_t, rsi_t)
+entry_t  = valid_t AND entry_t
+exit_t   = valid_t AND exit_raw // source generate_signal neutral guard applies to BOTH outputs
 ```
+
+- Source-verified neutral-guard clarification: the per-bar `generate_signal` returns BOTH signals false whenever `len(df) < 98` or any of VWAP/EMA/RSI is missing, before evaluating either predicate. This is the authoritative guard for the already-declared zero-volume-neutral posture; the 200-bar derived floor remains unchanged. The raw `generate_signals` twin does not apply that shared guard: its RSI/regime exit legs can remain true when VWAP is unavailable, and on pandas 2.3.3 a zero-volume window containing `pd.NA` raises `TypeError: boolean value of NA is ambiguous` before `.fillna(False)` can run. Therefore the raw twin is not an interchangeable executable path on such rows; the declared controller must preserve the per-bar neutral result, including holding an existing position with no fill. This clarification preserves the existing neutral posture and does not add an exit, select new parameters, or change timing.
 
 - Trade events: `entry_signal` on a four-leg pullback bar, `direction` long-only; `exit_signal` on any reclaim/recovery/regime-loss bar. A flat book enters one full unit (`0.01` ETH) on an entry bar; a long book exits the full unit on the first exit-leg bar.
 - Exact boundaries (pinned semantics): entry distance is non-strict (`>=` 1.5%); `trend_ok`/`ema_rising` strict (`>`, 8-bar shift); entry RSI strict (`< 35`); exit reclaim non-strict (`>= vwap`), exit RSI strict (`> 60`), exit regime-loss strict (`< ema`). A bar 1.499% under VWAP fires no entry; RSI exactly 35 fires no entry; RSI exactly 60 fires no exit; touches hold the prior state — disclosed, not smoothed.
