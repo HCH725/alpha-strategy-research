@@ -135,7 +135,7 @@ BTCUSDT spot `1d` is the research pin (the `S012-BTC` leg names `BTC` only). Lon
 ## Limitations
 
 - Rare entries by construction: the reclaim must land above BOTH slow averages at once — verified 2 entries per 800 synthetic bars against 29 exits. Live `1d` tape may print months of silence between entries; exits firing from flat are absorbed as no-ops, disclosed.
-- Late exits on reversals: a bar that gaps from RSI-70 to RSI-30 exits one bar later at the earliest — there is no stop order to front-run it, disclosed.
+- Completed-bar exit latency: a bar whose RSI falls from 70 to 30 triggers the exit on that same completed bar (`prev_rsi >= 60` and `rsi_val < 60`), with the full-unit exit at that bar’s effective close under the declared derived fill model. There is no intrabar stop order to front-run that close, disclosed.
 - No trend-break exit: price can sit beneath both EMAs while RSI holds above 60 and the book keeps the long — the exit reads RSI alone, disclosed stale-hold profile, harsher than the EMA-RSI-pullback cousin's trend-break exit.
 - Dead ADX leg at pinned defaults: `adx_min = 0` vetoes nothing — trend certification is EMA-only unless a later falsification round moves the floor (which would be a new revision, never a silent repair).
 - No risk leg: no stop loss, take profit, ROI rung, trailing-stop order, or time limit exists in source — recorded as explicitly disabled; adverse excursions have no capital guardrail besides the RSI-60 rollover.
