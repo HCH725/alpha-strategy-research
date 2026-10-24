@@ -59,7 +59,7 @@ Exact rule as pinned (any other ADX/DI length, threshold, frame, fill, book, or 
 ```text
 adx_strong_t   = (ADX14_t > 25)                                  // strict
 plus_cross_t   = (plus_DI_{t-1} <= minus_DI_{t-1}) & (plus_DI_t > minus_DI_t)    // EDGE
-minus_cross_t  = (minus_DI_{t-1} <= plus_DI_{t-1}) & (minus_DI_t > plus_DI_{t-1}) // EDGE
+minus_cross_t  = (minus_DI_{t-1} <= plus_DI_{t-1}) & (minus_DI_t > plus_DI_t) // EDGE
 entry_t        = adx_strong_t & plus_cross_t
 exit_t         = (ADX14_t < 25) | minus_cross_t                  // level OR edge
 ```
