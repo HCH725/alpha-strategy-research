@@ -1,0 +1,95 @@
+---
+schema: strategy-research-record-v1
+hb_ready_status: PASS
+title: "Forven momentum-burst mean-reversion ATR-percentile filter — independent ETHUSDT spot 4h long-flat derivative"
+created: 2026-10-25
+updated: 2026-10-25
+type: strategy-research-record
+tags:
+  - quant
+  - strategy-research
+  - source-backed
+status: research-only
+confidence: medium
+source_as_of: 2026-10-25
+sources:
+  - https://github.com/judder659/Forven/blob/0e35d7dd3f84a8ef6d8d7a3b131ff366585a451e/forven/strategies/builtin/momentum_burst_mean_reversion.py
+  - https://github.com/judder659/Forven
+implementation_status: not-implemented
+adoption: not-approved
+approval_scope: research-only
+contested: false
+contradictions: []
+---
+
+# Momentum-burst percentile mean reversion — independent long-flat derivative
+
+## Provenance
+
+- **Primary source:** [`forven/strategies/builtin/momentum_burst_mean_reversion.py`](https://github.com/judder659/Forven/blob/0e35d7dd3f84a8ef6d8d7a3b131ff366585a451e/forven/strategies/builtin/momentum_burst_mean_reversion.py) in public repository [judder659/Forven](https://github.com/judder659/Forven), pinned commit **`0e35d7dd3f84a8ef6d8d7a3b131ff366585a451e`**. Upstream HEAD has since advanced to `14397ae45d2d88fe78b8a2bec6e4b638daed845d` (confirmed via `git ls-remote` this cycle); this record pins the immutable commit, never a moving HEAD. The file was retrieved end to end this cycle via pinned-commit raw fetch (HTTP 200, 5554 bytes, 169 lines); `git hash-object` reproduces blob SHA **`5580d933b12d20ebc09c7e602eff703573527006`**.
+- **Verified source-defined concepts only:** class `MomentumBurstMeanReversion` (`TYPE_NAME = "momentum_burst_mean_reversion"`, lines 14–17), roster leg `("H01624-ETH-MOM-BURST-4H", MomentumBurstMeanReversion, {"_asset": "ETH"})` (lines 167–169); defaults `atr_period 14 / burst_percentile 95 / burst_threshold 1.5 / adx_period 14 / adx_regime_max 25 / ema_trend 50 / vol_confirm_mult 1.2 / vol_ema_period 20 / atr_stop_mult 2.0 / max_hold_bars 8` (lines 32–44); `describe()` long/short burst entry with ADX regime, EMA alignment and volume confirmation (lines 50–57); length guard `min_len = max(14,14,50,20,21)+2 = 52` (lines 90–93); in-file `_atr` rolling-mean true range (lines 59–67) and in-file `_adx` rolling-mean directional system (lines 69–84); long/short burst conditions on 20-bar percentile rank, ATR-normalized return, ADX, EMA50 side and volume confirmation (lines 117–137); direction fallback `"long"` (line 139).
+- **Verified source gaps (token census over the 169 lines this cycle):** `exit_signal=False` on **both** return paths (lines 94–98, 141–154) — the source defines **no executable exit**; `atr_stop_mult` and `max_hold_bars` appear only in defaults (lines 42–43) and are **never read** anywhere else in the file (dead parameters); 0 `stop_loss`/`stoploss`/`take_profit`/`trailing`; 0 `pyramid`/`position_`/`cooldown`; 0 `funding`/`mark_price`/external columns; 0 `open` reads of any kind (no `df["open"]`, fully close-based); 0 `pandas_ta`/`hyperopt`; 0 `leverage` key (unleveraged by construction); 2 `volume` reads (the confirmation leg); 4 `short` hits (the short leg this derivative disables). No performance phrase ships in the file.
+- **Independent derivative — NOT lossless source reconstruction:** the researcher explicitly chooses ETHUSDT spot 4h, long-only/flat state (source short leg disabled), fixed 0.01 ETH sizing, the fully specified recursions/seeds below (including the EMA seed and the percentile-rank definition, stated as researcher choices — no claim of pandas/`ta.ema` equivalence is made anywhere in this record), activation of the source's dead `atr_stop_mult`/`max_hold_bars` values as the exit system, the 120-bar warmup (a strict superset of the source's 52-bar guard), completed-bar close research fills, and the research fee/position ledger. The source's `describe()` prose is lineage context only, never an executable rule.
+- **Immutable derived identity:** `Forven-momentum_burst_mean_reversion@0e35d7d | independently-derived-v1-AN20-PR95-TH1p5-ADX14LT25-EMA50-VEMA20x1p2-ATRstop2p0-T8-long-flat | BinanceSpot-ETH-USDT-4h | 2026-10-25`. Changing any formula, seed, threshold, side, state, market, quantity, cost or execution convention creates a different derivative.
+- **Dedup as of 2026-10-25:** Main at `f0eb3f75fd1df4b5f9b80a8e7cee3d4ac3deea9c` contains 317 root strategy records. Default-branch search for exact `momentum_burst_mean_reversion` returned no matches; all 10 open `research/*` PRs were enumerated and none cites this file. The pool's momentum/RSI/ADX/EMA families (Roc, RSI-momentum, TTM-squeeze, ADX-momentum, eterna-momentum-combo) use different order-trigger constructions; no record uses an ATR-normalized-return 20-bar percentile burst gate. This is not a trivial parameter change to their triggers. This check is not a claim that every one of 317 records was semantically read in full.
+
+## Economic mechanism
+
+**Source-reported:** A fat upside (or downside) bar, large relative to recent volatility and rare within the last 20 bars, during a low-ADX regime and aligned with trend/volume, marks a liquidity-sweep overshoot expected to mean-revert. The file states no profitability claim.
+
+**Research hypothesis:** Low-ADX percentile bursts isolate exhaustion spikes rather than trend breakouts; the EMA50 side and volume confirmation filter against drift-driven prints. Entries may cluster in choppy markets and the fixed time/stop exits may cut reversals early or late. This is an untested hypothesis, not a reproduced backtest or survivor designation.
+
+## Signal
+
+**Fully frozen researcher-defined derivative (Gates 1–4):** One consecutive, UTC-aligned Binance ETH-USDT spot **4h** OHLCV stream. For bar index `t`, the kline's open timestamp is `T[t]`, with exact spacing **14,400 seconds**. All calculations and signals use **completed bars only** and are first available at `T[t]+14400`. `O[t],H[t],L[t],C[t],V[t]` are the bar's open/high/low/close/volume; no other market/data feed is used. All arithmetic is IEEE-754 double; every entry condition additionally requires each of its inputs to be finite (non-finite never triggers).
+
+1. **True range / rolling ATR14 (researcher transcription of the source's in-file `_atr`).** `TR[0]=H[0]-L[0]`; for `t>=1`, `TR[t]=max(H[t]-L[t],abs(H[t]-C[t-1]),abs(L[t]-C[t-1]))`. `ATR[t]=mean(TR[t-13..t])` for `t>=13`. Entries require `ATR[t]>0` and finite. No Wilder smoothing substitution.
+2. **ATR-normalized return and 20-bar percentile rank (researcher definition).** `R[t]=C[t]/C[t-1]-1` for `t>=1` (requires `C[t-1]>0`). `AN[t]=R[t]/ATR[t]` for `t>=13`. For `t>=32`, `PR[t]=rank/20` where `rank` is the ascending rank of `AN[t]` among `AN[t-19..t]` with ties averaged (rank 20/20 = 1.0 only when strictly greatest; a tied-for-max print scores below 1.0). This rank formula is the researcher's frozen definition; no pandas-internals equivalence is claimed.
+3. **Rolling ADX14 (researcher transcription of the source's in-file `_adx`).** For `t>=1`: `P1[t]=max(H[t]-H[t-1],0)`; `M1[t]=max(L[t-1]-L[t],0)`; `P2[t]=0` if `P1[t]<M1[t]` else `P1[t]`; `M2[t]=0` if `M1[t]<P2[t]` else `M2[t]` (sequential zeroing exactly as coded). For `t>=14`: `sP[t]=mean(P2[t-13..t])`, `sM[t]=mean(M2[t-13..t])`, `DIP[t]=100*sP[t]/ATR[t]`, `DIM[t]=100*sM[t]/ATR[t]`. `DX[t]=100*abs(DIP[t]-DIM[t])/(DIP[t]+DIM[t])` for `t>=14`, with the researcher-chosen value `DX[t]=0` when `DIP[t]+DIM[t]==0` (no directional movement; disclosed). `ADX[t]=mean(DX[t-13..t])` for `t>=27`. Entries require `ADX[t]` finite.
+4. **Seeded EMA50 and volume EMA20 (researcher recursion, explicit seeds).** `E[0]=C[0]`; for `t>=1`, `E[t]=(2/51)*C[t]+(49/51)*E[t-1]`. `F[0]=V[0]`; for `t>=1`, `F[t]=(2/21)*V[t]+(19/21)*F[t-1]`. These seeds are independent researcher choices; no equivalence with any library EMA seed convention is asserted.
+5. **Long entry (level-triggered with state gate, no edge detector).** When state is `FLAT`: `PR[t]>0.95 AND AN[t]>1.5 AND ADX[t]<25 AND C[t]>E[t] AND V[t]>1.2*F[t]` creates one MARKET BUY of exactly **0.01 ETH** and changes state to `LONG`, recording entry bar `e=t`, entry price `P_e=C[t]`, and stop `S=P_e-2.0*ATR[t]` (the source's dead `atr_stop_mult` value, activated here as a disclosed researcher choice). The source short leg is explicitly disabled in this derivative.
+6. **Exits (researcher-activated; the source specifies none).** While `LONG`, at each later completed bar `t>e`: if `C[t]<=S`, MARKET SELL the entire 0.01 ETH (ATR-stop exit); else if `t>=e+8`, MARKET SELL the entire 0.01 ETH (time exit; the source's dead `max_hold_bars` value, activated here). Stop is evaluated first on any bar. One action maximum per bar; never a same-bar round trip. A later bar satisfying the entry level after an exit may re-enter immediately, with **zero cooldown**. No entries while LONG, no exit while FLAT, no simultaneous positions.
+7. **Explicit disabled behavior:** short sales, pyramiding, DCA/BO-SO overlays, safety orders, partial sizing, multi-asset concurrency, margin, leverage, any stop/take-profit/trailing beyond the stated ATR stop, session filter, intrabar order, limit/maker order, compounding and automatic final-bar liquidation are all **OFF**. If the dataset ends LONG, mark the remaining ETH at last valid close without inventing a SELL.
+
+**Data validity and gap handling:** Every candle must have a 4h UTC open timestamp exactly one interval after its predecessor; finite positive O/H/L/C with `C[t-1]>0`; `H>=max(O,C)`, `L<=min(O,C)`; finite `V>=0`. Any missing/invalid candle resets all indicator initialization and the **120-consecutive-bar** trading warmup. Suppress new entries and exits until reinitialized; an already-open LONG is carried across the gap without a fabricated fill or a forced exit. No forward filling, zero-price substitution, future extrema, or use of incomplete candles.
+
+## Required data and point-in-time causality (Gate 6)
+
+Single **Binance spot ETH-USDT 4h** OHLCV feed, with open timestamps. Signal inputs are `H,L,C` of the current and prior **completed** candles plus `V`; `O` is used for validity only (the source reads no open at all). No cross-asset synchronization, external model, funding/mark price, order book, lower-timeframe, multi-timeframe or session/calendar feed. The 120-consecutive-bar floor exceeds the first fully defined entry index (all legs defined by index 32), while allowing rolling/seeded state to stabilize. A signal on bar `t` cannot be evaluated before `T[t]+14400`; any timestamp representing `T[t]` must be normalized to the **bar close effective time** before controller decision and simulator event recording. A bar-close fill is a declared **research-simulation convention**, not an executable live guarantee of obtaining that same observed close after the decision.
+
+## Execution assumptions (Gate 5)
+
+- **Pinned baseline and identity fence:** admission policy Hummingbot package **`20260920`**, `hummingbot/VERSION=dev-2.17.0`; immutable engine source **`HCH725/hummingbot@8b0e067e80ab62f10846d518dcb5a8218527ddb3`**. The previously independently admitted `forven-adx-trend-di-cross-long-flat-btcusdt-1d-2026-10-25.md` documents the distribution wheel `hummingbot-20260920-cp312-cp312-macosx_11_0_arm64.whl`, its SHA-256 `ea5a929c52095bc03fd34f5b3fb2fbfef068f7ea880af6c38290d1ddb729a148`, its `VERSION` and a 902/902 Python-file hash match to that engine commit. **This cycle did not independently rehash that wheel**; the binding is inherited reviewed evidence, not an invented equivalence based on the repo's unrelated `setup.py` version string.
+- **Actual pinned data path:** `hummingbot/data_feed/candles_feed/binance_spot_candles/constants.py` includes `4h` in `INTERVALS`; `binance_spot_candles.py` requests `/api/v3/klines` and parses row 0 as open timestamp and rows 1–5 as OHLCV. Only a completed 4h bar may feed the decision rule; a strategy-specific controller/preprocessing step must enforce the stated gap, warmup and close-time availability rules.
+- **Controller/executor:** `strategy_v2/backtesting/backtesting_engine_base.py` processes feature rows, calls `controller.determine_executor_actions()`, accepts `CreateExecutorAction`, and dispatches `OrderExecutorConfig` to `order_executor_simulator.py`. A dedicated controller is **not implemented**; its entire deterministic rule is the Signal section above. It maintains its **own immediate filled-order FLAT/LONG ledger** (including entry price, stop and entry bar) rather than trusting the engine's one-row-lagged `positions_held` view or the terminated-executor view window. The intended market/connector/side are `binance` / `ETH-USDT` / BUY or SELL, `ExecutionStrategy.MARKET`, base quantity `0.01`, leverage 1, with `CloseType.POSITION_HOLD` netting.
+- **Actual pinned fill path:** `order_executor_simulator.py` for MARKET chooses the first provided row timestamp, uses that row's `close` as full-fill price, computes `filled_amount_quote=Q*close`, `cum_fees_quote=trade_cost*filled_amount_quote`, and returns `POSITION_HOLD`. It does **not** establish next-open, real-time order latency, bid/ask spread, maker queues, partial fills or exchange-valid lot/tick precision. The required strategy-specific feed/feature normalization must map the bar-open label to effective `T+14400` and issue exactly one same-close simulated action. `prepare_market_data()` uses backward `merge_asof`, which alone does **not** prove point-in-time availability; the declared normalization/closed-bar gate is mandatory.
+- **Research economics:** Fix `trade_cost=0.001` (0.1% of quote notional **per filled side**) and `Q=0.01 ETH`. At BUY price `P_b`, modeled cash outflow is `Q*P_b*(1+0.001)`; at SELL `P_s`, modeled inflow is `Q*P_s*(1-0.001)`. Matched realized net PnL = gross sell-minus-buy less both fill fees; an open ETH holding is marked at the last valid close with its paid entry fee retained. `BacktestPositionHold` separates realized gross and accumulated fee fields; `update_state.total_pnl` and executor `net_pnl_quote` must **not** be silently treated as fee-inclusive cash/equity. **Spot funding is not applicable**, not a fabricated zero funding observation. Extra modeled slippage is **0** on this simulator path, which is not a claim of zero actual spread/slippage. Precision/lot/min-notional, real commissions, partial fills and exchange latency are **unverified** and not claimed as live executable.
+- **Capability reuse:** The same pinned **single-symbol Binance spot completed-candle MARKET-close / POSITION_HOLD / fee-ledger** primitive is documented in previously admitted research PRs **#421, #423 and #424** and in the admitted ETHUSDT-4h eterna record. This strategy introduces a new **deterministic signal formula** but no new execution primitive, portfolio model, funding requirement, data category or market type. That reusable pinned-engine evidence is expressibility evidence, not a strategy-specific backtest or implementation. Any real next-open/intrabar/maker requirement would require a separate representative capability validation before mass screening.
+
+## Six-gate evidence matrix
+
+1. **Deterministic signals:** complete TR/ATR, return/rank, directional-system, seeded-EMA recursions, tie rule, finiteness guards and all fixed constants in Signal; no fitting, no library-convention claims, no unspecified source defaults.
+2. **Direction:** spot LONG/FLAT only, the source short leg explicitly disabled as a derived decision.
+3. **Entries/exits/risk:** burst-level entry; researcher-activated ATR-stop and 8-bar time exits with same-bar priority; all other exit/risk mechanisms explicitly disabled; no hidden engine SL/TP defaults.
+4. **Position state:** single 0.01 ETH, immediate controller ledger with entry/stop/bar memory, no DCA/pyramiding/concurrency/cooldown, one action/bar, no forced terminal close.
+5. **Pinned-engine compatibility:** explicit engine commit, reviewed package binding, Binance spot ETH-USDT 4h OHLCV, MARKET OrderExecutor and POSITION_HOLD fill/fee/cost path; no futures funding, maker, intrabar or unsupported data path.
+6. **Causality:** completed 4h bars only, close-time normalization, explicit 120-bar warmup, current/prior-bar comparisons only and no future data.
+
+## Evidence, falsification and limitations
+
+**Source-reported evidence:** The pinned file's `describe()` prose and roster label the concept a 4h ETH momentum-burst mean-reversion entry with ADX/EMA/volume filters. It discloses no parameters beyond the quoted defaults and no PnL, win rate, Sharpe or backtest statistics of any kind; none are claimed as independently reproduced.
+
+**Independently reproduced for this candidate:** **None.** No strategy-specific Qlib or Hummingbot backtest, event-level parity, live fills or source-equivalence test was run. Pinned-code inspection and reusable previously reviewed engine-path evidence support the **expressibility claim only**.
+
+**Falsification plan:** Following independent admission and separate downstream authorization, freeze this exact strategy identity, then test whether the percentile-burst gate changes entries versus an ADX/EMA/volume-only baseline on predetermined IS/OOS splits. Validate a genuinely new engine primitive once before mass Qlib screening; event-level Qlib/Hummingbot parity is required for a new strategy/execution path. No tuning on OOS and no implied survivor/production approval.
+
+**Limitations:** The source specifies no exit, so the ATR-stop and time exits, the long-only conversion, fixed sizing, warmup, seeds, tie rule, zero-DX rule and same-close fills are **all independently derived and explicitly disclosed**. Dead defaults were activated, never mistaken for live source behavior. A different implementation or real exchange execution may yield different events. The ATR stop does not guarantee the modeled stop price under real gaps/slippage. `hb_ready_status: PASS` is this Scout's **proposed six-gate research admission pending independent Hermes Auditor review**, not a self-approved merge. Implementation remains `not-implemented`; adoption remains `not-approved`; approval scope remains `research-only`. No Qlib/Hummingbot execution, trading, containers, deployment or schedule changes are authorized by this record.
+
+## Sources
+
+- https://github.com/judder659/Forven/blob/0e35d7dd3f84a8ef6d8d7a3b131ff366585a451e/forven/strategies/builtin/momentum_burst_mean_reversion.py — pinned source file read end to end, 2026-10-25.
+- https://github.com/judder659/Forven — upstream repository (HEAD `14397ae` noted, not used).
+- https://github.com/HCH725/hummingbot/tree/8b0e067e80ab62f10846d518dcb5a8218527ddb3 — immutable pinned engine source cited via inherited reviewed evidence, 2026-10-25.
+- https://github.com/HCH725/alpha-strategy-research/pull/421 — previously reviewed Binance spot MARKET-close primitive.
+- https://github.com/HCH725/alpha-strategy-research/pull/423 — previously reviewed same pinned 4h primitive.
+- https://github.com/HCH725/alpha-strategy-research/pull/424 — previously reviewed same pinned 4h primitive.
