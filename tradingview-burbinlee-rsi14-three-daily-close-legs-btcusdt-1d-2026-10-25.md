@@ -29,9 +29,11 @@ contradictions: []
 
 ## Provenance
 
-Primary public TradingView page: [RSI DCA Strategy](https://www.tradingview.com/script/LS6Jsy63-RSI-DCA-Strategy/) by **BurbinLee**, published **2025-09-14**, inspected **2026-10-25**. The page labels the script open-source, but the public text rendered to this researcher did **not** expose the executable Pine source or a source-code version identifier. Script ID `LS6Jsy63`, author, title, date and source-described mechanism are the stable provenance; do not pretend the unavailable Pine bytes were verified.
+Primary public TradingView page: [RSI DCA Strategy](https://www.tradingview.com/script/LS6Jsy63-RSI-DCA-Strategy/) by **BurbinLee**, published **2025-09-14**, inspected **2026-10-25**. The page labels the script open-source, but the public text rendered to this researcher did **not** expose the executable Pine source. Independent review of the same public page found script metadata `script_id_part=PUB;9e384a07af1f41ba9f82dab0a8789acf`, `version_maj=1`; this is published-page identity metadata, not verification of immutable executable Pine bytes. Script ID `LS6Jsy63`, author, title, date and source-described mechanism are the stable provenance; do not pretend the unavailable Pine bytes were verified.
 
 **Source-native statements actually visible:** RSI crosses below 30 to trigger oversold; up to three consecutive daily entries, one per day, dividing user-configured capital equally; TP/SL as user-configurable percentages of **average entry price**; exit on TP or SL. The optional monthly performance table is visualization, not a decision input.
+
+**Published-chart metadata (independently verified 2026-10-25):** the page embedded `StudyStrategy` input definitions and saved values show `RSI Period=14`, `Take Profit (%)=8`, `Stop Loss (%)=5`, and `Capital per DCA=500`; strategy-property metadata shows `pyramiding=3`, `commission_type=percent`, `commission_value=0.07`, and `process_orders_on_close=false`. These are published-chart settings/default metadata, not a complete Pine-code or broker-event verification. This derivative deliberately retains its independently specified RSI14 initialization, TP +4% / SL -3%, fixed-base sizing, completed-close fills and 0.1% modeled fee; none of those rules is changed by this provenance correction.
 
 **Researcher-defined changes (NOT attributed to BurbinLee):** RSI length 14 and exact Wilder initialization; UTC Binance BTC-USDT spot daily bars; a strict completed-bar RSI cross; trigger-day + next two daily **close** MARKET buys; **fixed 0.001 BTC per leg** rather than the source-described equal quote-capital slices; TP +4% / SL -3% checked only at completed **daily close** instead of unverified intrabar broker stops; exit-before-add priority, early-exit cancellation of remaining legs, deterministic gap handling, 10,000 USDT nonborrowed initial cash, modeled 0.1% fee per side, and all state/cooldown/disabled rules below. These changes alter possible trade events and cost; this version is **not** lossless. No author performance numbers are used.
 
@@ -86,7 +88,7 @@ Binance `binance` connector, `BTC-USDT` **spot**, UTC `1d` OHLCV. No perpetual m
 
 ### Source-reported
 
-The author's 2025-09-14 public description says RSI cross **below 30**, up to **three consecutive daily entries**, one per day, and TP/SL relative to **average entry price**. It does not expose to this researcher an RSI length, TP/SL default percentages, exact intrabar order semantics, first entry timing, actual fees or reproducible numerical performance. These are **not** silently attributed to the author.
+The author's 2025-09-14 public description says RSI cross **below 30**, up to **three consecutive daily entries**, one per day, and TP/SL relative to **average entry price**. The prose description does not specify an RSI length or TP/SL default percentages; however, the embedded published-chart metadata exposes RSI Period 14, TP 8%, SL 5%, capital per DCA 500, pyramiding 3, modeled commission 0.07% and process_orders_on_close=false, as distinguished in Provenance. Metadata does not establish complete executable Pine logic, exact intrabar order semantics, first entry timing, actual exchange fees or independently reproduced performance. These are **not** silently attributed to the author.
 
 ### Independently reproduced
 
@@ -115,7 +117,7 @@ The author's source does not establish BTC-USDT results. This independent resear
 
 ## Limitations
 
-Original Pine bytes/version unavailable; no source-native broker timing or economic equivalence. Same-completed-close research fills can be optimistic for live execution. Price gaps can exceed the -3% close stop. Fee, precision, latency, liquidity, spread, exchange rejection and slippage realism remain unverified. Package-source identity relies on existing independent audit, not a fresh wheel hash. No claim of profitability, Survivor, HB certification, Qlib parity or live safety. `hb_ready_status: PASS` is **a proposed six-gate eligibility record**, pending independent Hermes Auditor verification at exact PR head, not Scout self-approval.
+Original executable Pine bytes unavailable; public script version_maj=1 and published-chart settings are metadata only; no source-native broker timing or economic equivalence. Same-completed-close research fills can be optimistic for live execution. Price gaps can exceed the -3% close stop. Fee, precision, latency, liquidity, spread, exchange rejection and slippage realism remain unverified. Package-source identity relies on existing independent audit, not a fresh wheel hash. No claim of profitability, Survivor, HB certification, Qlib parity or live safety. `hb_ready_status: PASS` is **a proposed six-gate eligibility record**, pending independent Hermes Auditor verification at exact PR head, not Scout self-approval.
 
 ## Implementation status
 
