@@ -12,7 +12,7 @@ tags:
   - source-backed
 status: research-only
 confidence: medium
-source_as_of: 2025-04-19
+source_as_of: 2026-10-21
 sources:
   - https://www.tradingview.com/script/sFlOY8ZD-blackcat-L1-M-H-Pee-Trend-Intensity-Index-TII/
 implementation_status: not-implemented
@@ -26,7 +26,9 @@ contradictions: []
 
 ## Provenance
 
-**Primary source and stable identity.** blackcat1402, *[blackcat] L1 M.H. Pee Trend Intensity Index (TII)*, TradingView stable script ID **sFlOY8ZD**, first published **2021-09-08**, updated **2025-04-19**; public open-source indicator: https://www.tradingview.com/script/sFlOY8ZD-blackcat-L1-M-H-Pee-Trend-Intensity-Index-TII/ . The first-party readable description was inspected **2026-10-26**. It describes a 55-bar SMA reference, deviations of 34 previous/current price observations from today's average, positive/negative deviation aggregation and TII = 100 × sum(positive deviations) / sum(absolute deviations). It also mentions ALMA and HMA noise filtering and an April 2025 release with a three-bar comparison line and buy/sell labels. The accessible page does not expose the actual complete Pine source revision, exact ALMA/HMA settings, label booleans, executable order defaults or source-code hash. No source-native, lossless-Pine or native backtest-equivalence claim is made.
+**Primary source and stable identity.** blackcat1402, *[blackcat] L1 M.H. Pee Trend Intensity Index (TII)*, TradingView stable script ID **sFlOY8ZD**, first published **2021-09-08**, historical release **2025-04-19**, latest public release notes **2026-10-21**; public open-source indicator: https://www.tradingview.com/script/sFlOY8ZD-blackcat-L1-M-H-Pee-Trend-Intensity-Index-TII/ . The first-party readable description was inspected **2026-10-26**. It describes a 55-bar SMA reference, deviations of 34 previous/current price observations from today's average, positive/negative deviation aggregation and TII = 100 × sum(positive deviations) / sum(absolute deviations). It also mentions ALMA and HMA noise filtering and an April 2025 release with a three-bar comparison line and buy/sell labels. The accessible page does not expose the actual complete Pine source revision, exact ALMA/HMA settings, label booleans, executable order defaults or source-code hash. No source-native, lossless-Pine or native backtest-equivalence claim is made.
+
+**Source-fact correction from the same first-party page (Auditor, 2026-10-26).** The April 2025 release is historical, not the latest revision: the page also exposes release id **9900476**, dated **2026-10-21T08:45:22.696609+00:00**. Its v2 notes explicitly document ALMA then Hull smoothing, a three-bar delayed comparator, price-source default **hl2**, average/deviation defaults **55/34**, optional midline filter default **off**, same-bar exclusivity default **on**, cooldown default **3**, and ATR reference defaults **length 14 / stop 2.0 ATR / target 3.0 ATR**. The notes describe bar-close-confirmed alerts, a neutral-50 zero-division guard during warmup, and TP/SL as manual-execution references, not automated orders. These are release-note facts, not verification of complete Pine revision bytes or every executable boolean. The frozen derivative below retains its original historical-2025 lineage and every researcher-defined rule: close input, unsmoothed cross-50 entry, level exit, no cooldown/ATR orders and its own neutral handling. It does not reproduce either source revision; none of the newly documented defaults is transplanted into this strategy.
 
 **Independently specified derivative, NOT the published script's trading system.** This research defines a particular *unsmoothed, fixed-current-reference TII* using source-described 55/34 windows, plus researcher-chosen **50 cross-up LONG / level-at-or-below-50 FLAT** triggers, single BTC-USDT spot UTC 1d feed, fixed 0.001 BTC, completed-candle-close historical MARKET fills, explicit research costs, cash checks and order-confirmed state. The original ALMA/HMA filtering, three-bar comparator, labels and alert conditions are intentionally **not** reproduced; their omission changes signals. The TradingView page is an **indicator**, not evidence for these derivative entries/exits, fees, size, market or risk rules. Those are researcher decisions, not source facts. No Pine defaults are invented or attributed to the author.
 
@@ -84,7 +86,7 @@ Exactly one Binance spot BTC-USDT UTC 1d candle stream (real open timestamps, ac
 
 ### Source-reported
 
-TradingView first-party sFlOY8ZD, blackcat1402, published 2021-09-08, updated 2025-04-19: 55-bar average, prior 34 price deviations, ratio of positive deviations to total absolute deviations; ALMA/HMA smoothing and a three-bar comparison/labels are mentioned. No source-reported exact executable derivative rules, stop/target, cost, 0.001 BTC size, BTC market or historical profit reproduction.
+TradingView first-party sFlOY8ZD, blackcat1402, published 2021-09-08, historical release 2025-04-19, latest release notes 2026-10-21 (id 9900476): 55-bar average, prior 34 price deviations, ratio of positive deviations to total absolute deviations; ALMA/HMA smoothing and a three-bar comparison/labels are mentioned. No source-reported exact executable derivative rules, stop/target, cost, 0.001 BTC size, BTC market or historical profit reproduction.
 
 ### Independently reproduced
 
