@@ -93,7 +93,7 @@ GitHub source search found no existing `Vufc1HaC` / five-bar `close_at_high_coun
 
 1. **Deterministic:** all three exact geometry ratios, 5-bar counts, tie operators, skip priority, ATR14 Wilder seed, 80-bar warmup, cash/fill/fee parameters and state are frozen.
 2. **Direction:** BTC-USDT spot LONG/FLAT; source SHORT explicitly disabled; no leverage, margin or borrowing.
-3. **Entries/exits/risk:** bull entry; subsequent fixed ATR2 close-stop, ATR3 close-target or bear close, with stop > target > bear reason priority; all other exits and executor defaults explicitly disabled.
+3. **Entries/exits/risk:** bull entry; subsequent fixed ATR2 close-stop, ATR3 close-target or bear close, with exit-reason priority stop first, then target, then bearish pattern; all other exits and executor defaults explicitly disabled.
 4. **Position:** 0.001 BTC full fills, one outstanding order, no adds/DCA/concurrency, no same-bar re-entry, next-bar independent re-entry only, cash affordability and unresolved-fill abort.
 5. **Pinned model:** real 1d Binance spot feed, controller/action loop, MARKET close-fill simulator, position-hold netting and separate quote fees examined at immutable Hummingbot commit; bounded modeled costs and explicit economic limitations, no invented missing price/funding.
 6. **Causality:** completed bars only, ATR prefix seed, 80-bar warmup, daily open timestamps mapped to completed-close effective time, no repainting, future extrema or full-sample leakage.
