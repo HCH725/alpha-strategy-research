@@ -33,17 +33,17 @@ contradictions: []
 
 **Immutable derived identity:** FMZ:438053 | HPotter Trend-Trader v1.0 | TASC-1998-Abraham | derivative:v1:2026-10-27 | BTC-USDT Binance spot UTC 1d | Length21 Multiplier3 reverse-false | WMA21-of-TR avgTR | HH21/LL21 inset rails | ret/pos dual latch | 0.01 BTC | close-price MARKET research model | 100-bar warmup.
 
-**Dedup at main SHA 1eaaeb8:** main had 379 root-level strategy Markdown records and README counter 379. Filename/title/content search found no abraham/hpotter/trend-trader identity; all 10 open research/* PR titles and source descriptions were checked (Heracles, ClucMay72018, AdxSmas, Forven-CCI, Swift-2YMA, SSL, Chandelier, SuperTrend, Gauss-StochRSI, Larry-Williams — none is this mechanism). Nearest main relatives use different constructions: Eterna Chandelier 22/3.0 dual-stop state-flip and Forven Chandelier long-stop-cross ratchet a highest-high-since-entry stop, while Keltner records break EMA-centered bands; HPotter KAMA21 shares only the Pine author, not the indicator. This proposal's **WMA-smoothed raw true-range estimator, inset-from-rolling-extremes rails, and the dual-threshold ret/pos latch state machine** (a flip requires the close to clear BOTH rails) is not a parameter variant of any of them.
+**Dedup at main SHA 1eaaeb8:** main had 379 root-level strategy Markdown records and README counter 379. Filename/title/content search found no abraham/hpotter/trend-trader identity; all 10 open research/* PR titles and source descriptions were checked (Heracles, ClucMay72018, AdxSmas, Forven-CCI, Swift-2YMA, SSL, Chandelier, SuperTrend, Gauss-StochRSI, Larry-Williams — none is this mechanism). Nearest main relatives use different constructions: Eterna Chandelier 22/3.0 dual-stop state-flip and Forven Chandelier long-stop-cross ratchet a highest-high-since-entry stop, while Keltner records break EMA-centered bands; HPotter KAMA21 shares only the Pine author, not the indicator. This proposal's **WMA-smoothed raw true-range estimator, inset-from-rolling-extremes rails, and the dual-threshold ret/pos latch state machine** (a ret re-anchor requires the close to clear BOTH rails; pos can also flip across a retained ret without either dual-rail escape) is not a parameter variant of any of them.
 
 ## Economic mechanism
 
 ### Source-reported
 
-A volatility-normalized channel inset from recent extremes: the rails sit 3 average-true-ranges inside the 21-bar highest high / lowest low, so only a close that escapes both rails re-anchors the reference level. The state machine then rides the prevailing side until the opposite escape. These are descriptive source facts, not verified original trades.
+A volatility-normalized channel inset from recent extremes: the rails sit 3 average-true-ranges inside the 21-bar highest high / lowest low, so only a close that escapes both rails re-anchors the reference level. The ret reference persists until another dual-rail escape, but pos is determined separately by close versus the current ret: crossing a retained ret can reverse pos without an opposite dual-rail escape; equality retains the previous pos. These are descriptive source facts, not verified original trades.
 
 ### Research interpretation
 
-A new, testable hypothesis: after volatility-adaptive confirmation (a close beyond both inset rails), the side latch persists through ordinary pullbacks that fail to reach the opposite rail, cutting whipsaw versus a plain band-breakout. Exit is the symmetric opposite escape. Profitability is unknown.
+A new, testable hypothesis: after volatility-adaptive confirmation (a close beyond both inset rails), the side latch persists through ordinary pullbacks that do not cross the retained ret, potentially cutting whipsaw versus a plain band-breakout. Exit follows pos == -1, which can occur on a close below a retained ret without an opposite dual-rail escape. Profitability and whipsaw reduction are unknown.
 
 ## Signal
 
