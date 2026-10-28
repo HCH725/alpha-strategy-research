@@ -1,0 +1,74 @@
+---
+schema: strategy-research-record-v1
+hb_ready_status: PASS
+title: "TradingView bas20230503 OBV30 breakout-mode long-flat — BTCUSDT spot 1d independent derivative"
+created: 2026-10-28
+updated: 2026-10-28
+type: strategy-research-record
+tags:
+  - quant
+  - strategy-research
+  - source-backed
+status: research-only
+confidence: medium
+source_as_of: 2025-07-01
+sources:
+  - https://www.tradingview.com/script/Hha4ur3T/
+implementation_status: not-implemented
+adoption: not-approved
+approval_scope: research-only
+contested: false
+contradictions: []
+---
+
+# TradingView bas20230503 OBV30 breakout-mode long-flat — BTCUSDT spot 1d independent derivative
+
+## Provenance
+
+- **First-party public TradingView strategy:** bas20230503, *OBV ATR Strategy (OBV Breakout Channel) bas20230503*, stable script ID `Hha4ur3T`, first published 2025-06-23 and updated 2025-07-01. Canonical URL: https://www.tradingview.com/script/Hha4ur3T/ . The 2025-07-01 public release notes contain the strategy's Pine logic, including the `strategy(...)` header, OBV cumulative formula, 30-bar channel, prior-bar channel crossover tests, persistent `mode`, Bull/Bear mode-change signals, and Long/Short order calls. Inspected 2026-10-28. Version label inside the published code: `OBV ATR Strategy v1.4 (OBV Breakout Channel) bas20230503 v0.3`; no unsupported Pine language-version assertion.
+- **Source-native facts:** `obvVal = ta.cum(volume * sign(close - close[1]))`; `obv_high = highest(obvVal, 30)`, `obv_low = lowest(obvVal, 30)`; `crossover(obvVal, obv_high[1])` sets `mode=1`; `crossunder(obvVal, obv_low[1])` sets `mode=-1`. `bullSignal` and `bearSignal` occur only on mode changes. The original places Long and Short entries on those signals and closes the opposite side. The two OBV SMA plots (lengths 30 and 14) do **not** govern trades. The script's name mentions ATR, but the executable entry/exit rules contain no ATR computation. Its dynamic support/resistance plot is **not** an executable stop order; no source `strategy.exit` stop/target is present.
+- **Original economics, not inherited by this derivative:** `initial_capital=1000`, `default_qty_type=percent_of_equity`, `default_qty_value=5`, `commission_value=0.2` percent, `slippage=5` ticks, `pyramiding=0`. The separately declared `slippage_input=5` is not passed into the strategy's order calls and is not a second execution slippage control.
+- **Explicit independent derivative — NOT lossless/source-native:** preserve the source's OBV 30-channel mode-transition mechanism, but (1) pin Binance BTC-USDT spot and UTC 1d completed candles, (2) map source Bull to LONG entry and Bear to LONG exit without opening shorts, (3) define a deterministic OBV seed and warmup, (4) replace percent-of-equity sizing with fixed 0.001 BTC, (5) replace the source's broker-emulator order timing with the pinned Hummingbot historical effective-close MARKET model, (6) use fixed 0.2% per-side research fees but **zero simulated slippage** instead of the original 5-tick TradingView slippage, and (7) specify a separate cash/position ledger and data-error policy. Every such change can alter source trading events/economics; no TradingView-equivalent PnL is claimed.
+- **Immutable research identity:** `TV:Hha4ur3T|bas20230503|2025-07-01-release-v1.4-v0.3|derived-v1-20261028|OBV-sign-close-basevolume-cum-seed0|prior30-highlow-cross-mode-edge|BTC-USDT-spot-UTC1d|long-flat|Q0.001|effective-close-MARKET|fee0.002-slippage0|warmup64`. The stable URL and dated release are the source identity; this frozen derivative specification, not an unpublished source revision, is the strategy being proposed.
+- **Dedup at main `242460bd94291f1707dd4386a7eca2af12650005`:** 395 root strategy records and README count 395. GitHub code search for `Hha4ur3T` and PR search for the same ID / OBV breakout channel returned none; all 10 open `research/*` PRs were inspected for source identity and mechanism. Nearest admitted records `obv-ema-crossover-trend-two-sided-btcusdt-1d-2026-10-10.md`, `forven-obv-ema-cross-sma-gated-long-flat-btcusdt-1h-2026-10-19.md`, and `freqtrade-trendfollowing-ewm20-obv-cross-long-flat-btcusdt-5m-2026-10-25.md` use OBV/EMA crosses or OBV as a price-trend filter, **not** the source's previous-30-OBV-extrema mode-change state machine. No trivial parameter variant.
+
+## Economic mechanism
+
+Cumulative signed base volume makes a new high above its *previous* 30-bar OBV ceiling, or a new low below its previous 30-bar OBV floor. The first upward mode transition opens one long position; the first downward transition closes it. Unlike an OBV/EMA crossover, this is a trailing volume-extrema breakout with persistent mode memory. The original author's reported or implied backtest performance has **not** been reproduced or adopted.
+
+## Signal
+
+Use validated, contiguous, **completed** UTC daily candles `(O[t],H[t],L[t],C[t],V[t])`, indexed `t=0,1,...`. Prices must be finite and strictly positive; `H>=max(O,C)>=min(O,C)>=L`; Binance base-asset volume `V>=0` must be finite. A zero-volume candle is valid and contributes zero OBV.
+
+1. **Pinned derivative OBV seed:** `B[0]=0`; for `t>=1`, `B[t]=B[t-1]+V[t]*sign(C[t]-C[t-1])`, where `sign(x)=+1` for `x>0`, `-1` for `x<0`, and `0` otherwise. This seed is a declared research choice, not a claim of byte-equivalence to TradingView `ta.cum` initialization. No EMA, SMA, ATR or price-channel input enters the trading rule.
+2. For `t>=29`, `U[t]=max(B[t-29],...,B[t])` and `D[t]=min(B[t-29],...,B[t])`. **Use the previous bar's band**, never a band including the candidate breakout bar.
+3. For `t>=31`, define `upCross[t]=(B[t]>U[t-1]) AND (B[t-1]<=U[t-2])`. Define `downCross[t]=(B[t]<D[t-1]) AND (B[t-1]>=D[t-2])`. These are the strict/non-strict `ta.crossover` / `ta.crossunder` edge semantics against the source's `obv_high[1]` / `obv_low[1]`. Equality to the current breakout threshold does **not** cross; equality on the preceding bar permits a new cross.
+4. `mode[0]=0`; for each `t>=1`, `mode[t]=+1` on `upCross[t]`, else `-1` on `downCross[t]`, else `mode[t-1]`. A valid positive-volume breakout cannot be simultaneously above the prior 30-bar maximum and below the prior 30-bar minimum; if both flags ever appear due to malformed input, **abort**, not silently choose. `mode` stays latched between crosses.
+5. `Bull[t] = (mode[t]==+1 AND mode[t-1]!=+1)`; `Bear[t] = (mode[t]==-1 AND mode[t-1]!=-1)`. A new high while already in Bull mode is not another entry; a new low while already Bear is not another exit.
+6. **Warmup:** first 64 completed contiguous candles, indices 0–63, update OBV/channel/mode state but produce no orders. First tradable decision is `t=64`; no queued pre-warmup signals are replayed. The 64-bar choice is a conservative researcher-defined warmup exceeding the source's 30-bar channel and its prior-channel crossover requirements.
+7. **Position machine:** initially `FLAT`, permitted states `FLAT` and `LONG(0.001 BTC)`. On a completed `t>=64` bar, if LONG and Bear, sell exactly 0.001 BTC to FLAT; else if FLAT and Bull, buy exactly 0.001 BTC to LONG; otherwise hold. Process EXIT before ENTRY as a fixed priority, though the Bull/Bear mode edges are mutually exclusive. Bull while LONG and Bear while FLAT are no-ops. A position is updated only on confirmed simulated fill; suppress any second action while a fill is pending. No same-bar re-entry; later Bull after a completed Bear/exit can re-enter.
+8. **Explicitly disabled:** short entries, reversal into short, hedging, pyramiding, scaling, DCA/safety orders, concurrent positions, cooldown, stop-loss, take-profit, trailing stop, time exit, funding, leverage, margin and end-of-sample forced liquidation. Source's OBV S/R line is visual only and must not be reinterpreted as a price stop. No implicit Hummingbot executor-layer stop/TP/time-limit defaults are allowed. Unclosed exposure at the predetermined research end remains open, with unrealized PnL separately marked at the last available close.
+
+## Required data and point-in-time causality
+
+- One Binance Spot `BTC-USDT` market, `1d` UTC daily candle-open timestamp plus completed OHLC and **base volume**. No order book, trade tape, future bars, secondary symbols/timeframes, ML/fitted parameters, portfolio-wide capital sharing, perpetual funding or external indicator data.
+- Binance REST kline timestamp labels **bar open**, not completed-close availability. `decision_ts[t]=open_ts[t]+86400` seconds. The engine's feature row timestamp, market-data-provider time, MARKET fill row and controller decision clock must all use that same *effective completed-close timestamp*. A zero-latency fill at that completed close is a **historical research convention**, not a claim that a live post-close REST fetch can fill at the past close.
+- Every `U[t-1]`, `D[t-1]`, previous-close difference and mode update depends only on bars `<=t`; no pivot right-bars, `security()`, incomplete higher-timeframe bar, repainting or future-dependent normalization. Warmup is silent. A future suffix perturbation cannot change a fixed historical prefix's signals.
+- Missing, duplicate, unsorted or non-contiguous daily candles; nonfinite/negative volume; invalid OHLC; missing close/fill; or missing timestamp cause a **fail-closed abort** of that research run. Never interpolate, substitute previous prices, assume an order filled, or reinterpret an incomplete candle as closed.
+
+## Execution assumptions and six-gate engine evidence
+
+**Pinned Hummingbot:** package `20260920`, `hummingbot/VERSION=dev-2.17.0`; inspected immutable `HCH725/hummingbot@8b0e067e80ab62f10846d518dcb5a8218527ddb3` (2026-10-28). The pinned source's `setup.py` has a *different* historical string (`20260729`); this is disclosed, not silently relabeled. Existing independently reviewed PR #414 documents the package `20260920` wheel SHA256 `ea5a929c52095bc03fd34f5b3fb2fbfef068f7ea880af6c38290d1ddb729a148` and a byte-identical match for all 902 shipped Python files to the pinned source commit. This Scout read that review and relevant immutable engine files; it **did not** independently rehash the wheel artifact. Any later failure of this package-to-source evidence invalidates Gate 5 and must block merge.
+
+- **Data path:** `hummingbot/data_feed/candles_feed/binance_spot_candles/binance_spot_candles.py` parses REST kline `row[0]` as open timestamp and `row[1..5]` as OHLC/base volume; `.../constants.py` declares `1d`. This is evidence of the data path only; timestamp-to-close conversion and continuity checks are mandatory in the declared derivative.
+- **Controller/executor path:** the research-only custom directional signal controller emits one `CreateExecutorAction(OrderExecutorConfig(..., execution_strategy=MARKET, side=BUY/SELL, amount=Decimal('0.001')))` when the state machine authorizes a trade. `strategy_v2/backtesting/backtesting_engine_base.py` processes current rows through `update_state` and `determine_executor_actions`, dispatches `OrderExecutorConfig` to `OrderExecutorSimulator`, and performs last-tick executor/position-hold flush. `.../executors_simulator/order_executor_simulator.py` fills MARKET at the **first supplied row's close** and uses `filled_amount_quote=float(amount)*close`; `CloseType.POSITION_HOLD` routes the exposure to `BacktestPositionHold` for buy/sell netting. No claim is made that a dedicated OBV controller implementation already exists; `implementation_status: not-implemented` is not a second admission gate.
+- **Fill/state boundary:** the native `positions_held` view and `POSITION_HOLD` bookkeeping can lag the newly simulated executor by a tick. Use the declared fill-confirmed independent Decimal cash/inventory state for same-row suppression and re-entry decisions; reconcile it against all terminated/held executor records after final flush. Do not treat a pending action as a confirmed fill or an expired/unfilled order as a trade. Any mismatch beyond the declared tolerances aborts.
+- **Costs/accounting:** initial research cash `10000 USDT`, fixed base quantity `0.001 BTC`, fee `f=Decimal('0.002')` of quote notional **per side**, zero *modeled* slippage, MARKET-only historical close fills, no spread/liquidity/partial-fill model. BUY requires cash `>= Q*P*(1+f)`; SELL requires confirmed inventory `>=Q`; otherwise abort rather than borrow. Debit BUY quote cost and fee, credit SELL quote proceeds net of fee. Net realized quote PnL on a completed round trip is `Q*(P_sell-P_buy)-f*Q*(P_buy+P_sell)`; keep open inventory marked separately. The pinned simulator's fee calculation is `trade_cost*filled_amount_quote` and its hold ledger tracks realized gross and accumulated fees separately; do **not** label gross-only summary fields net profit.
+- **Precision/reconciliation:** controller-side inventory and cash use Decimal values constructed from string prices; reconcile engine's float-derived quote fills to the independent ledger with max absolute discrepancy `1e-8 USDT` per order and base residual `1e-12 BTC`. Tiny float residue below tolerance is diagnostic only, not an additional tradable position. Larger residual, wrong side, missing fill or fee disagreement aborts. No exchange lot/tick/min-notional enforcement or realized exchange commission is claimed. Funding is **not applicable to this spot-only model**, not fabricated as observed zero futures funding.
+- **Gate map:** (1) fully specified cumulative OBV, prior-30 extrema, strict edge, mode and seeds; (2) LONG/FLAT Binance Spot only; (3) Bull entry/Bear exit and all risk legs disabled; (4) one fixed position, no DCA/cooldown/concurrency and fill-confirmed re-entry; (5) pinned package/source mapping, actual Binance candles + MARKET OrderExecutor + POSITION_HOLD/cost/precision path above, with historical-model limitations; (6) completed UTC bars, prior-channel causality, 64-bar warmup, no fabricated data/future access.
+
+## Evidence and limitations
+
+- The primary TradingView release-note code is public and decision-critical rules were checked directly; the author supplied no independently reproduced performance here. This record makes **no** return, Sharpe, win-rate, drawdown, Qlib parity, Survivor or profitability claim.
+- The source's short-side reversal, 5%-equity sizing, 5-tick slippage, and broker-emulator order timing are **not** preserved. The derivative's same-effective-close research fill is not a guaranteed live fill; no stop protects against a price gap or long adverse OBV regime.
+- This is an **HB_READY research-admission proposal only**, pending independent Hermes Auditor source-fact and six-gate review at exact PR head. A PASS frontmatter declaration is not an audit outcome. Representative event-level Qlib/Hummingbot parity remains necessary before large-scale screening of any new unverified execution path. No Paper/Testnet/Live authorization or implementation artifact is asserted.
