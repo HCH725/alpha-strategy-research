@@ -1,0 +1,92 @@
+---
+schema: strategy-research-record-v1
+hb_ready_status: PASS
+title: "tcspirit STC23/50 double-stochastic ADX14 freeze-gated 25/75 long-flat — independent BTC-USDT spot 1h derivative"
+created: 2026-10-29
+updated: 2026-10-29
+type: strategy-research-record
+tags:
+  - quant
+  - strategy-research
+  - tradingview
+  - source-backed
+status: research-only
+confidence: medium
+source_as_of: 2026-10-29
+sources:
+  - https://www.tradingview.com/script/eZwlb7PV/
+implementation_status: not-implemented
+adoption: not-approved
+approval_scope: research-only
+contested: false
+contradictions: []
+---
+
+# ADX-gated Schaff Trend Cycle with dormant-line freeze — independently derived strategy
+
+## Provenance and immutable strategy identity
+
+**First-party public source:** TradingView open-source indicator *Schaff Trend Cycle V6 + Multi-Timeframe (STC)*, author **tcspirit**, stable public script ID **eZwlb7PV**, Pine **v6** per the author; https://www.tradingview.com/script/eZwlb7PV/ . The directly inspected public description shows initial posting **Mar 22** and an update **Mar 25**, but does **not display a year** in the accessible text; no publication year is asserted. Research read date: **2026-10-29**. The full Pine source bytes/revision hash were **not retrievable** through the public text interface, so this record makes no claim to a byte-verified original Pine revision or source-native order-event equivalence.
+
+**Source-native description, carefully bounded:** MACD uses fast/slow EMA lengths **23/50** on **close**; two stochastic stages of length **10** with first/second EMA-style %D smoothing lengths **3/3** form STC; default lower/upper bands **25/75**. The Mar 25 update adds an ADX threshold **25**; above threshold, STC is active and band-crossing signals may fire; in weak regimes the displayed STC freezes and alerts are suppressed. The public source supports independently selectable STC and ADX timeframes. The author describes **buy on crossing upward through 25**, **sell on crossing downward through 75**, only when ADX exceeds the threshold. The source is an **indicator**, not a complete executable order/position/cost specification. The accessible description does **not** unambiguously pin ADX length/seed, exactly how the oscillator resumes after ADX dormancy, execution venue, order timing, sizing, risk exits or fills.
+
+**Independent researcher-defined derivative, NOT lossless source-native Pine:** all missing executable choices are explicitly frozen below. In particular: one common BTC-USDT Binance spot **UTC 1h** timeframe (both STC and ADX; source MTF feature deliberately disabled), Wilder **ADX14**, precisely specified raw STC initialization/zero-range handling, **raw oscillator computed continuously** but the **published decision STC frozen** while ADX<=25, no order signals during dormancy, Long/Flat-only mapping (sell closes a long, never opens a short), one **0.001 BTC** unit, **10,000 USDT** initial cash, **120** completed-bar warmup, completed t decision with **t+1 completed-close MARKET simulation**, no SL/TP/DCA/cooldown, and hypothetical **0.1% per-side** cost. Continuing the raw oscillator under a frozen output, rather than asserting the unknown Pine internal-state semantics, is a **material researcher choice**. None of these choices is attributed to tcspirit.
+
+**Immutable derived identity:** `TV:eZwlb7PV:tcspirit:public-Mar22-update-Mar25:read-20261029 | independent-derived-v1:20261029 | Binance:BTC-USDT:spot:UTC1h | MACD-EMA23-50:STOCH10-EMA3-STOCH10-EMA3:zero-range-carry | WilderADX14>25:decision-STC-freeze | crossup25-BUY:crossdown75-SELL | LONG-FLAT:Q0.001:cash10000 | t-decision-to-t+1-completed-close-MARKET | warmup120 | fee0.001-per-filled-side`. Any rule/seed, clock, venue, cost, state or size change is a different derivative.
+
+**Pre-write dedup (main `f3607b4037680b18618bd1e516cd1b2acc8a0c6f`):** the nontruncated recursive main tree has **421** root strategy Markdown records (excluding two READMEs), and README static count **421**. Twelve distributed frontmatter samples are PASS; this is **not** a 421-file frontmatter audit. Main code search for `eZwlb7PV` and all-state PR search for `eZwlb7PV`, `tcspirit`, and `Schaff ADX` found no matching records/PRs. Ten open PRs were examined, none shares this source or mechanism. Closest admitted record `schaff-trend-cycle-band-edge-two-sided-btcusdt-1d-2026-10-09.md` is based on **FMZ 365905**, uses unfiltered STC and two-sided opposite-signal reversal; this proposal instead adds **ADX14-dependent oscillator output freezing and suppression** with a distinct TradingView source and long-flat exit mapping. This materially changes both signal timing and market-regime exposure, not merely a length retune. The admitted `forven-ttm-squeeze-momentum-release` and `forven-adx-trend-pulse-reclaim` records use different signal constructions.
+
+## Hypothesis and deterministic Signal (Gate 1)
+
+**Research hypothesis, not performance evidence:** suppressing STC band signals while ADX<=25 may avoid choppy regimes; the dormant-line freeze may also delay crossings or cause a resumed jump. Either effect can be falsified in downstream research; no return, Sharpe, win rate or Survivor status is claimed.
+
+**Inputs and validity:** exactly one Binance BTC-USDT spot 1h OHLCV stream, exchange candle-open timestamp `T[t]` in UTC seconds, strictly spaced by 3600 seconds. Require finite positive O/H/L/C, H>=max(O,C), L<=min(O,C), finite V>=0, strictly increasing unique timestamps, no gaps, duplicate bars, partial candles, interpolation, forward fill, synthetic closes or silent `dropna` bridging. Any violation aborts the bounded research run **before** feature preparation. Float64 feature arithmetic in ascending timestamp order, with fixed sums and comparisons, no fitting or optimization.
+
+**Research-pinned indicator equations:**
+
+1. EMA(X,n) uses `alpha=2/(n+1)`, `EMA[0]=X[0]`, and `EMA[t]=alpha*X[t]+(1-alpha)*EMA[t-1]`. `M[t]=EMA(close,23)[t]-EMA(close,50)[t]`. This is the sole MACD variant; no MACD signal line or histogram.
+2. Define `STOCH_SELF(X,10)[t]=100*(X[t]-min(X[t-9..t]))/(max(X[t-9..t])-min(X[t-9..t]))` for t>=9 and positive range. Before a full window or with zero range, carry the most recent defined value, initially **0**; never divide by zero. `K1=STOCH_SELF(M,10)`; `D1=EMA(K1,3)`; `K2=STOCH_SELF(D1,10)`; `RAW[t]=min(100,max(0,EMA(K2,3)[t]))`. EMA stages start from their first input at index 0. This exact zero-range and EMA-seeding convention is researcher-defined; do not substitute other STC implementations.
+3. Wilder ADX14 from completed H/L/C: for t>=1, `TR=max(H-L,abs(H-Cprev),abs(L-Cprev))`; `up=H-Hprev`, `down=Lprev-L`; `+DM=up if up>down and up>0 else 0`, `-DM=down if down>up and down>0 else 0`. At t=14 seed RMA(TR), RMA(+DM), RMA(-DM) with the means of t=1..14, then recur `RMA[t]=(13*RMA[t-1]+value[t])/14`. `+DI=100*RMA(+DM)/RMA(TR)`, `-DI=100*RMA(-DM)/RMA(TR)`; if TR denominator is zero both DI=0. `DX=100*abs(DIplus-DIminus)/(DIplus+DIminus)`, with DX=0 if its denominator is zero. Seed ADX at t=27 as mean(DX[14..27]), then Wilder-recur ADX. ADX is undefined before t=27; any nonfinite result aborts.
+4. **Dormant output:** `F[0]=RAW[0]`. For t>=1, if ADX[t] is defined **and ADX[t]>25**, `F[t]=RAW[t]` and `ACTIVE[t]=true`; otherwise `F[t]=F[t-1]` and `ACTIVE[t]=false`. RAW and its EMA/stochastic states keep updating in dormant bars; only the published decision series F freezes. This is a deliberate derivative of the author's described freeze, **not** an assertion about the inaccessible Pine internal-state implementation. On first active bar after dormancy, a jump from frozen F[t-1] to RAW[t] **can** form a valid crossing; no retroactive dormant-bar event is generated.
+5. Strict completed-bar edges: `BUY_EDGE[t]=ACTIVE[t] AND F[t-1]<=25 AND F[t]>25`; `SELL_EDGE[t]=ACTIVE[t] AND F[t-1]>=75 AND F[t]<75`. Equality at current threshold is not a crossing. ADX exactly 25 is **inactive**; the source says active above 25, and the equality boundary is pinned here. BUY_EDGE and SELL_EDGE are mutually exclusive (their prior-F conditions contradict), so no hidden same-bar priority. A dormant crossing in RAW alone never fires. A valid edge while a position/order state disallows action is consumed, not queued.
+
+**Warmup and causality (Gate 6):** compute all features from the first real completed bar, but prohibit all trades on indices 0..119. Initial book is FLAT, no inherited orders. First possible signal at **t=120** and only after 120 consecutive fully valid completed 1h bars; `F[t-1]` is available. No future extrema, negative shifts, repainting, incomplete higher-timeframe bars, full-sample statistics, or bar-close values used before close availability. Binance Kline `timestamp=T[t]` is the **bar OPEN**, not decision availability; OHLC and F/ADX for bar t become available no earlier than `E[t]=T[t]+3600` seconds. If this effective-time rule cannot be enforced, do not treat the model as HB_READY.
+
+## Direction, entries, exits and position state (Gates 2–4)
+
+**Direction:** Binance spot **LONG/FLAT** only. In FLAT, BUY_EDGE requests one BUY of exactly 0.001 BTC; in LONG, SELL_EDGE requests one SELL of the entire confirmed 0.001 BTC. SELL_EDGE in FLAT is a no-op, BUY_EDGE in LONG is a no-op. The indicator's sell marker is **not** a short-entry authorization; short, borrow, futures, leverage, margin, hedge and multi-asset shared capital are disabled.
+
+**Execution-state machine:** `FLAT -> BUY_PENDING -> LONG -> SELL_PENDING -> FLAT`, one position and at most one pending order. A decision at completed bar t queues an action; dispatch at **bar t+1** and fill only at that bar's **actual observed completed close**, with effective timestamp E[t+1]. No new signal is acted on during the fill bar, and a pending order suppresses all other actions. A confirmed full BUY fill changes to LONG, a confirmed full SELL changes to FLAT. No pyramiding, scaling, DCA/safety orders, partial exits, concurrent positions, compounding, profit-based sizing or cross-market synchronization. A later fresh BUY_EDGE after confirmed SELL may re-enter (no extra cooldown); edges on pending/fill bars are discarded, never replayed. A failed, rejected, partial, missing-price, nonfinite or otherwise unreconciled fill **aborts**, not assumed complete. If t+1 is outside the available tape, the final pending action remains unfilled, not a fabricated trade.
+
+**Risk and exits:** SELL_EDGE is the **sole** exit. Stop-loss, take-profit, trailing stop, breakeven, time limit, reverse-to-short, session cutoff, forced end-of-sample liquidation and executor default triple barrier are **explicitly disabled**. If no later SELL_EDGE appears, the long can persist indefinitely, including through ADX dormancy; mark a terminal open long using the last **real** valid close as unrealized inventory, without inventing a SELL. This is a significant unprotected-drawdown limitation, not a risk guarantee.
+
+## Execution assumptions — demonstrated pinned Hummingbot Gate 5
+
+**Bounded engine identity:** HCH725/hummingbot source commit `8b0e067e80ab62f10846d518dcb5a8218527ddb3`, Hummingbot package **20260920**, `hummingbot/VERSION=dev-2.17.0` (VERSION blob `fa1dd206a0e288710d6d68e195d4f030960fc6fb`, fetched this cycle via GitHub connector). Existing merged Alpha PR **#414** reports 902/902 source/wheel file identity and 33-assert representative validation for this pinned baseline. This Scout **did not** rehash installed wheel bytes or run this candidate. If the pinned binary/source mapping is invalidated, this Gate fails.
+
+**Actual data model:** inspected pinned `hummingbot/data_feed/candles_feed/binance_spot_candles/constants.py` (blob `6d505dff42b60b356931df13eeeecd1e28b426f9`) and `binance_spot_candles.py` (blob `5d0c938af574aca5f8dcba5ba28121797eae4dd0`): Binance Spot `/api/v3/klines` supports `1h`; parser maps row[0] open-time and rows[1..5] to actual O/H/L/C/V. One spot 1h stream suffices for both STC and ADX. No HTF synchronization, intrabar trades, order book, funding feed, multi-asset alignment or model artifact is required. Reject incomplete/gapped data before the engine's feature merging.
+
+**Actual controller/executor path:** inspected pinned `hummingbot/strategy_v2/backtesting/backtesting_engine_base.py` (blob `7d1e552dd7ee62df4f83f10950b8d593cd1106e6`): `run_backtesting` prepares market data, `simulate_execution` calls `update_state(row)`, then `controller.determine_executor_actions()`, then `simulate_executor` for `CreateExecutorAction`. A future minimal **strategy-specific controller**, not implemented here, must compute the above F/ADX/state and dispatch t's pending action **only when row t+1 is reached**; never infer that the generic engine implements STC. Pinned `OrderExecutorConfig` (blob `67715e3d14a1edf636defa95a7bbe5c73b8cff90`) supports `connector_name="binance"`, `trading_pair="BTC-USDT"`, `side=BUY/SELL`, `amount=Decimal("0.001")`, `position_action=OPEN/CLOSE`, `execution_strategy=MARKET`, `price=None`, `leverage=1`. The pinned `OrderExecutorSimulator.simulate` (blob `3b4e82e91896db9074295ca2a8a087dde2499eab`) **actually fills MARKET at the first supplied row's close**, computes `filled_amount_quote=amount*close`, `cum_fees_quote=trade_cost*amount*close`, and terminates as `CloseType.POSITION_HOLD`. These are verified code paths, not mere API-name inference.
+
+**Fill time and costs:** the t decision uses only E[t] information; dispatch at t+1 uses actual C[t+1] and becomes effective at E[t+1]. The engine row's raw open-time label T[t+1] must **not** be misreported as the decision/fill availability timestamp. This is an idealized **historical next-completed-close MARKET fill**, **not** a real post-close execution guarantee, a TradingView broker-emulator equivalence claim, or next-open/intrabar/maker execution. Pin `trade_cost=0.001` **hypothetical fee per filled side**, not historical Binance fee. With initial spot cash 10,000 USDT, inventory 0, and Q=0.001 BTC: BUY at real P debits `Q*P*(1+0.001)`, credits Q BTC if cash suffices; SELL debits Q BTC and credits `Q*P*(1-0.001)`. Matched fee-inclusive PnL = `Q*(Psell-Pbuy)-0.001*Q*(Pbuy+Psell)`. No futures funding applies to this unlevered spot derivative; **do not** fabricate zero realized futures funding. Simulator omits modeled spread/impact/latency; do not call those realized costs zero.
+
+**Accounting and missing-price guard:** pinned `BacktestPositionHold` nets `POSITION_HOLD` BUY/SELL, tracks gross realized PnL and fees separately; float-derived quote/base conversion can leave dust. Maintain a Decimal cash/inventory ledger from confirmed executor fills as authority, reconcile terminated executors and hold summaries within diagnostic tolerances **1e-9 BTC** and **1e-8 USDT**; never conceal missing/partial fills. Use full ledger (`terminated_executors_window=None` or equivalent) rather than the engine's default 3600s controller view, which can expire history between 1h rows. The inspected pinned `BacktestingDataProvider.get_price_by_type` (blob `e3d3e087b4da7c0381fac9621d1a04dcb8de81cf`) can return `Decimal("1")` for a missing pair; **forbid this fallback** as fill/mark, require finite positive actual candle close and abort otherwise. Actual Binance fee tier, tick/lot/min-notional rules, partial-fill handling and real slippage remain unverified, so no live-trading compatibility is asserted.
+
+## Six-gate Scout claim — independent Auditor review still required
+
+1. **Determinism:** exact EMA, self-stochastic zero-range carry, ADX Wilder seeds, freeze, strict threshold edges and order-state rules; no fitting or hidden defaults.
+2. **Direction:** one Binance BTC-USDT spot LONG/FLAT unit; no short/futures assumptions.
+3. **Entry/exit/risk:** active ADX-gated STC25 BUY and STC75 SELL, with no stop, target, trailing or time exit, explicitly.
+4. **Position/re-entry:** fixed 0.001 BTC, single pending action/position, confirmed fills only, no DCA/scale/hedge, fresh-edge re-entry.
+5. **Pinned expressibility:** source-verified Binance 1h data parser, per-row controller dispatch, MARKET first-row-close fill, POSITION_HOLD netting, hypothetical fees, Decimal ledger and real-price guard; **the new controller is not implemented** and engine compatibility is bounded to the specified idealized historical fill semantics.
+6. **Point-in-time:** 120 completed bars, all calculations at E[t], t+1 close fill at E[t+1], no HTF lookahead, future price in signal, missing-price fabrication or repainting.
+
+**Negative evidence / limits:** original Pine bytes, original ADX length and freeze-internal-state details are inaccessible in the public text read; this is **independent-derived-v1**, never claimed source-native. The source's HTF feature is deliberately disabled, and the source's sell marker is used as close-to-flat, not short entry. ADX dormancy can strand a losing position without stop. No strategy-specific engine run, Qlib/Hummingbot event parity, OOS, Survivor assessment, fee-realistic return, Paper/Testnet/Live or deployment has occurred. Later validation should test zero-range stochastic, ADX seed/25 equality, dormant-resume jump, 25/75 equality, stale cross while pending, gaps, t/t+1 timestamps, terminal open inventory, float dust and missing-price fallback. Representative Qlib/Hummingbot event-level parity is required **before large-scale Qlib screening of a new execution primitive**, not an extra HB_READY admission gate.
+
+## Research-only adoption boundary
+
+`hb_ready_status: PASS` is the Scout's **proposed six-gate assessment**, not an independent Auditor PASS or implementation approval. `status: research-only`, `implementation_status: not-implemented`, `adoption: not-approved`, `approval_scope: research-only`. Only the independent Hermes Auditor GitHub Webhook Review may verify/remediate exact source facts and exact-head merge or NOT_LOSSLESS close; only the existing signed webhook receiver updates README count after an accepted merge. No backtest, container, cron, trading, Qlib/Hummingbot, README or other repository file was changed.
+
+- TradingView first-party source: https://www.tradingview.com/script/eZwlb7PV/ (tcspirit; accessible page displays Mar 22, Mar 25 update, no year).
+- Pinned engine source: https://github.com/HCH725/hummingbot/tree/8b0e067e80ab62f10846d518dcb5a8218527ddb3 .
+- Prior pinned source/wheel and representative test evidence: https://github.com/HCH725/alpha-strategy-research/pull/414 .
