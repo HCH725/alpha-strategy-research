@@ -33,6 +33,8 @@ contradictions: []
 
 **Immutable derivative identity:** `FMZ:482829|ianzeng123:2025-02-21|independent-derived-v1-zvol20-g15-reversal-atr14x15-rr20|BinanceSpot:ETH-USDT:2h|LONG-FLAT|0.05ETH|prior-complete-signal-next-complete-close-MARKET|SLmax(struct2,atr)-TPrr-frozen-stopfirst|fee0.0005|warmup100|2026-10-29`. Changing any formula, threshold, timing, market, risk, cost or direction creates a different derivative.
 
+**來源可證補正（Auditor，2026-10-29）：** 原始 Pine 的 `long_sl = ta.lowest(low, 2)`，`long_tp = close + (close - long_sl) * rr`；實際送出的 stop 才是 `math.max(long_sl, long_atr_stop)`。因此來源 TP 使用純結構止損距離，並非合成後 stop 距離。下文研究者已寫定的衍生公式 `TP = C[u] + (C[u]-SL)*RR`（`SL=max(structSL,atrSL)`）保持不變；這也是一項既有但先前未明示的來源差異，不能宣稱保留原始 TP。此處僅補正來源歸屬，不新增或選擇交易規則。完整第一方頁面 stream 解碼來源快照 SHA256：`1d25a2553d772a43a5af980807f0f5d076070ff10c35cf36b6991a1f99bd9471`。
+
 ## Economic mechanism
 
 ### Source-reported
@@ -56,6 +58,8 @@ This is an **informed-participation reversal**: the traded thesis is that a reve
 7. If confirmed LONG and not pending: on completed bar `t` with `u = t-1`, (i) if `C[u] <= SL`, queue one SELL of the confirmed 0.05 ETH at simulated `C[t]` (stop, checked **first** — pinned stop-first priority when both levels are touched by the same close); (ii) else if `C[u] >= TP`, queue the same SELL at simulated `C[t]` (take-profit). Never reverse or re-enter on the same bar. The entry predicate is not consulted while LONG.
 8. There is no opposite-signal exit (short leg disabled), no trailing order, no time exit, no scale-out, no cooldown, no pyramiding, and no end-of-sample forced liquidation. An unclosed final position remains open, marked at the last observed valid price only. The `triggerAlarm` function, `barcolor`, all four `plotshape` markers, both `alertcondition`s and the `exitLong`/`exitShort` plot accumulators have no decision function and are pinned as display-only.
 
+**TP 來源邊界：** 步驟 6 的 TP 是本衍生版既有規則，不是原始 Pine TP；來源應寫為 `sourceTP = C[u] + (C[u]-structSL)*RR`。當 `atrSL > structSL` 時兩者不同，本紀錄仍只執行步驟 6，不切換至來源 TP。
+
 **Gate 2:** LONG/FLAT on Binance ETH-USDT **spot**, leverage 1, short side explicitly disabled. **Gate 3:** complete anomaly-gated reversal entry, frozen structural-plus-ATR stop exit, frozen RR take-profit exit, and intentionally absent further risk legs as specified above (verified structural-plus-ATR `stop=` and RR `limit=` in source: two `strategy.exit` lines, zero `strategy.close`/`strategy.order`).
 
 ## Position, risk and state
@@ -71,6 +75,8 @@ The fixed size is a backtest design, not an assertion of exchange lot/min-notion
 Every bar must have a strictly consecutive UTC 2-hour timestamp and valid OHLCV. On a missing/invalid/out-of-sequence bar, generate no new signal or fill and **retain** any confirmed existing spot position; do not synthesize an exit. After continuity is restored, resume decisions only after a fresh 100-bar warmup. The controller must never use the current bar's still-forming close or volume to construct a signal. `STDEV==0`, undefined ATR, non-positive closes and negative/missing volumes deterministically yield no signal — no invented tie-break.
 
 ## Execution assumptions
+
+**來源／執行邊界補正：** 此處的凍結 TP 指 Signal 步驟 6 已宣告的合成 SL 距離 TP；不是原始 Pine 以純結構 SL 距離產生的 limit。此來源差異獨立於 intrabar → completed-close MARKET 的轉換；本次未更動任一執行公式、參數或成交時序。
 
 **Gate 5 — actual inspected pinned engine path (re-verified this cycle at source commit, not a generic API assertion):** admission package `20260920` (policy label, see disclosure), Hummingbot VERSION `dev-2.17.0` (read this cycle from `hummingbot/VERSION` at the pinned commit, 11 bytes), source commit `HCH725/hummingbot@8b0e067e80ab62f10846d518dcb5a8218527ddb3`. This cycle fetched the pinned tree over HTTPS and verified: `backtesting_engine_base.py` (39,071 bytes), `backtesting_data_provider.py` (8,823 bytes), `order_executor_simulator.py` (3,913 bytes), `binance_spot_candles.py` feed (3,924 bytes), feed `constants.py` (993 bytes; REST `https://api.binance.com` + `CANDLES_ENDPOINT /api/v3/klines` + `INTERVALS` including **`2h`**). No claim is made about a different engine build.
 
@@ -110,6 +116,8 @@ Future tests (not performed): hand-calculate z/reversal/SL/TP transitions on fro
 This derivative is specified for Binance ETH-USDT spot 2h only. The 1.5σ volume gate, the 2-bar structural stop and the ATR-14 × 1.5 stop are calibrated to ETH-scale volatility and 2h bar geometry; no transfer to other symbols, timeframes or venues is asserted. The 6/6/6 campaign DCA overlay, futures leverage and multi-coin universe are not part of this derivative.
 
 ## Limitations and adoption boundary
+
+**來源差異補正：** 即使暫時忽略成交時序與方向差異，既有衍生 TP 與來源 TP 仍可導致不同退出事件。例如 C[u]=100、structSL=90、atrSL=95、RR=2 時，兩者 stop 均為 95，但來源 TP=120、本衍生 TP=110；後續判定 close=115 只會觸發本衍生版 TP。此差異不是原生策略等價，也不能用本衍生版 PASS 證明原碼重現。
 
 This is an independent derived hypothesis, not a faithful reproduction of the FMZ Pine source. It inherits an anomaly-cluster weakness: volume z-scores are autocorrelated, so anomaly bars arrive in bursts and chop prints repeated fee-paying entries that stop out; the frozen RR-2.0 target further demands a one-in-three win rate net of fees that ranging markets rarely supply. The close-evaluated stop/TP conversion lags the source intrabar exits by up to a full 2h bar, so fast reversals give back more than the source backtest implies, and 2h gaps jump over both frozen levels with no slippage accounting. The fixed 0.05 ETH size does not transfer to other symbols. No positive return, real trading viability, Qlib parity, OOS result, Survivor/HB Certified status, Paper/Testnet/Live authorization or deployment is asserted. Optional campaign coins/timeframes, DCA BO/SO 6/6/6 and futures leverage are not entry requirements and are not part of this derivative.
 
