@@ -1,0 +1,126 @@
+---
+schema: strategy-research-record-v1
+hb_ready_status: PASS
+title: "Freqtrade Supertrend triple-agreement volume-gated ROI/SL BTC spot 1h long-flat — independent derivative"
+created: 2026-10-30
+updated: 2026-10-30
+type: strategy-research-record
+tags:
+  - quant
+  - strategy-research
+  - freqtrade
+  - source-backed
+status: research-only
+confidence: medium
+source_as_of: 2026-09-08
+sources:
+  - https://github.com/freqtrade/freqtrade-strategies/blob/f3340ce11f5bdf62f598522e64d1f5638eaa13f5/user_data/strategies/Supertrend.py
+  - https://github.com/freqtrade/technical/blob/00190d7fab7df45eb5f116609fbd02e8c5154446/technical/indicators/supertrend.py
+implementation_status: not-implemented
+adoption: not-approved
+approval_scope: research-only
+contested: false
+contradictions: []
+---
+
+# Freqtrade Supertrend triple-agreement with volume gate and ROI/SL — BTC spot 1h independent research derivative
+
+## Provenance
+
+- **Primary (immutable GitHub implementation):** `freqtrade/freqtrade-strategies@f3340ce11f5bdf62f598522e64d1f5638eaa13f5` (commit date 2026-09-08T16:42:47Z), file `user_data/strategies/Supertrend.py` — *"Supertrend strategy"*, author **@juankysoriano** (Juan Carlos Soriano). Fetched raw end to end this cycle: **6,448 bytes**, md5 `3790a91eaafaf4403eea33bd9fba8104`, `git hash-object` = GitHub blob `757b15214c0088b38973b3eb0d6bd56bfcfbf56c` (exact match via contents API). Only rule tokens are normalized and cited here; no large source block is copied into this repository.
+- **Source-file census (verbatim 156-line program):** 1 `class Supertrend(IStrategy)`; `INTERFACE_VERSION = 3`; `timeframe = '1h'`; `startup_candle_count = 199`; `buy_params` dict `{buy_m1:4, buy_m2:7, buy_m3:1, buy_p1:8, buy_p2:9, buy_p3:8}`; `sell_params` dict `{sell_m1:1, sell_m2:3, sell_m3:6, sell_p1:16, sell_p2:18, sell_p3:18}`; `minimal_roi = {"0":0.087, "372":0.058, "861":0.029, "2221":0}`; `stoploss = -0.265`; trailing block (`trailing_stop=True`, `trailing_stop_positive=0.05`, `trailing_stop_positive_offset=0.144`, `trailing_only_offset_is_reached=False`); 6 `IntParameter` buy/sell declarations (hyperopt-space metadata only — see parameter-resolution note); 1 `populate_indicators` expanding the six hyperopt ranges into named direction columns; 1 `populate_entry_trend` writing `enter_long` only; 1 `populate_exit_trend` writing `exit_long` only; 0 `enter_short`/`exit_short` (long-only by construction; `can_short` absent so short stays disabled); 0 `request.*`/`security(`/informative pairs (single-timeframe, OHLCV-only); 1 `volume` read (`volume > 0` on both legs); 0 `strategy.close`/custom-stoploss overrides. The file header itself warns the supertrend implementation follows freqtrade-strategies issue #30 discussion and is not validated against the original paper.
+- **Indicator-provenance pin:** the strategy delegates direction computation to `ftt.supertrend` (`import technical.indicators as ftt`). The `technical` package version is unpinned by the strategy, so this derivative pins the exact implementation at immutable `freqtrade/technical@00190d7fab7df45eb5f116609fbd02e8c5154446` (2026-08-06): `technical/indicators/supertrend.py`, **1,873 bytes**, md5 `f01e8ee19c2be7f55594e9fd20fbdc45`, re-exported through `technical/indicators/__init__.py` (`from .supertrend import *`, 229 bytes, verified this cycle), so `ftt.supertrend` resolves. The derivative restates that implementation's arithmetic verbatim below as its own executable rule (TA-Lib `TRANGE` restated as the identical manual true-range on validated finite inputs; float64 loop order preserved); bit-identity with any `technical` release is not claimed beyond this pinned restatement.
+- **Parameter-resolution note (source-verifiable, disclosed):** each leg's `IntParameter` range/default (e.g. `buy_m2 = IntParameter(1, 7, default=4)`) disagrees with its `buy_params`/`sell_params` dict value (`buy_m2: 7`). Freqtrade resolves a parameter's runtime `.value` from the `buy_params`/`sell_params` dicts when present; the `IntParameter` declarations govern the hyperopt search space, not the frozen rule. This derivative pins the six dict values as the executable rule: buy legs `(m,p) = (4,8), (7,9), (1,8)`; sell legs `(1,16), (3,18), (6,18)`. No variant was chosen; both numbers are cited so the reviewer can verify.
+- **Explicit independent derivative, and ONLY this derivative is proposed for HB_READY:** researcher keeps the exact triple-`up` entry conjunction with `volume > 0`, the triple-`down` signal exit with `volume > 0`, the full ROI ladder, the `-0.265` fixed stop, `1h` timeframe and 199-bar warmup, but trades Binance **BTCUSDT spot** UTC **1h** LONG/FLAT with fixed 0.001 BTC, 10,000 USDT cash, hypothetical 0.1% fee per side, completed-bar decisions with next-completed-close MARKET fills, close-evaluated stop-first exits, and **trailing disabled** (the source trailing block is dropped as a declared researcher change). Freqtrade's next-open/intrabar fill timing is converted to the idealized next-completed-close convention (same conversion class as merged Alpha PR #590 / FMZ 482829 record). These alter possible trade events and economics. No backtest performance or source-native event equivalence is claimed; the source file ships no performance figures.
+- **Immutable research identity:** `FT:Supertrend.py|juankysoriano|blob-757b1521|tech-supertrend-00190d7f|derived-v1-20261030|BinanceSpot:BTCUSDT:UTC1h|STup(4,8)+(7,9)+(1,8)-vol|STdn(1,16)+(3,18)+(6,18)-vol|ROI8.7-5.8-2.9-0|SL26.5|no-trailing|t-to-tplus1-completed-close-MARKET|Q0.001BTC|cash10000USDT|fee0.001-side|warmup199|no-DCA`.
+- **Dedup, 2026-10-30:** `main` at `e352ea3d`, 462 root strategy records / README 462; working-tree searches for `juankysoriano`, `Supertrend.py`, `buy_m1`, `supertrend_1_buy` return no same-source record (the only hits are boilerplate open-PR list mentions inside unrelated records). All 11 open research PRs inspected by source/title/branch — none uses this file or rule. Closest pool neighbors use different mechanisms: open PR #63 is a single-Supertrend flip on 1d (one indicator, different timeframe, no volume gate, no ROI ladder); TradingView supertrend records are single-indicator systems from different sources. This derivative's six-leg triple-agreement conjunction (buy `(4,8)+(7,9)+(1,8)` vs sell `(1,16)+(3,18)+(6,18)`) with volume gates plus ROI-ladder/fixed-stop exits is not a paraphrase or trivial parameter variant.
+
+## Economic mechanism
+
+### Source-reported
+
+Three differently parameterized supertrend direction filters must agree `up` before a long is taken (and agree `down` before a signal exit), so a single noisy band cannot trigger trades alone; the `volume > 0` gate keeps dead bars out; a four-leg ROI ladder banks winners early while letting calm trends run; a deep fixed stop plus optional trailing bounds catastrophic loss. This is a qualitative hypothesis, not independently validated profitability.
+
+### Research interpretation
+
+Test whether hourly triple-supertrend agreement (fast/medium/slow bands with hyperopt-frozen lengths) predicts BTC appreciation durable enough to reach an 8.7%-to-0% duration-gated ROI ladder before a 26.5% fixed stop or a triple-`down` reversal — with state-based entries (no cross edge, no cooldown) and at most one fixed-size position. The derivative measures only this frozen bracket; it cannot speak for the source's trailing leg, equity sizing, hyperopt variants, or Freqtrade fill timing.
+
+## Signal
+
+- Input: strictly chronological, **completed** UTC Binance Spot BTC-USDT `1h` candles indexed `t=0,1,...`; use `O/H/L/C[t]` and `V[t]`. Reject missing/duplicate/gapped hourly bars, nonfinite/nonpositive prices, `H<max(O,C)`, `L>min(O,C)`, `L>H`, or nonfinite/negative volume. Reject/abort invalid research segment; never synthesize prices, forward-fill signals, or silently skip a broken bar. No funding, order book, cross-market, alternate-timeframe, or private feed is read.
+- **Researcher-pinned supertrend arithmetic (own executable rule; restates pinned `technical@00190d7f supertrend.py` loop-for-loop):** float64 throughout. `TR[0]=H[0]-L[0]`; `TR[t]=max(H[t]-L[t],|H[t]-C[t-1]|,|L[t]-C[t-1]|)` for `t>=1` (identical to TA-Lib `TRANGE` on validated finite inputs). `ATR` = rolling SMA of TR over period P: `ATR[P-1]=mean(TR[0..P-1])`, undefined for `t<P-1`. `HL2=(H+L)/2` (the only divisions are `/2` and the length-P mean — both over validated finite inputs with nonzero constant divisors, so no zero-division is reachable). Basic bands `bU=HL2+M*ATR`, `bL=HL2-M*ATR`. Final bands zero-initialized, loop `i=P..n-1`: `fU[i]=bU[i]` if (`bU[i]<fU[i-1]` or `C[i-1]>fU[i-1]`) else `fU[i-1]`; `fL[i]=bL[i]` if (`bL[i]>fL[i-1]` or `C[i-1]<fL[i-1]`) else `fL[i-1]`. Line `st` zero-initialized, same loop: if `st[i-1]==fU[i-1]` then `st[i]=fU[i]` if `C[i]<=fU[i]` else `fL[i]`; elif `st[i-1]==fL[i-1]` then `st[i]=fL[i]` if `C[i]>=fL[i]` else `fU[i]` (the `0==0` seed quirk at `i=P` is preserved exactly as in the pinned implementation). Direction `d[i]='up'` if (`st[i]>0` and `C[i]>=st[i]`), `'down'` if (`st[i]>0` and `C[i]<st[i]`), else undefined (mirrors the source `fillna('')`; strict inequalities — equality on the `up` side never fires `down`). Any undefined input makes the dependent value undefined; a gate on undefined is false, never imputed. Post-warmup (`t>=199`, max period 18) no undefined branch is reachable; fail-closed handling governs invalid candles only.
+- **Entry conjunction (all on completed bar `t`, state-based — no cross edge required):** FLAT, no pending, `t>=199`, `d[t]=='up'` on all three buy legs `(4,8)`, `(7,9)`, `(1,8)`, and `V[t]>0`. On fire: queue exactly one BUY of 0.001 BTC for `t+1`; record entry reference `P=C[t]` (fill-price basis is the actual `t+1` close — see Execution assumptions). Re-entry after flat needs only the same state on a later bar; there is no cooldown, no fresh-cross requirement, and no pyramiding.
+- **Exit (LONG, no pending, first eligible bar strictly after the BUY-fill bar):** on completed bar `u` evaluate in pinned order — (1) fixed stop: if `C[u]<=0.735*P_entry` queue one full-position SELL (stop, checked **first**; algebraically identical to `(C-P)/P<=-0.265` for `P>0`, stated without division); (2) else ROI ladder on duration `dur_min=(u-(t_fill+1))*60` from BUY-fill availability: required profit is the value of the largest ROI key `<=dur_min` (`0→0.087`, `372→0.058`, `861→0.029`, `2221→0`), fire if `(C[u]-P_entry)>=req*P_entry`; (3) else signal exit if `d[u]=='down'` on all three sell legs `(1,16)`, `(3,18)`, `(6,18)` and `V[u]>0`. Fill at `u+1` completed close. No trailing (levels never ratchet), no time exit beyond the `2221→0` leg, no opposite-signal reversal (there is no short leg).
+- **Warmup:** bars `0..198` update indicators but cannot queue or fill. First eligible signal `t=199` (covers the source's own `startup_candle_count=199`; all six legs are defined from `t>=18`, with wide margin). First fill `t=200`.
+- **State:** FLAT, BUY_PENDING, LONG, SELL_PENDING; exactly one position and one pending order at most. A queued action on `t` attempts one historical fill at `t+1` completed close; process that fill first and do **not** generate a new order on the fill bar, though indicators still update. On BUY fill enter LONG; on SELL fill become FLAT. No short, hedge, borrowing, DCA, safety orders, partial exits, dynamic sizing, independent cooldown, or forced end-of-sample liquidation. An unfilled end-of-sample pending order remains unfilled and is reported as such.
+- **Risk and disabled behavior:** the only risk mechanisms are the frozen `-0.265` stop and the ROI ladder; trailing from the source block is explicitly disabled by researcher choice (alters trade events vs the source). No protective stop beyond the frozen level, no time exit, no discretionary override. Gap risk across hourly closes jumping over both stop and ROI levels is real and undisguised (pinned stop-first sequential evaluation); indefinite holding without any exit trigger is possible; no hidden executor SL/TP defaults.
+- **Pinned dead source elements (never decision-read, disclosed):** the six `IntParameter` ranges/defaults (hyperopt-space metadata; dict values govern), `populate_indicators` hyperopt-expansion columns outside the six frozen legs, `plot`/`label` display calls (none present), config-level `stake_amount`/`max_open_trades` (resolved here to one fixed 0.001 BTC position), and the source trailing block (dropped, not adopted).
+
+## Required data
+
+Single Binance Spot `BTC-USDT` UTC hourly OHLCV series, validated for completeness and chronological availability. All six supertrend legs derive from validated O/H/L/C; the entry/exit gates additionally read validated volume. Only completed-bar indicator values, completed-bar volume, and the fixed-fee cash ledger are decision-critical. No funding, order book, open interest, cross-market synchronization, alternate timeframe, or private feed is required. Historical MARKET fill prices must be actual validated next-bar close data, never the backtesting provider's missing-price fallback.
+
+## Execution assumptions — demonstrated bounded pinned-engine research path
+
+- **Pinned engine:** Hummingbot package `20260920`, VERSION `dev-2.17.0`, source `HCH725/hummingbot@8b0e067e80ab62f10846d518dcb5a8218527ddb3`. This cycle byte-fetched and directly read at the pinned commit: `hummingbot/VERSION` (11 bytes, md5 `36d10e643cb7725ac6c42c538c0190d4`), Binance spot candles `constants.py` (993 bytes) and `binance_spot_candles.py` (3,924 bytes), `order_executor_simulator.py` (3,913 bytes), `backtesting_data_provider.py` (8,823 bytes), `backtesting_engine_base.py` (39,071 bytes) and `candles_base.py` (27,444 bytes) — sizes identical to prior independent review. `simulate_execution` prepares rows then advances `update_state(row)` before controller `determine_executor_actions()` (causal order); `OrderExecutorSimulator.simulate` for MARKET fills on the first supplied row at its actual `close`, sets `filled_amount_quote=amount*close`, `cum_fees_quote=trade_cost*filled_amount_quote`, and terminates `POSITION_HOLD`. Prior independently reviewed representative primitive is Alpha PR #414; no wheel rehash or candidate-specific backtest was run.
+- **Real data path:** `BinanceSpotCandles.INTERVALS` includes `1h`; Binance REST `/api/v3/klines` parser takes the actual Kline opening timestamp (`row[0]`). A candle's stored `timestamp=T[t]` is **open time**; its `H/L/C/V` are decision-available only after `T[t]+3600 seconds` for a complete UTC hour. The candidate's own controller rejects incomplete last bars, gaps and invalid candles/prices before use; the pinned `get_price_by_type` missing-price `Decimal("1")` fallback (re-verified this cycle) is **forbidden** here. Engine `prepare_market_data` merges suffixed `_bt` candles and `dropna`s; the controller's own validation runs on the same validated candle stream and never invents a price.
+- **Controller/executor path:** the future dedicated controller (NOT yet implemented) keeps the six supertrend states, one-bar pending action and LONG/FLAT machine in its own memory and never reads `executors_info`, holdings, positions-held views, or terminated-executor windows for decisions (decoupled from engine bookkeeping order and any windowing). `OrderExecutorConfig(connector_name="binance",trading_pair="BTC-USDT",side=BUY/SELL,amount=Decimal("0.001"),execution_strategy=MARKET,price=None,leverage=1,position_action=OPEN/CLOSE)`. SELL size equals the recorded base inventory exactly. No limit/maker/intrabar fill or unverified cross-asset path is required.
+- **Exact causal fill mapping:** decide at `T[t]+3600` using data through completed bar `t`; dispatch the stored order only on the `t+1` row, and model a retrospective full fill at actual `C[t+1]`, effective `T[t+1]+3600`. The row's opening timestamp is not misrepresented as fill availability. Do not use `C[t+1]`, indicators recomputed on `t+1`, or volume `V[t+1]` to decide at `t`; the `t+1` indicator state may update but does not create another action on the fill bar. This is an **idealized historical next-completed-close** convention, not live close-order timing or a live close-order guarantee. No claim equates any close with any neighboring open.
+- **Exact modeled cash/inventory ledger (the #641 lesson applied):** initial cash `10000 USDT`, BTC inventory 0, fixed `Q=Decimal("0.001")`, hypothetical quote fee rate `f=Decimal("0.001")` per executed side (the source declares no commission; this fee is a researcher input, not a source fact). Pinned `fetch_candles` returns `np.array(arr).astype(float)` (re-verified in `candles_base.py` this cycle), so the engine path provably carries **float64** closes — this record therefore does NOT claim original exchange-string preservation. The controller ledger converts each fill price strictly as `Decimal(str(C_float))` where `C_float` is the validated engine-path float64 close (the same `Decimal(str(...))` pattern the pinned `update_state` itself uses for `mid_price`); signal arithmetic runs on those same float64 closes. On BUY at converted price `P`, require `cash >= Q*P*(1+f)`; otherwise consume BUY intent without a fill and stay FLAT (the state gate simply re-evaluates on later bars — no cross/counter is consumed). Successful BUY: `cash -= Q*P*(1+f)`, `base += Q`. SELL requires `base==Q`; successful SELL: `cash += Q*P*(1-f)`, `base=0`. Invalid inventory or nonfinite/absent price aborts, not a fabricated fill. Round-trip fee-net quote PnL `Q*(Pexit-Pentry)-f*Q*(Pentry+Pexit)`. On each full-fill-only modeled action pass `trade_cost=0.001` to the pinned simulator; do not double-subtract fees. No `quantize` rounding is applied anywhere in the model.
+- **Research economics boundary:** this is a **fixed idealized full-fill** historical Spot model. Research fee 0.1% per side is a declared hypothetical input, NOT a verified Binance fee tier. Zero **modeled** spread/slippage is an explicit idealization, not an observed zero. Exchange-specific lot/tick rounding, min-notional, historical order acceptance, latency, partial fills, liquidity and live fee tier are not verified or claimed compatible. Spot has no perpetual funding/margin/liquidation leg; do not fabricate futures funding observations. PASS only concerns this precisely bounded historical model; actual trading would require separate validation and authorization.
+- **Fail closed:** reject invalid candles, undefined indicators, insufficient warmup, missing next close, price fallbacks and contradictory pending/position states. No paper/testnet/live order path, trading, Qlib run or Hummingbot run is authorized by this record.
+
+## Evidence
+
+### Source-reported
+
+First-party freqtrade-strategies file (Supertrend.py, @juankysoriano): triple-`up` entry conjunction over `(4,8)/(7,9)/(1,8)` supertrend directions with `volume>0`; triple-`down` signal exit over `(1,16)/(3,18)/(6,18)` with `volume>0`; `minimal_roi` ladder `0.087/0.058/0.029/0` at `0/372/861/2221` minutes; `stoploss=-0.265`; trailing block present in source but disabled by this derivative; `timeframe='1h'`; `startup_candle_count=199`; long-only (`enter_long`/`exit_long` only). It provides no independently verified performance and no commission model.
+
+### Independently reproduced
+
+Not independently reproduced. No trade sequence, candidate-specific Hummingbot execution, Qlib parity, profitability, OOS or Survivor status was reproduced. The full 156-line program and the pinned 1,873-byte `technical` supertrend implementation were read verbatim this cycle; the pinned Hummingbot **source capability** paths were directly inspected at the pinned commit; existing independently accepted primitive evidence #414 is referenced without claiming the derivative controller exists.
+
+### Negative evidence
+
+`technical`-release bit-identity, TA-Lib availability, live fill quality, hyperopt-space legs outside the six frozen ones, and the source's trailing-leg behavior were not obtained or adopted. Fixed sizing, close-fill timing, close-evaluated exits, disabled trailing, and single-position resolution of config-level concurrency are explicitly researcher choices. Main and open PR dedup found no same-source file or materially identical six-leg conjunction. Real exchange precision, fees, fill quality and partial executions are unverified.
+
+## Six-gate assessment — Scout proposal, not independent audit
+
+1. **Determinism:** six frozen supertrend legs with loop-for-loop pinned arithmetic, strict-inequality state gates, `volume>0` gates, duration-gated ROI ladder, frozen `-0.265` stop, 199-bar warmup, no fitted parameters beyond the source's frozen hyperopt values.
+2. **Direction:** BTC-USDT Binance Spot LONG/FLAT; no short leg exists in source and none is added.
+3. **Entry/exit/risk:** triple-`up` state entry, stop-first close-evaluated exits (fixed stop, ROI ladder, triple-`down` signal), trailing explicitly disabled by disclosure, all other exits absent by construction.
+4. **Position:** one fixed 0.001 BTC position, 10000 USDT ledger, one pending, fill-bar no-action, stateless re-entry, no DCA/pyramiding/cooldown.
+5. **Pinned engine:** actual 1h Binance spot candles with volume, pinned controller/action/MARKET close-fill/POSITION_HOLD and quote-fee model verified from source this cycle; `Decimal(str(float64))` ledger conversion proven against the pinned `astype(float)` feed path with no original-string claim; bounded hypothetical full-fill research accounting only, not exchange-valid orders.
+6. **Causality:** all gates use completed bars only (lookbacks through `t`, available at `T[t]+3600`), warmup precedes decisions, open timestamps corrected to close availability, `t` signal → `t+1` completed-close modeled fill, no future-data decision leakage, no close/open equality claim.
+
+`hb_ready_status: PASS` is a **Scout research admission proposal** for this independent derivative only; independent Hermes Auditor decides exact-head PASS, source-verifiable remediation or NOT_LOSSLESS. It is not proof of source-native equivalence, profitability, Qlib parity, implementation, HB Certified survivor or live readiness.
+
+## Falsification plan
+
+Not executed: adversarial tests for ties on every strict gate (`C==st`, `C==fU/fL`, zero volume), degenerate ATR freeze, single-bar gaps over both stop and ROI levels (stop-first check), breakdown on BUY fill bar, insufficient cash, fees, missing next close and sample-end pending order. A later representative Qlib↔Hummingbot event-level primitive parity check is required before mass screening if this path is not already covered by validated evidence; candidate-specific performance research is separate.
+
+## Crypto portability
+
+BTC-USDT spot 1h is an independent study selection (the source is itself a `1h` crypto strategy; venue/symbol transfer disclosed), not an HB_READY whitelist. Applying this structure to other coins/timeframes, equity sizing, Freqtrade fill timing, the source trailing leg, house BO/SO 6/6/6, futures leverage, or new fill conventions requires separately declared research assumptions and capability checks; it is not silently the original program.
+
+## Limitations
+
+No `technical`-release replay bit-identity (TA-Lib path not adopted), live fill quality, or source commission model exists. Close-evaluated exits can materially lag the source's intrabar ROI/stoploss behavior. No trailing or independent time exit; slow bleed inside the bracket and indefinite holding are possible. The hypothetical 0.1% fee and idealized full-fill/zero-modeled-slippage Spot ledger are not exchange-realistic order acceptance or canonical realized costs. No controller implementation, candidate-specific event parity, backtest, reproduced returns or deployment exists.
+
+## Implementation status
+
+`not-implemented`: no strategy-specific controller, Qlib recipe or executable deployment. HB_READY research admission is not implementation approval.
+
+## Adoption boundary
+
+`research-only`, `not-approved`; no Paper/Testnet/Live, capital authorization or Qlib/Hummingbot run. Only independent Hermes Auditor GitHub Webhook Review may remediate/review/merge or close; only the existing signed GitHub webhook receiver performs post-merge README count bookkeeping.
+
+## Related Wiki records
+
+None required; no separate registry or research artifact was created.
+
+## Sources
+
+- Freqtrade strategies (primary, immutable): https://github.com/freqtrade/freqtrade-strategies/blob/f3340ce11f5bdf62f598522e64d1f5638eaa13f5/user_data/strategies/Supertrend.py
+- Technical indicator implementation (pinned reference): https://github.com/freqtrade/technical/blob/00190d7fab7df45eb5f116609fbd02e8c5154446/technical/indicators/supertrend.py
+- Pinned engine: Hummingbot package `20260920` (`HCH725/hummingbot@8b0e067e80ab62f10846d518dcb5a8218527ddb3`), VERSION `dev-2.17.0`
