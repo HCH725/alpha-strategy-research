@@ -100,6 +100,12 @@ Later, only if separately authorized: synthetic tests for the first 20 warmup ca
 
 This derivative is pinned only to Binance BTC-USDT **spot**, UTC 1h, LONG/FLAT. Porting to other assets, timeframes, sessions, futures, leverage or DCA alters event/cost assumptions and requires an explicit new research identity plus actual engine compatibility evidence. BO/SO 6/6/6 and 3×/5× are downstream optional campaign settings, not admission requirements.
 
+## Limitations
+
+- The first-party TradingView description establishes the lower-close entry, prior-bar-high exit, default Lookback=3 and Start/End Time filter, but the Pine bytes and native execution/cost defaults were not obtained. This record is the separately identified derivative declared above, not byte-exact or source-native Pine reproduction. Disabling the source time-window filter and the independently specified market, clock, size, fee, warmup and risk/state choices remain researcher-defined alterations, not recovered source defaults.
+- At pinned Hummingbot commit `8b0e067e80ab62f10846d518dcb5a8218527ddb3`, `OrderExecutorSimulator.simulate` fills MARKET at the first supplied row close and computes quote amount and fees from `float(config.amount)` and `trade_cost`. That path does not establish actual exchange liquidity, spread, latency, partial fills, historical lot/tick/min-notional acceptance or a real fee tier. The declared next-completed-close/full-fill convention and hypothetical costs are bounded historical research assumptions, not a live execution guarantee.
+- The simulator holds filled orders with zero native order-level PnL tracking. Net cash, inventory and fee interpretation therefore remains the separately specified exact ledger/reconciliation contract above, not a claim that the native gross summary proves net performance. Missing real prices must not use the provider fallback. No source-native fill reproduction, performance, Qlib parity or trading authorization follows from this record.
+
 ## Implementation status
 
 `implementation_status: not-implemented`. The six-gate `PASS` here is a **Scout proposal pending independent Hermes Auditor**, not proof of an existing strategy controller, source-native parity, profitability, Survivor, HB Certified, Qlib parity or execution authorization.
