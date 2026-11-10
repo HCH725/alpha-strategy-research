@@ -8,24 +8,20 @@
 
 Every root-level strategy record on `main` MUST have `hb_ready_status: PASS`. This count is the number of those records; it must match the number of root-level strategy records, excluding the two READMEs. Historical research with non-PASS statuses is preserved outside `main`.
 
-## 📌 Current Backtest Baseline
+## 📌 Proposed Hummingbot-only research campaign (2026-11-10)
 
-**v1.0 research campaign — 2026-10-05 (not HB_READY admission limits)**
+**Transition status: planning / validation pending, not a deployed execution contract.** The old Qlib + n8n + Node01–13 campaign was retired. Keep its research assumptions where useful, but do not treat its pipeline, performance certificates or integrations as active.
 
-- Current research campaign universe (not a PASS whitelist): `BTCUSDT`, `ETHUSDT`, `BNBUSDT`, `SOLUSDT`, `XRPUSDT`, `DOGEUSDT`, `LINKUSDT`
-- Current campaign timeframes (not a PASS whitelist): `1h` / `4h` / `1d`
-- Full coverage per frozen version: `7 symbols × 3 timeframes × 2 leverage settings = 42 cells`; no baseline parameter-domain sweep
-- Backtest scope: full available historical Kline range for each symbol × timeframe; no cherry-picked window
-- Current campaign DCA experiment: Base Order `6%` + Safety Order `6%` + Safety Order `6%` = max `18%`; this is not an HB_READY admission prerequisite and is a separately declared derivative if it changes source trade events
-- Baseline round 0 freezes source/config plus the declared house overlay. Only after 05→06→07→08/09 may Hermes propose one falsifiable change set per round; a YES runs all 42 cells for that frozen revision, at most three revisions. Select the best version using IS only at the end of 09; freeze identity/config/data/window snapshots for Node10's one-time OOS, with no return to 06–09
-- Futures setup: Binance USDT-M perpetual, Isolated, `3×` and `5×`, single-strategy stage does not compound
-- Costs: Node04/05 uses an explicit, fixed, reproducible research cost model (declared fee/slippage/funding assumptions, including limitations). Modeled funding is not realized/canonical funding. Missing settlement mark_price alone does not block research; an undefined research cost model does. Node13 verifies canonical Hummingbot futures fills/equity/funding/slippage and final HB economics
-- Engine rule: Hummingbot remains the canonical execution benchmark. Qlib reuses verified execution primitives, data paths and timing semantics; only a new, unverified capability requires one representative validation before its use in mass screening, not exact strategy parity for every candidate
-- Promotion rule: only `PASS` records are eligible for current Qlib screening; survivor candidates are later re-run in Hummingbot for trade-by-trade validation
-- Qlib Research Survivor → Hummingbot first-pass hard filters: `Annualized Net Return ≥ 10%` and `Sharpe ≥ 1.0` on the same run/sample; `Net Strategy ROI` is report-only, not an independent hard filter. These are downstream performance criteria, not HB_READY admission gates
-- Node11 applies those thresholds using the same declared Qlib research cost model and complete modeled equity curve, over a fixed continuous tradable evaluation period from the first legally possible post-warmup signal to the predetermined end, including flat time—not from the first winning trade. Node13 separately checks canonical HB economics; disagreement cannot be Certified
-- [Historical Backtest Baseline v1.0 →](docs/hb-backtest-baseline-v1.0.md) — the current downstream contract below governs admission, coverage and research/canonical cost separation where older baseline wording differs
-- [Archived visual baseline v0.1 →](docs/hb-backtest-baseline-v0.1.html)
+- **Strategy source:** `main` is the six-gate `hb_ready_status: PASS` pool; PASS is admission to research, **not** profitability, executable implementation or trading approval.
+- **Campaign universe (not an HB_READY whitelist):** `BTCUSDT`, `ETHUSDT`, `BNBUSDT`, `SOLUSDT`, `XRPUSDT`, `DOGEUSDT`, `LINKUSDT`.
+- **Decision timeframes (not an HB_READY whitelist):** `1h`, `4h`, `1d`; Binance USDT-M perpetual, isolated margin, separately test `3×` and `5×` leverage, without compounding in single-strategy research.
+- **Baseline coverage:** `7 symbols × 3 timeframes × 2 leverage settings = 42 independent cells` per frozen revision, *before* parameter sweeps; use the full available historical Kline range for each symbol/timeframe, without cherry-picking. Preflight actual Hummingbot/Condor interval, data, futures and accounting support; report unsupported or missing cells rather than silently skipping them.
+- **Optional disclosed DCA experiment:** Base `6%` + Safety `6%` + Safety `6%` of initial capital, up to `18%` per strategy, two safety orders, size multiplier `1.0`; DCA spacing is research-defined. This is **not** an HB_READY prerequisite; changed source trade events require a separately identified derived strategy.
+- **Runtime inputs:** Freeze initial USDT capital, strategy/source revision, engine/image/commit, instrument/timeframe, actual data window and availability, warmup, execution/fill assumptions, fees, slippage, funding assumptions and their limitations. Preflight exchange minimum order size/precision. Never report missing funding or other economics as verified zero costs.
+- **Research discipline:** Separate IS research/selection from a predeclared final OOS holdout; freeze versions, data and split before OOS. Hermes may propose one falsifiable adjustment per round (with a bounded iteration budget to be agreed), dispatch another complete Hummingbot backtest, or stop and record rejection. No OOS-driven retuning.
+- **Orchestration direction:** Hermes uses its existing Condor/Hummingbot MCP connection (to be verified against the newly installed engine) for Hummingbot backtests. At every round it records the hypothesis, inputs, trade events, equity curve, costs, metrics, decision and failure evidence in Wiki Brain, linked to immutable GitHub strategy/revision identities. Wiki Brain is research memory, not a second source of strategy admission.
+- **Performance promotion:** The retired Qlib campaign recorded `Annualized Net Return ≥ 10%` and `Sharpe ≥ 1.0`. A different 8% target was also discussed; **the new Hummingbot-only campaign's promotion threshold is not yet approved**. Neither figure is an HB_READY gate, and no automated promotion or live trading is authorized.
+- [Archived dual-engine baseline v1.0 →](docs/hb-backtest-baseline-v1.0.md) and [archived visual v0.1 →](docs/hb-backtest-baseline-v0.1.html) remain historical evidence, not runtime instructions.
 
 **HB_READY PASS-only strategy pool:** Every strategy record on `main` must satisfy all six Hummingbot expressibility gates. Non-PASS research remains accessible on non-main Git branches or in existing PR/history; it is never promoted by relabeling.
 
@@ -39,7 +35,7 @@ Every root-level strategy record on `main` MUST have `hb_ready_status: PASS`. Th
 - Non-Scout `reconstruction/*` / legacy PRs have **no admission exemption**. If they add or modify strategy records, require the same six-gate PASS review before merge; otherwise keep the PR unmerged or retain the research on a non-main branch. For current batch PR #58, its `NOT_LOSSLESS` records MUST NOT be merged as-is.
 - Maintenance/docs PRs receive COMMENT-only review (never auto-merge), but their diffs must still preserve the PASS-only `main` invariant; removal/archiving of pre-existing non-PASS records is allowed **only without relabeling** and after verifying a recoverable branch/history reference.
 - Previously preserved non-PASS families (AEAP/SEADS, QuantaAlpha, Wasserstein) were snapshotted in `archive/non-pass-research-20261008` before their removal from `main`; the 17-family reconstruction PR #58 remains an unmerged source. No new repository, folder, status or data pipeline is introduced.
-- Current Hummingbot/Qlib performance research may trust `main` for HB_READY admission status **only**, not for profitability, Qlib parity or Testnet/Mainnet authorization. Historical Survivor metrics remain research evidence and never override the six gates.
+- Downstream research may trust `main` for independently reviewed HB_READY admission only, not for profitability, executable Hummingbot artifacts or Paper/Testnet/Mainnet authorization. Historical Qlib/Survivor metrics are legacy evidence only.
 - The README HB_READY pool count must equal the count of root-level strategy records on `main`; any mismatch fails the admission integrity check.
 
 The detailed reviewer policy is [`.github/HB_READY_REVIEW.md`](.github/HB_READY_REVIEW.md).
@@ -262,7 +258,7 @@ contradictions: []
 
 `confidence` describes confidence in the research interpretation, not expected profitability.
 
-`implementation_status` describes dedicated implementation/deployment artifacts only. `not-implemented` does not revoke HB_READY PASS or permit Node02/03 to refuse downstream research admission. Do not add `QLIB_READY`, implementation admission, another status flag or a second admission registry. When an admitted strategy is formally selected for execution but has no reproducible Qlib executable recipe/artifact, the engineering route is `IMPLEMENTATION_NEEDED`: add the minimal strategy/family-specific implementation, then return to the same 01–05 without redoing HB_READY. This route is physical materialization pending, not strategy REJECT, not a new Gate, and is never written back into Alpha as a second qualification field.
+`implementation_status` describes strategy-specific implementation artifacts, not HB_READY admission. `not-implemented` does not revoke an independently reviewed PASS. A selected strategy without a reproducible Hummingbot executable/configuration binding requires the smallest verifiable strategy-specific implementation and engine/data capability preflight before backtesting; it is an engineering gap, not an automatic strategy rejection or a new admission flag. Do not add `QLIB_READY`, a second registry or a generic Markdown-to-strategy compiler. Former Qlib/Node02–03 instructions are historical only.
 
 ### Required document structure
 
@@ -342,46 +338,31 @@ Do not use ambiguous suffixes such as `latest`, `final`, or `new`.
 
 ## Downstream boundary
 
-This repository's `main` owns **only independently reviewed HB_READY PASS strategy records**. Any incomplete/non-PASS research is preserved on other branches, PRs or existing Git history, not merged into `main`.
+The repository's `main` owns **independently reviewed six-gate HB_READY PASS-only strategy records**, with non-PASS work preserved in existing non-main branches, PRs or Git history. The pinned HB_READY admission contract and existing review automation remain unchanged.
 
-Current intended downstream model:
+**Proposed downstream research loop (not yet independently verified or deployed):**
 
 ```text
-alpha-strategy-research/main
+alpha-strategy-research/main (HB_READY PASS-only)
         ↓
-filter: hb_ready_status == PASS
+Hermes selects strategy + freezes campaign configuration / data / version
         ↓
-standardized research overlay
-(DCA: 6% + 6% + 6%, Isolated, 3× / 5×)
+Hermes → existing Condor / Hummingbot MCP → Hummingbot backtest
         ↓
-Qlib large-scale screening
+Hermes reviews events, equity, costs and risk; logs each round to Wiki Brain
         ↓
-Annualized Net Return ≥ 10% AND Sharpe ≥ 1.0
-        ↓
-survivor candidates
-        ↓
-future Survivor Repo
-        ↓
-Hummingbot re-validation
-        ↓
-event-level parity confirmed
-        ↓
-Formal Survivor
-        ↓
-later Testnet / live qualification
+  reject / stop  |  revise hypothesis and parameters  |  freeze IS candidate
+                       ↓                           ↓
+           Hermes re-dispatches via MCP       one-time final OOS
+                       └────────→ Hummingbot          ↓
+                                             research decision only
 ```
 
-HB_READY PASS on Alpha `main` is the downstream research admission. Research admission != executable materialization: a PASS record itself carries no executable recipe, Qlib entrypoint or execution binding, and PASS never guarantees such an artifact already exists. Qlib executability is an **engine capability** question: an admitted strategy that already has a reproducible Qlib executable recipe/artifact and uses only verified execution primitives, data paths and timing semantics may enter 01–05 directly. If it is formally selected but has none, route `IMPLEMENTATION_NEEDED` to add the minimal strategy/family-specific implementation, then return to the same 01–05 without redoing HB_READY; this is not strategy REJECT, not `QLIB_READY`, and not a new Gate. Reusing verified capabilities requires no per-candidate HB↔Qlib parity; only a truly new execution capability needs one representative capability validation. The minimal executable handoff is a run artifact, not an admission registry: frozen candidate/source identity + executable entrypoint/ref + effective_config/ref + hashes + declared research cost/run inputs + evidence refs. Existing candidate-execution links are only examples of existing proof, not a system-wide formal standard; do not batch-backfill existing strategies. Do not design a generic Markdown→Qlib compiler, DSL, Manager, Registry, Factory, Adapter, runner, database, queue or second control plane to eliminate the materialization step.
+The **revision path must loop back to Hummingbot via Hermes/MCP**. Wiki Brain is continuously updated during analysis and revision; it never substitutes for reproducible run evidence, GitHub history or independent OOS validation. Revisions that change a source strategy's material trade events must be explicitly declared as derived research, never silently rewritten as source-native PASS.
 
-For PASS records, HB_READY verifies the declared source-native or explicitly derived executable rules against the pinned Hummingbot model, without asserting profitability or source-native equivalence for adaptations. Standardized DCA/capital/leverage is a **downstream research experiment**, not a prerequisite for admission. Materially changed trade events require an independently specified derived strategy, full cost/causality checks and new evidence; source-native provenance must not be overwritten.
+Each run should preserve source/commit and executable ref, frozen effective config/hash, Hummingbot engine identity, data source/window, IS/OOS boundary, initial capital, symbol/timeframe/leverage, DCA overlay when used, execution and cost assumptions, fills/trade events, equity curve, performance metrics, revision rationale and decision. `42 cells` means full coverage per frozen baseline revision, not an implicit parameter grid; failures and unsupported cells must be visible.
 
-Node04/05 owns Qlib mass screening and MLflow evidence: frozen source/config/data/window/cost assumptions, native outputs and a retrievable Replay recipe. Existing `performance_claimable=true` means that run's coverage, evidence and explicit research cost assumptions are complete enough for 06–09 research interpretation; it is not HB Certified or live economics. Do not add another flag or relabel historical engineering proofs. Full means all 42 cells per frozen version, not 42 cells multiplied by a Signal/Structure/DCA parameter search; missing/failed cells cannot be hidden as coverage. Parameter changes belong to the 06–09 loop, followed by frozen one-time OOS, never OOS retuning.
-
-Node11 uses the same declared research cost model, the existing performance thresholds and Qlib IS/OOS Replay evidence. Node13 Hummingbot certification retains canonical futures fills/account equity/funding/slippage accounting, HB Replay and strategy-specific event-level parity. Matching final ROI or Sharpe is insufficient: signal/entry/exit times, direction, prices, sizing, Safety Orders and close transitions must agree under pinned comparable assumptions; unexplained execution or HB economic disagreement cannot be Certified. HB-grade fills, settlement mark_price and account equity are not Node04/05 prerequisites.
-
-The automatic repo-to-Hummingbot/Qlib execution bridge is **not defined by this repository README as already active**. The new Survivor Repo is also not created yet. Current n8n 01–05 exact-candidate/Donchian hardcoding is representative engineering proof, not the final admission contract. Separate code work must remove the exact-candidate allowlist and Donchian hardcode while reusing verified capabilities; do not build a generic strategy compiler, Manager/Registry/Factory/Adapter framework, new control plane, runner, database or queue. This documentation change deploys nothing.
-
-The current research and admission contracts are the HB_READY review policy and the Hummingbot-aligned backtest baseline; retired intake/review routines are not executable entrypoints.
+The former **Qlib screening, n8n orchestration, Node01–13 gates, MLflow evidence and dual-engine parity/certification flow are retired as operational requirements**. Historical research remains evidence with explicit legacy provenance; it must not be presented as a current Hummingbot reproduction or certification. The historical `10% / Sharpe 1.0` screening thresholds and a discussed `8%` alternative are **unresolved for the new campaign**; define metrics and OOS criteria before any automated promotion. No Testnet/Mainnet authorization or automatic live execution is implied. A documented MCP plan does not prove the actual Hummingbot/Condor deployment supports all required semantics. This documentation-only change deploys nothing.
 
 ## Public-repository hygiene
 
