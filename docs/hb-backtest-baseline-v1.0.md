@@ -1,8 +1,10 @@
-# Hummingbot / Qlib Backtest Baseline v1.0
+# Historical Hummingbot / Qlib Backtest Baseline v1.0
+
+> **ARCHIVED — retired dual-engine campaign (2026-11-10).** This file preserves the 2026-10-05 Hummingbot/Qlib/n8n research design and its methodological evidence. **It is not an active execution plan, a verified deployment, or the current Hummingbot-only campaign contract.** For the proposed Hermes → Condor/Hummingbot MCP → Hummingbot backtest and Wiki Brain revision loop, refer to [current English README](../README.md) or [繁體中文說明](../README.zh-TW.md). Historical Qlib/Node01–13/Survivor and 10% Sharpe screening references below are kept for provenance, not automatic promotion. Existing HB_READY six-gate admission remains governed by [the review contract](../.github/HB_READY_REVIEW.md). No data, strategy evidence or tests are removed.
 
 Effective: 2026-10-05 (UTC+8)
 
-這份文件是目前**單策略量化研究 Campaign** 的 v1.0 execution target，不是 HB_READY 准入的市場／週期／資料／成交方式硬門檻。2026-10-08 六項 HB_READY 規範見 [Review Contract](../.github/HB_READY_REVIEW.md)。文件描述的目標能力必須經 pinned simulator 實測，不能把規劃視為實作已完成；不新增 pipeline、optimizer、manager 或治理層。
+這份文件記載**2026-10-05 當時單策略量化研究 Campaign** 的 v1.0 execution target，不是 HB_READY 准入的市場／週期／資料／成交方式硬門檻。2026-10-08 六項 HB_READY 規範見 [Review Contract](../.github/HB_READY_REVIEW.md)。文件描述的目標能力必須經 pinned simulator 實測，不能把規劃視為實作已完成；不新增 pipeline、optimizer、manager 或治理層。
 
 ## 0. Big picture
 
